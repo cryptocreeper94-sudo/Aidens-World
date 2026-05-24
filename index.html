@@ -53,10 +53,89 @@
         padding-right: env(safe-area-inset-right);
       }
     }
+
+    /* ── PWA Install Banner ── */
+    #install-banner {
+      display: none;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 9999;
+      background: linear-gradient(135deg, #15162a 0%, #1a1a33 100%);
+      border-top: 3px solid #e63946;
+      padding: 14px 16px;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 -4px 20px rgba(230,57,70,0.3);
+      font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+      animation: slideUp 0.4s ease-out;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    #install-banner.show { display: flex; }
+    #install-banner img {
+      width: 48px; height: 48px;
+      border-radius: 12px;
+      border: 2px solid #e63946;
+    }
+    #install-banner .banner-text {
+      flex: 1;
+    }
+    #install-banner .banner-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: #ffffff;
+      margin-bottom: 2px;
+    }
+    #install-banner .banner-sub {
+      font-size: 11px;
+      color: #aaaaaa;
+    }
+    #install-banner .banner-sub .ios-icon {
+      display: inline-block;
+      width: 18px; height: 18px;
+      vertical-align: middle;
+      margin: 0 2px;
+    }
+    #install-btn {
+      background: #e63946;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    #install-btn:active { background: #c1121f; }
+    #close-banner {
+      background: none;
+      border: none;
+      color: #666;
+      font-size: 22px;
+      cursor: pointer;
+      padding: 4px 8px;
+      line-height: 1;
+    }
   </style>
 </head>
 <body>
   <div id="game-container"></div>
+
+  <!-- PWA Install Banner -->
+  <div id="install-banner">
+    <img src="assets/ui/icon-192.png" alt="Aiden's World">
+    <div class="banner-text">
+      <div class="banner-title">🕷️ Aiden's World ⚔️</div>
+      <div class="banner-sub" id="install-instructions">Install the app to play anytime!</div>
+    </div>
+    <button id="install-btn">Install</button>
+    <button id="close-banner">&times;</button>
+  </div>
 
   <!-- Phaser 3 CDN -->
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
@@ -71,8 +150,9 @@
   <script src="src/scenes/LevelScene.js"></script>
   <script src="src/config.js"></script>
 
-  <!-- Register Service Worker -->
+  <!-- Service Worker + Install Banner Logic -->
   <script>
+    // ── Service Worker ──
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
@@ -81,13 +161,61 @@
       });
     }
 
-    // Prevent pull-to-refresh and bounce on iOS
+    // ── PWA Install Banner ──
+    let deferredPrompt = null;
+    const banner = document.getElementById('install-banner');
+    const installBtn = document.getElementById('install-btn');
+    const closeBtn = document.getElementById('close-banner');
+    const instructions = document.getElementById('install-instructions');
+
+    // Don't show if already installed as standalone or dismissed
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+      || window.navigator.standalone === true;
+    const wasDismissed = localStorage.getItem('pwa-banner-dismissed');
+
+    if (!isStandalone && !wasDismissed) {
+      // Android/Chrome: catch the native install prompt
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        banner.classList.add('show');
+      });
+
+      // iOS Safari: show custom instructions
+      const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+      const isSafari = /Safari/.test(navigator.userAgent) && !/CriOS|FxiOS|Chrome/.test(navigator.userAgent);
+      if (isIOS && isSafari) {
+        instructions.innerHTML = 'Tap <svg class="ios-icon" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg"><rect width="50" height="50" rx="8" fill="#007AFF"/><path d="M25 8 L25 32 M16 17 L25 8 L34 17" stroke="white" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 28 L14 38 C14 40 16 42 18 42 L32 42 C34 42 36 40 36 38 L36 28" stroke="white" stroke-width="3" fill="none" stroke-linecap="round"/></svg> then <b>"Add to Home Screen"</b>';
+        installBtn.textContent = 'GOT IT!';
+        // Show banner after a short delay
+        setTimeout(() => banner.classList.add('show'), 2000);
+      }
+    }
+
+    // Install button click
+    installBtn.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log('[PWA] Install:', outcome);
+        deferredPrompt = null;
+      }
+      banner.classList.remove('show');
+      localStorage.setItem('pwa-banner-dismissed', 'true');
+    });
+
+    // Close button
+    closeBtn.addEventListener('click', () => {
+      banner.classList.remove('show');
+      localStorage.setItem('pwa-banner-dismissed', 'true');
+    });
+
+    // ── Mobile Behaviors ──
     document.addEventListener('touchmove', (e) => {
       if (e.touches.length > 1) return;
       e.preventDefault();
     }, { passive: false });
 
-    // Keep screen awake via Wake Lock API (if supported)
     async function requestWakeLock() {
       try {
         if ('wakeLock' in navigator) {
@@ -99,6 +227,9 @@
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') requestWakeLock();
     });
+
+    document.addEventListener('contextmenu', (e) => e.preventDefault());
   </script>
 </body>
 </html>
+
