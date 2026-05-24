@@ -1,5 +1,5 @@
-// Service Worker — Cache-first for offline play
-const CACHE_NAME = 'hero-hq-v2';
+// Service Worker — Network-first for active updates
+const CACHE_NAME = 'hero-hq-v3';
 const ASSETS = [
   '/',
   '/index.html',
@@ -11,6 +11,8 @@ const ASSETS = [
   '/src/scenes/HubScene.js',
   '/src/scenes/StoryScene.js',
   '/src/scenes/LevelScene.js',
+  '/src/systems/ThreeEngine.js',
+  '/assets/models/RobotExpressive.glb',
   '/assets/characters/hero_red.png',
   '/assets/characters/hero_black.png',
   '/assets/characters/jedi_kid.png',
@@ -54,38 +56,29 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch — cache first, fallback to network
+// Fetch — Network first, fallback to cache
 self.addEventListener('fetch', (event) => {
-  // Skip Phaser CDN — always fetch from network
-  if (event.request.url.includes('cdn.jsdelivr.net')) {
-    event.respondWith(
-      caches.match(event.request).then(cached => {
-        const fetched = fetch(event.request).then(response => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-          return response;
-        });
-        return cached || fetched;
-      })
-    );
-    return;
-  }
-
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request).then((fetchResponse) => {
-        // Cache new resources dynamically
-        if (fetchResponse.status === 200) {
-          const clone = fetchResponse.clone();
+    fetch(event.request)
+      .then((networkResponse) => {
+        // Cache the fresh response dynamically
+        if (networkResponse.status === 200) {
+          const clone = networkResponse.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
         }
-        return fetchResponse;
-      });
-    }).catch(() => {
-      // Offline fallback
-      if (event.request.destination === 'document') {
-        return caches.match('/');
-      }
-    })
+        return networkResponse;
+      })
+      .catch(() => {
+        // Network failed (offline), try cache
+        return caches.match(event.request).then((cachedResponse) => {
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+          // Ultimate fallback
+          if (event.request.destination === 'document') {
+            return caches.match('/');
+          }
+        });
+      })
   );
 });
