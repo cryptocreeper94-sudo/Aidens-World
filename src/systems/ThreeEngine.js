@@ -72,17 +72,50 @@ class ThreeEngine {
     this.buildings = [];
     this.spawnScenery();
 
-    // Player Object (Temporary Cylinder until GLB loads)
-    const playerGeo = new THREE.CylinderGeometry(0.5, 0.5, 1.5, 8);
-    const playerMat = new THREE.MeshStandardMaterial({ color: 0xe63946, roughness: 0.2, metalness: 0.5 });
-    this.player = new THREE.Mesh(playerGeo, playerMat);
-    this.player.position.set(0, 1, 0); // 1 = standing on ground
-    
-    // Add a glowing core to the player to make it look cool
-    const coreLight = new THREE.PointLight(0xe63946, 1, 5);
-    this.player.add(coreLight);
-    
+    // Player Object Container
+    this.player = new THREE.Group();
+    this.player.position.set(0, 0, 0); 
     this.scene.add(this.player);
+
+    // Add a glowing core to the player to make it look cool
+    this.coreLight = new THREE.PointLight(0xe63946, 1, 5);
+    this.coreLight.position.y = 1;
+    this.player.add(this.coreLight);
+
+    // Load actual 3D Character (RobotExpressive placeholder)
+    const loader = new THREE.GLTFLoader();
+    loader.load('assets/models/RobotExpressive.glb', (gltf) => {
+      const model = gltf.scene;
+      
+      // Scale and position the robot
+      model.scale.set(0.3, 0.3, 0.3);
+      model.rotation.y = Math.PI; // Face away from camera
+      
+      // Apply materials
+      model.traverse((child) => {
+        if (child.isMesh) {
+          child.castShadow = true;
+          // Store original material reference to change color later
+          child.userData.originalMat = child.material;
+        }
+      });
+      
+      this.player.add(model);
+      this.playerModel = model;
+
+      // Setup Animations
+      this.mixer = new THREE.AnimationMixer(model);
+      
+      gltf.animations.forEach((clip) => {
+        this.actions[clip.name] = this.mixer.clipAction(clip);
+      });
+
+      // Start in Idle state
+      if (this.actions['Idle']) {
+        this.activeAction = this.actions['Idle'];
+        this.activeAction.play();
+      }
+    });
 
     // Enemies Array
     this.enemies = [];
@@ -90,6 +123,10 @@ class ThreeEngine {
     // Animation Loop Variables
     this.gameSpeed = 0.5;
     this.isRunning = false;
+    this.clock = new THREE.Clock();
+    this.mixer = null;
+    this.actions = {};
+    this.activeAction = null;
 
     // Handle Resize
     window.addEventListener('resize', () => {
@@ -107,7 +144,19 @@ class ThreeEngine {
   }
 
   setRunning(state) {
-    this.isRunning = state;
+    if (this.isRunning !== state) {
+      this.isRunning = state;
+      // Switch animation
+      if (this.mixer) {
+        const nextAction = state ? this.actions['Running'] || this.actions['Walking'] : this.actions['Idle'];
+        if (nextAction && this.activeAction !== nextAction) {
+          nextAction.reset();
+          nextAction.play();
+          if (this.activeAction) this.activeAction.crossFadeTo(nextAction, 0.3, true);
+          this.activeAction = nextAction;
+        }
+      }
+    }
   }
 
   // Called from Phaser's jump logic
@@ -130,16 +179,47 @@ class ThreeEngine {
       this.player.position.y = 1 + (jumpHeight * 0.05);
     }
     
+    // Handle Ducking vs Jumping Animation
+    if (this.mixer && this.actions['Jump']) {
+      const isJumping = (yPos < 320); // Not on ground
+      
+      if (isJumping && this.activeAction !== this.actions['Jump']) {
+        this.actions['Jump'].reset().play();
+        this.activeAction.crossFadeTo(this.actions['Jump'], 0.1, true);
+        this.activeAction = this.actions['Jump'];
+      } else if (!isJumping && this.activeAction === this.actions['Jump']) {
+        // Back to running
+        const runAction = this.actions['Running'] || this.actions['Walking'];
+        if (runAction) {
+          runAction.reset().play();
+          this.activeAction.crossFadeTo(runAction, 0.2, true);
+          this.activeAction = runAction;
+        }
+      }
+    }
+
     // Change color based on active character
+    let colorHex = 0xe63946;
     if (textureKey === 'jedi_kid') {
-      this.player.material.color.setHex(0x22d3ee); // Cyan
-      this.player.children[0].color.setHex(0x22d3ee);
+      colorHex = 0x22d3ee; // Cyan
     } else if (textureKey === 'hero_black') {
-      this.player.material.color.setHex(0x1e1e2e); // Black
-      this.player.children[0].color.setHex(0x7c3aed);
-    } else {
-      this.player.material.color.setHex(0xe63946); // Red
-      this.player.children[0].color.setHex(0xe63946);
+      colorHex = 0x7c3aed; // Purple/Black
+    }
+    
+    this.coreLight.color.setHex(colorHex);
+
+    if (this.playerModel) {
+      this.playerModel.traverse((child) => {
+        if (child.isMesh && child.material) {
+          // If the material has a color property, tint it slightly to match the persona
+          if (!child.userData.originalColor) {
+            child.userData.originalColor = child.material.color.clone();
+          }
+          // Blend original color with persona color
+          const c = new THREE.Color(colorHex);
+          child.material.color.copy(child.userData.originalColor).lerp(c, 0.5);
+        }
+      });
     }
   }
 
@@ -200,6 +280,9 @@ class ThreeEngine {
 
   animate() {
     requestAnimationFrame(() => this.animate());
+
+    const delta = this.clock.getDelta();
+    if (this.mixer) this.mixer.update(delta);
 
     if (this.isRunning) {
       // Scroll the grid to simulate forward movement
