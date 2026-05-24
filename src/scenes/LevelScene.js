@@ -100,13 +100,13 @@ class LevelScene extends Phaser.Scene {
     // ── PLAYER ──
     const charKey = save.selectedChar;
     this.playerX = 100;
-    this.playerY = groundY - 32;
+    this.playerY = groundY - 50;
     this.playerVY = 0;
     this.isJumping = false;
 
     if (this.textures.exists(charKey)) {
       this.player = this.add.image(this.playerX, this.playerY, charKey);
-      this.player.setDisplaySize(64, 64);
+      this.player.setDisplaySize(120, 120);
     } else {
       // Fallback colored rectangle with emoji
       this.player = this.add.rectangle(this.playerX, this.playerY, 40, 48, 0xe63946);
@@ -362,44 +362,45 @@ class LevelScene extends Phaser.Scene {
       this.spawnPowerup(enemy.sprite.x, enemy.sprite.y, 'heart');
     }
 
-    // Hit particles
-    for (let i = 0; i < 8; i++) {
-      const p = this.add.circle(enemy.sprite.x, enemy.sprite.y, 3, 0xfbbf24);
+    this.explodeEnemy(enemy);
+  }
+
+  explodeEnemy(enemy) {
+    // Burst of particles
+    for (let i = 0; i < 12; i++) {
+      const p = this.add.circle(enemy.sprite.x, enemy.sprite.y, 4, 0xffffff);
       this.tweens.add({
         targets: p,
-        x: enemy.sprite.x + (Math.random() - 0.5) * 80,
-        y: enemy.sprite.y + (Math.random() - 0.5) * 80,
+        x: p.x + (Math.random() - 0.5) * 150,
+        y: p.y + (Math.random() - 0.5) * 150,
         alpha: 0,
-        scale: 0,
         duration: 400,
         onComplete: () => p.destroy(),
       });
     }
 
-    // Hit text
-    const hitText = this.add.text(enemy.sprite.x, enemy.sprite.y - 20, '+10', {
-      fontFamily: 'Arial Black',
-      fontSize: '16px',
-      color: '#fbbf24',
-    }).setOrigin(0.5);
-    this.tweens.add({
-      targets: hitText,
-      y: hitText.y - 40,
-      alpha: 0,
-      duration: 600,
-      onComplete: () => hitText.destroy(),
-    });
-
-    // Remove enemy visual
+    // Dissolve / explode animation
     this.tweens.add({
       targets: enemy.sprite,
+      scaleX: 2.5,
+      scaleY: 2.5,
       alpha: 0,
-      scaleX: 0,
-      scaleY: 0,
-      duration: 200,
-      onComplete: () => enemy.sprite.destroy(),
+      angle: 180,
+      duration: 300,
+      onComplete: () => {
+        if (enemy.sprite) enemy.sprite.destroy();
+      }
     });
-    if (enemy.label) enemy.label.destroy();
+
+    if (enemy.label) {
+      this.tweens.add({
+        targets: enemy.label,
+        y: enemy.label.y - 50,
+        alpha: 0,
+        duration: 300,
+        onComplete: () => enemy.label.destroy(),
+      });
+    }
   }
 
   takeDamage() {
@@ -564,12 +565,12 @@ class LevelScene extends Phaser.Scene {
 
     const enemyKey = `enemy_${type}`;
     const x = width + 40;
-    const y = this.groundY - 28;
+    const y = this.groundY - 45;
 
     let sprite;
     if (this.textures.exists(enemyKey)) {
       sprite = this.add.image(x, y, enemyKey);
-      sprite.setDisplaySize(48, 48);
+      sprite.setDisplaySize(100, 100);
     } else {
       sprite = this.add.rectangle(x, y, 36, 42, 0xff4444, 0.7);
       sprite.setStrokeStyle(2, 0xff6666);
@@ -689,11 +690,10 @@ class LevelScene extends Phaser.Scene {
       // Player collision
       const dx = Math.abs(e.sprite.x - this.playerX);
       const dy = Math.abs(e.sprite.y - this.playerY);
-      if (dx < 30 && dy < 35) {
+      if (dx < 45 && dy < 55) {
         this.takeDamage();
         e.alive = false;
-        e.sprite.destroy();
-        if (e.label) e.label.destroy();
+        this.explodeEnemy(e);
         this.enemies.splice(i, 1);
         continue;
       }
