@@ -28,8 +28,8 @@ class LevelScene extends Phaser.Scene {
 
     this.score = 0;
     this.shardsCollected = 0;
-    this.health = 2;
-    this.maxHealth = 2;
+    this.health = 3;
+    this.maxHealth = 3;
     this.isAlive = true;
     this.gameSpeed = 3;
     this.distanceTraveled = 0;
@@ -108,6 +108,9 @@ class LevelScene extends Phaser.Scene {
     this.playerY = groundY - 50;
     this.playerVY = 0;
     this.isJumping = false;
+    this.isDucking = false;
+    this.primaryChar = save.selectedChar;
+    this.secondaryChar = 'jedi_kid';
 
     if (this.textures.exists(charKey)) {
       this.player = this.add.image(this.playerX, this.playerY, charKey);
@@ -181,16 +184,29 @@ class LevelScene extends Phaser.Scene {
     }).setDepth(100).setInteractive({ useHandCursor: true });
     backBtn.on('pointerdown', () => this.scene.start('HubScene'));
 
-    // ── CONTROLS ──
-    // Tap top half = jump, tap bottom half = attack, swipe = special
+    // Tap top = jump, Bottom left = duck, Bottom right = attack
     this.input.on('pointerdown', (pointer) => {
       if (!this.isAlive) return;
       if (pointer.y < height * 0.6) {
         this.jump();
       } else {
-        this.attack();
+        if (pointer.x < width / 2) {
+          this.duck(true);
+        } else {
+          this.attack();
+        }
       }
     });
+
+    this.input.on('pointerup', () => {
+      if (this.isDucking) this.duck(false);
+    });
+
+    // Tag-Team Button
+    this.tagBtn = this.add.text(width / 2, 70, '🔄 TAG TEAM', {
+      fontFamily: 'Arial Black', fontSize: '12px', color: '#ffffff', backgroundColor: '#e63946', padding: { x: 8, y: 4 }, borderRadius: 4
+    }).setOrigin(0.5).setDepth(100).setInteractive({ useHandCursor: true });
+    this.tagBtn.on('pointerdown', () => this.tagSwap());
 
     // ── TUTORIAL OVERLAY ──
     if (this.levelData.isTutorial) {
@@ -257,9 +273,9 @@ class LevelScene extends Phaser.Scene {
       color: '#22d3ee',
     }).setOrigin(0.5).setDepth(201);
 
-    const instBot = this.add.text(width / 2, height / 2 + 20, '👇 TAP BOTTOM = WEB SHOOT!', {
+    const instBot = this.add.text(width / 2, height / 2 + 20, '👇 LEFT = DUCK | RIGHT = ATTACK', {
       fontFamily: 'Arial Black',
-      fontSize: '18px',
+      fontSize: '16px',
       color: '#e63946',
     }).setOrigin(0.5).setDepth(201);
 
@@ -299,12 +315,33 @@ class LevelScene extends Phaser.Scene {
     }
   }
 
+  tagSwap() {
+    SoundFX.play('jump');
+    this.cameras.main.flash(200, 255, 255, 255);
+    const currentChar = this.player.texture.key;
+    const nextChar = currentChar === this.primaryChar ? this.secondaryChar : this.primaryChar;
+    if (this.textures.exists(nextChar)) {
+      this.player.setTexture(nextChar);
+    }
+  }
+
+  duck(isDown) {
+    if (this.isJumping || this.isSwinging) return;
+    this.isDucking = isDown;
+    if (isDown) {
+      this.player.setDisplaySize(120, 70);
+      this.playerY = this.groundY - 25;
+    } else {
+      this.player.setDisplaySize(120, 120);
+      this.playerY = this.groundY - 50;
+    }
+  }
+
   attack() {
     if (this.attackCooldown > 0) return;
     this.attackActive = true;
     this.attackCooldown = 20;
-    const save = SaveSystem.load();
-    const isJedi = save.selectedChar === 'jedi_kid' || save.selectedChar === 'spider_jedi';
+    const isJedi = this.player.texture.key.includes('jedi');
     SoundFX.play(isJedi ? 'saber' : 'web');
 
     // Show attack visual
@@ -324,7 +361,11 @@ class LevelScene extends Phaser.Scene {
       const dx = e.sprite.x - this.playerX;
       const dy = Math.abs(e.sprite.y - this.player.y);
       if (dx > 0 && dx < 150 && dy < 50) {
-        this.hitEnemy(e);
+        if (this.isDucking && !isJedi) {
+          this.webThrow(e);
+        } else {
+          this.hitEnemy(e);
+        }
       }
     });
 
@@ -377,12 +418,41 @@ class LevelScene extends Phaser.Scene {
     this.scoreText.setText(`💎 ${this.shardsCollected}`);
     SoundFX.play('hit');
 
-    // Chance to drop a heart
     if (this.health < this.maxHealth && Math.random() < 0.3) {
       this.spawnPowerup(enemy.sprite.x, enemy.sprite.y, 'heart');
     }
 
     this.explodeEnemy(enemy);
+  }
+
+  webThrow(enemy) {
+    enemy.alive = false;
+    this.score += 20;
+    this.shardsCollected += 3;
+    this.scoreText.setText(`💎 ${this.shardsCollected}`);
+    SoundFX.play('web');
+    
+    // Draw web line to enemy
+    const web = this.add.line(0, 0, this.playerX, this.player.y, enemy.sprite.x, enemy.sprite.y, 0xffffff).setOrigin(0).setDepth(90);
+    web.setLineWidth(3);
+    
+    // Animate enemy spinning overhead and thrown backwards
+    this.tweens.add({
+      targets: enemy.sprite,
+      x: this.playerX - 250,
+      y: this.player.y - 150,
+      angle: -360,
+      duration: 400,
+      ease: 'Quad.easeOut',
+      onUpdate: () => {
+        web.setTo(this.playerX, this.player.y, enemy.sprite.x, enemy.sprite.y);
+        if (enemy.label) enemy.label.setPosition(enemy.sprite.x, enemy.sprite.y);
+      },
+      onComplete: () => {
+        web.destroy();
+        this.explodeEnemy(enemy);
+      }
+    });
   }
 
   explodeEnemy(enemy) {

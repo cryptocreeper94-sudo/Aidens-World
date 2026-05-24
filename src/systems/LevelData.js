@@ -129,10 +129,10 @@ const STORY_PANELS = {
   intro_rift: {
     panels: [
       { image: 'intro_panel', text: 'Spider-Man swings through New York City on a normal day...', speaker: 'Narrator' },
-      { image: 'intro_panel', text: 'BOOM! A giant portal rips open in the sky above Times Square!', speaker: 'Narrator' },
-      { image: 'intro_panel', text: 'Stormtroopers march through the portal! TIE Fighters zoom overhead!', speaker: 'Narrator' },
-      { image: 'intro_panel', text: '"My Spidey Sense is going CRAZY! What\'s happening?!"', speaker: 'Spider-Man' },
-      { image: 'intro_panel', text: `"Only ${HERO_NAME} can stop it! Let's GO!" 🕸️`, speaker: HERO_NAME },
+      { image: 'intro_panel', text: 'BOOM! A giant portal rips open! The Rift King has merged Doc Ock tech with Sith Holocrons!', speaker: 'Narrator' },
+      { image: 'intro_panel', text: 'Stormtroopers march into Times Square! TIE Fighters zoom overhead!', speaker: 'Narrator' },
+      { image: 'intro_panel', text: '"My Spidey Sense is CRAZY! Anakin! Mando! I need backup!"', speaker: 'Spider-Man' },
+      { image: 'intro_panel', text: `"Tag me in, Spidey! Let's GO!" ⚔️`, speaker: 'Anakin Skywalker' },
     ],
   },
   world1_complete: {
@@ -159,14 +159,14 @@ const STORY_PANELS = {
   },
   world3_intro: {
     panels: [
-      { image: 'world3_intro_panel', text: 'A desert planet with two suns... that\'s Tatooine!', speaker: HERO_NAME },
-      { image: 'world3_intro_panel', text: 'Symbiote tendrils are spreading across the sand!', speaker: 'Narrator' },
-      { image: 'world3_intro_panel', text: '"Darth Maul found a symbiote... He\'s become DARTH VENOM!" 😈', speaker: 'Narrator' },
+      { image: 'world3_intro_panel', text: 'A desert planet with two suns... that\'s Tatooine!', speaker: 'Spider-Man' },
+      { image: 'world3_intro_panel', text: '"The Mandalorian is waiting for us ahead!"', speaker: 'Anakin' },
+      { image: 'world3_intro_panel', text: '"Watch out... Darth Vader found a symbiote. He is DARTH VENOM!" 😈', speaker: 'Narrator' },
     ],
   },
   world3_complete: {
     panels: [
-      { image: 'world3_intro_panel', text: 'Darth Venom is defeated! The symbiote releases Darth Maul!', speaker: 'Narrator' },
+      { image: 'world3_intro_panel', text: 'Darth Venom is defeated! The symbiote releases Vader!', speaker: 'Narrator' },
       { image: 'world3_intro_panel', text: `${HERO_NAME} combines Spider powers AND the Force!`, speaker: 'Narrator' },
       { image: 'world3_intro_panel', text: `🎉 NEW: Spider-Jedi ${HERO_NAME}! The ultimate hero!`, speaker: 'System' },
     ],
