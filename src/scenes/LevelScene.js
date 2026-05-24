@@ -28,17 +28,22 @@ class LevelScene extends Phaser.Scene {
 
     this.score = 0;
     this.shardsCollected = 0;
-    this.health = 3;
-    this.maxHealth = 3;
+    this.health = 2;
+    this.maxHealth = 2;
     this.isAlive = true;
     this.gameSpeed = 3;
     this.distanceTraveled = 0;
-    this.levelLength = (this.levelData.shards || 20) * 50; // level length scales with shard count
+    this.levelLength = (this.levelData.shards || 20) * 150; // Much longer levels
     this.hitCooldown = false;
     this.powerups = [];
     this.powerupTimer = 0;
     this.hasShield = false;
     this.speedBoostTimer = 0;
+
+    this.isSwinging = false;
+    this.swingTimer = 0;
+    this.anchors = [];
+    this.swingWeb = this.add.rectangle(0, 0, 4, 100, 0xffffff).setOrigin(0.5, 0).setAlpha(0).setDepth(40);
 
     // ── PARALLAX BACKGROUND ──
     const bgKey = this.worldData.bg;
@@ -123,7 +128,7 @@ class LevelScene extends Phaser.Scene {
     // ── ENEMIES ──
     this.enemies = [];
     this.enemySpawnTimer = 0;
-    this.enemySpawnRate = this.levelData.isTutorial ? 180 : 100; // frames between spawns
+    this.enemySpawnRate = this.levelData.isTutorial ? 180 : 70; // frames between spawns
 
     // ── SHARDS (collectibles) ──
     this.shards = [];
@@ -246,7 +251,7 @@ class LevelScene extends Phaser.Scene {
       color: '#e63946',
     }).setOrigin(0.5).setDepth(201);
 
-    const instTop = this.add.text(width / 2, height / 2 - 20, '👆 TAP TOP = JUMP (like Spidey!)', {
+    const instTop = this.add.text(width / 2, height / 2 - 20, '👆 TAP TOP = JUMP (Double-Tap to Swing!)', {
       fontFamily: 'Arial Black',
       fontSize: '18px',
       color: '#22d3ee',
@@ -272,10 +277,25 @@ class LevelScene extends Phaser.Scene {
   }
 
   jump() {
-    if (!this.isJumping) {
+    if (!this.isJumping && !this.isSwinging) {
       this.playerVY = -12;
       this.isJumping = true;
       SoundFX.play('jump');
+    } else if (this.isJumping && !this.isSwinging) {
+      // Initiate Web Swing!
+      this.isSwinging = true;
+      this.swingTimer = 50; // frames to swing
+      this.playerVY = -5; // upward boost
+      SoundFX.play('web');
+      this.swingWeb.setAlpha(1);
+
+      // Find nearest anchor or spawn a temporary one
+      let anchor = this.anchors.find(a => a.x > this.playerX && a.x < this.playerX + 300);
+      if (!anchor) {
+        anchor = this.add.circle(this.playerX + 150, 40, 8, 0xaaaaaa);
+        this.anchors.push(anchor);
+      }
+      this.currentAnchor = anchor;
     }
   }
 
@@ -610,14 +630,37 @@ class LevelScene extends Phaser.Scene {
       this.bg1.tilePositionX += this.gameSpeed * 0.3;
     }
 
-    // Player physics (gravity + jump)
-    this.playerVY += 0.6; // gravity
-    this.playerY += this.playerVY;
+    // Player physics (gravity + jump + swing)
+    if (this.isSwinging) {
+      this.swingTimer--;
+      this.playerVY += 0.15; // very low gravity for floaty arc
+      this.playerY += this.playerVY;
 
-    if (this.playerY >= this.groundY - 32) {
-      this.playerY = this.groundY - 32;
+      if (this.currentAnchor) {
+        this.swingWeb.x = this.currentAnchor.x;
+        this.swingWeb.y = this.currentAnchor.y;
+        this.swingWeb.height = Phaser.Math.Distance.Between(this.currentAnchor.x, this.currentAnchor.y, this.playerX, this.playerY);
+        this.swingWeb.rotation = Phaser.Math.Angle.Between(this.currentAnchor.x, this.currentAnchor.y, this.playerX, this.playerY) - Math.PI/2;
+      }
+
+      if (this.swingTimer <= 0) {
+        this.isSwinging = false;
+        this.swingWeb.setAlpha(0);
+        this.playerVY = 0; // slight drop
+      }
+    } else {
+      this.playerVY += 0.6; // normal gravity
+      this.playerY += this.playerVY;
+    }
+
+    if (this.playerY >= this.groundY - 50) {
+      this.playerY = this.groundY - 50;
       this.playerVY = 0;
       this.isJumping = false;
+      if (this.isSwinging) {
+        this.isSwinging = false;
+        this.swingWeb.setAlpha(0);
+      }
     }
 
     this.player.y = this.playerY;
@@ -670,7 +713,26 @@ class LevelScene extends Phaser.Scene {
     if (this.enemySpawnTimer >= spawnThreshold) {
       this.enemySpawnTimer = 0;
       this.spawnEnemy();
-      this.enemySpawnRate = Math.max(50, this.enemySpawnRate - 2);
+      this.enemySpawnRate = Math.max(40, this.enemySpawnRate - 2);
+    }
+
+    // Spawn swing anchors periodically
+    if (!this.isBossLevel && Math.random() < 0.02) {
+      const ax = width + 50;
+      const ay = 40 + Math.random() * 40;
+      const a = this.add.circle(ax, ay, 8, 0x555555);
+      a.setStrokeStyle(2, 0x888888);
+      this.anchors.push(a);
+    }
+
+    // Move anchors
+    for (let i = this.anchors.length - 1; i >= 0; i--) {
+      const a = this.anchors[i];
+      a.x -= this.gameSpeed;
+      if (a.x < -50) {
+        a.destroy();
+        this.anchors.splice(i, 1);
+      }
     }
 
     // Spawn shards
