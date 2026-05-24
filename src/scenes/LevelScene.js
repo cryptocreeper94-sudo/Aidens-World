@@ -59,18 +59,21 @@ class LevelScene extends Phaser.Scene {
     } else {
       // Procedural background
       const worldColor = Phaser.Display.Color.HexStringToColor(this.worldData.color);
-      this.add.rectangle(width / 2, height / 2, width, height,
+      const bgRect = this.add.rectangle(width / 2, height / 2, width, height,
         Phaser.Display.Color.GetColor(
           Math.floor(worldColor.red * 0.15),
           Math.floor(worldColor.green * 0.15),
           Math.floor(worldColor.blue * 0.15)
         ));
+      bgRect.setAlpha(0); // Hide for 3D
+
       // Starfield for space worlds
       for (let i = 0; i < 50; i++) {
         const star = this.add.circle(
           Math.random() * width, Math.random() * height,
           Math.random() * 2, 0xffffff, Math.random() * 0.5
         );
+        star.setAlpha(0); // Hide for 3D
         this.tweens.add({ targets: star, alpha: { from: star.alpha, to: 0 }, yoyo: true, repeat: -1, duration: 1000 + Math.random() * 2000 });
       }
     }
@@ -81,9 +84,10 @@ class LevelScene extends Phaser.Scene {
     const groundColor = Phaser.Display.Color.HexStringToColor(this.worldData.color).color;
 
     // Visual ground with platform look
-    this.add.rectangle(width / 2, groundY + 30, width, 60, 0x111122, 0.9);
-    this.add.rectangle(width / 2, groundY, width, 4, groundColor, 0.7);
-    this.add.rectangle(width / 2, groundY + 2, width, 2, 0xffffff, 0.1);
+    const g1 = this.add.rectangle(width / 2, groundY + 30, width, 60, 0x111122, 0.9);
+    const g2 = this.add.rectangle(width / 2, groundY, width, 4, groundColor, 0.7);
+    const g3 = this.add.rectangle(width / 2, groundY + 2, width, 2, 0xffffff, 0.1);
+    g1.setAlpha(0); g2.setAlpha(0); g3.setAlpha(0); // Hide for 3D
 
     // Scrolling ground grid lines
     this.groundScroll = this.add.tileSprite(width / 2, groundY + 30, width, 60, '__DEFAULT');

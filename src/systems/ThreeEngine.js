@@ -39,8 +39,8 @@ class ThreeEngine {
     this.scene.add(gridHelper);
     this.grid = gridHelper;
 
-    // Player Object (Temporary Capsule until GLB loads)
-    const playerGeo = new THREE.CapsuleGeometry(0.5, 1, 4, 8);
+    // Player Object (Temporary Cylinder until GLB loads)
+    const playerGeo = new THREE.CylinderGeometry(0.5, 0.5, 1.5, 8);
     const playerMat = new THREE.MeshStandardMaterial({ color: 0xe63946 });
     this.player = new THREE.Mesh(playerGeo, playerMat);
     this.player.position.set(0, 1, 0); // 1 = standing on ground
