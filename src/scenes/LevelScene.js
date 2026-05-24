@@ -26,6 +26,12 @@ class LevelScene extends Phaser.Scene {
     this.input.once('pointerdown', () => SoundFX.init());
     SoundFX.init();
 
+    // Initialize 3D Engine
+    if (!window.ThreeInstance) {
+      window.ThreeInstance = new ThreeEngine();
+    }
+    window.ThreeInstance.setRunning(false);
+
     this.score = 0;
     this.shardsCollected = 0;
     this.health = 3;
@@ -119,10 +125,9 @@ class LevelScene extends Phaser.Scene {
       // Fallback colored rectangle with emoji
       this.player = this.add.rectangle(this.playerX, this.playerY, 40, 48, 0xe63946);
       this.player.setStrokeStyle(2, 0xffffff, 0.5);
-      const charData = CHARACTERS[charKey] || CHARACTERS['hero_red'];
-      const emoji = charKey.includes('jedi') ? '⚔️' : '🕷️';
-      this.add.text(this.playerX, this.playerY, emoji, { fontSize: '24px' }).setOrigin(0.5);
     }
+    // Hide 2D player since Three.js renders the 3D version
+    this.player.setAlpha(0);
 
     // Player glow effect
     this.playerGlow = this.add.circle(this.playerX, this.playerY, 30, groundColor, 0);
@@ -289,6 +294,7 @@ class LevelScene extends Phaser.Scene {
     goBtn.on('pointerdown', () => {
       overlay.destroy(); title.destroy(); instTop.destroy(); instBot.destroy(); goBtn.destroy(); goText.destroy();
       this.isRunning = true;
+      if (window.ThreeInstance) window.ThreeInstance.setRunning(true);
     });
   }
 
@@ -456,6 +462,10 @@ class LevelScene extends Phaser.Scene {
   }
 
   explodeEnemy(enemy) {
+    if (window.ThreeInstance && enemy.id) {
+      window.ThreeInstance.removeEnemy(enemy.id);
+    }
+
     // Burst of particles
     for (let i = 0; i < 12; i++) {
       const p = this.add.circle(enemy.sprite.x, enemy.sprite.y, 4, 0xffffff);
@@ -669,7 +679,20 @@ class LevelScene extends Phaser.Scene {
     const emoji = type === 'trooper' ? '🪖' : type === 'symbiote' ? '🕷️' : type === 'drone' ? '🛸' : '👊';
     const label = this.add.text(x, y, emoji, { fontSize: '20px' }).setOrigin(0.5);
 
-    this.enemies.push({ sprite, label, type, alive: true, speed: 2 + Math.random() * 2 });
+    const enemyId = 'enemy_' + Date.now() + '_' + Math.random();
+    
+    this.enemies.push({
+      id: enemyId,
+      sprite: sprite,
+      label: label,
+      type: type,
+      speed: 1 + Math.random() * 2,
+      alive: true,
+    });
+
+    if (window.ThreeInstance) {
+      window.ThreeInstance.spawnEnemy(enemyId);
+    }
   }
 
   spawnPowerup(x, y, type) {
@@ -735,6 +758,11 @@ class LevelScene extends Phaser.Scene {
 
     this.player.y = this.playerY;
     this.playerGlow.y = this.playerY;
+
+    if (window.ThreeInstance) {
+      window.ThreeInstance.setSpeed(this.gameSpeed);
+      window.ThreeInstance.syncPlayer(this.playerY, this.isDucking, this.isSwinging, this.player.texture.key);
+    }
     if (this.attackLine.alpha > 0) {
       this.attackLine.y = this.playerY;
     }

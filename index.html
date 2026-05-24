@@ -137,13 +137,17 @@
     <button id="close-banner">&times;</button>
   </div>
 
-  <!-- Phaser 3 CDN -->
+  <!-- Phaser 3 -->
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+  <!-- Three.js & GLTFLoader -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 
   <!-- Game Modules -->
-  <script src="src/systems/SoundFX.js"></script>
   <script src="src/systems/SaveSystem.js"></script>
+  <script src="src/systems/SoundFX.js"></script>
   <script src="src/systems/LevelData.js"></script>
+  <script src="src/systems/ThreeEngine.js"></script>
   <script src="src/scenes/BootScene.js"></script>
   <script src="src/scenes/HubScene.js"></script>
   <script src="src/scenes/StoryScene.js"></script>
