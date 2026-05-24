@@ -1,8 +1,10 @@
 {
-  "name": "Aiden's Hero HQ",
-  "short_name": "Hero HQ",
-  "description": "Spider-Man × Star Wars crossover adventure game for Aiden!",
-  "start_url": "/",
+  "name": "Aiden's World",
+  "short_name": "Aiden's World",
+  "description": "Aiden's personal gaming universe — Spider-Man × Star Wars and beyond!",
+  "start_url": "https://aiden.tlid.io/",
+  "scope": "https://aiden.tlid.io/",
+  "id": "aidens-world",
   "display": "fullscreen",
   "orientation": "landscape",
   "background_color": "#0a0a1a",
@@ -21,5 +23,6 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["games", "entertainment"]
+  "categories": ["games", "entertainment"],
+  "prefer_related_applications": false
 }
