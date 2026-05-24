@@ -77,45 +77,10 @@ class ThreeEngine {
     this.player.position.set(0, 0, 0); 
     this.scene.add(this.player);
 
-    // Add a glowing core to the player to make it look cool
-    this.coreLight = new THREE.PointLight(0xe63946, 1, 5);
-    this.coreLight.position.y = 1;
-    this.player.add(this.coreLight);
-
-    // Load actual 3D Character (RobotExpressive placeholder)
-    const loader = new THREE.GLTFLoader();
-    loader.load('assets/models/RobotExpressive.glb', (gltf) => {
-      const model = gltf.scene;
-      
-      // Scale and position the robot
-      model.scale.set(0.3, 0.3, 0.3);
-      model.rotation.y = Math.PI; // Face away from camera
-      
-      // Apply materials
-      model.traverse((child) => {
-        if (child.isMesh) {
-          child.castShadow = true;
-          // Store original material reference to change color later
-          child.userData.originalMat = child.material;
-        }
-      });
-      
-      this.player.add(model);
-      this.playerModel = model;
-
-      // Setup Animations
-      this.mixer = new THREE.AnimationMixer(model);
-      
-      gltf.animations.forEach((clip) => {
-        this.actions[clip.name] = this.mixer.clipAction(clip);
-      });
-
-      // Start in Idle state
-      if (this.actions['Idle']) {
-        this.activeAction = this.actions['Idle'];
-        this.activeAction.play();
-      }
-    });
+    this.loader = new THREE.GLTFLoader();
+    
+    // We do NOT load the model in the constructor anymore. 
+    // It will be triggered by LevelScene.js calling loadCharacter()
 
     // Enemies Array
     this.enemies = [];
@@ -146,9 +111,13 @@ class ThreeEngine {
   setRunning(state) {
     if (this.isRunning !== state) {
       this.isRunning = state;
-      // Switch animation
+      // Switch animation if mixer is ready
       if (this.mixer) {
-        const nextAction = state ? this.actions['Running'] || this.actions['Walking'] : this.actions['Idle'];
+        // Handle custom GLB animations (often named differently, e.g. "Run", "Walk", "Running")
+        const nextAction = state ? 
+          (this.actions['Running'] || this.actions['Run'] || this.actions['Walking']) : 
+          (this.actions['Idle'] || this.actions['Stand']);
+          
         if (nextAction && this.activeAction !== nextAction) {
           nextAction.reset();
           nextAction.play();
@@ -156,6 +125,68 @@ class ThreeEngine {
           this.activeAction = nextAction;
         }
       }
+    }
+  }
+
+  loadCharacter(textureKey) {
+    let targetFile = 'assets/models/RobotExpressive.glb';
+    
+    // Map Phaser keys to expected GLB filenames
+    if (textureKey === 'hero_red') targetFile = 'assets/models/spiderman.glb';
+    else if (textureKey === 'jedi_kid') targetFile = 'assets/models/anakin.glb';
+    else if (textureKey === 'hero_black') targetFile = 'assets/models/venom.glb';
+    else if (textureKey === 'mandalorian') targetFile = 'assets/models/mandalorian.glb';
+
+    // Attempt to load the specific character. If it 404s, fallback to Robot.
+    this.loader.load(
+      targetFile,
+      (gltf) => this._setupModel(gltf, textureKey),
+      undefined,
+      (err) => {
+        console.warn(`[ThreeEngine] Custom model ${targetFile} not found. Falling back to placeholder.`);
+        this.loader.load('assets/models/RobotExpressive.glb', (fbGltf) => this._setupModel(fbGltf, textureKey));
+      }
+    );
+  }
+
+  _setupModel(gltf, textureKey) {
+    // Remove old model if it exists
+    if (this.playerModel) {
+      this.player.remove(this.playerModel);
+      this.playerModel = null;
+    }
+
+    const model = gltf.scene;
+    // Scale and position (adjust if custom models are huge)
+    model.scale.set(0.3, 0.3, 0.3);
+    model.rotation.y = Math.PI; // Face away from camera
+    
+    model.traverse((child) => {
+      if (child.isMesh) {
+        child.castShadow = true;
+        child.userData.originalMat = child.material;
+      }
+    });
+    
+    this.player.add(model);
+    this.playerModel = model;
+
+    // Setup Animations
+    this.mixer = new THREE.AnimationMixer(model);
+    this.actions = {};
+    
+    gltf.animations.forEach((clip) => {
+      this.actions[clip.name] = this.mixer.clipAction(clip);
+    });
+
+    // Determine starting state
+    const startAnim = this.isRunning ? 
+      (this.actions['Running'] || this.actions['Run'] || this.actions['Walking']) : 
+      (this.actions['Idle'] || this.actions['Stand']);
+
+    if (startAnim) {
+      this.activeAction = startAnim;
+      this.activeAction.play();
     }
   }
 
@@ -198,7 +229,7 @@ class ThreeEngine {
       }
     }
 
-    // Change color based on active character
+    // Change color based on active character (if using placeholder)
     let colorHex = 0xe63946;
     if (textureKey === 'jedi_kid') {
       colorHex = 0x22d3ee; // Cyan
@@ -206,16 +237,14 @@ class ThreeEngine {
       colorHex = 0x7c3aed; // Purple/Black
     }
     
-    this.coreLight.color.setHex(colorHex);
-
-    if (this.playerModel) {
+    // Only apply the color tint if we are using the fallback robot! 
+    // Real models should keep their native TrustGen textures.
+    if (this.playerModel && this.playerModel.children.length > 0 && this.playerModel.children[0].name.includes('Robot')) {
       this.playerModel.traverse((child) => {
         if (child.isMesh && child.material) {
-          // If the material has a color property, tint it slightly to match the persona
           if (!child.userData.originalColor) {
             child.userData.originalColor = child.material.color.clone();
           }
-          // Blend original color with persona color
           const c = new THREE.Color(colorHex);
           child.material.color.copy(child.userData.originalColor).lerp(c, 0.5);
         }

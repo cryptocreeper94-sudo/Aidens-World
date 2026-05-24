@@ -122,6 +122,10 @@ class LevelScene extends Phaser.Scene {
     this.primaryChar = save.selectedChar;
     this.secondaryChar = 'jedi_kid';
 
+    if (window.ThreeInstance) {
+      window.ThreeInstance.loadCharacter(this.primaryChar);
+    }
+
     if (this.textures.exists(charKey)) {
       this.player = this.add.image(this.playerX, this.playerY, charKey);
       this.player.setDisplaySize(120, 120);
@@ -330,8 +334,13 @@ class LevelScene extends Phaser.Scene {
     this.cameras.main.flash(200, 255, 255, 255);
     const currentChar = this.player.texture.key;
     const nextChar = currentChar === this.primaryChar ? this.secondaryChar : this.primaryChar;
+    
     if (this.textures.exists(nextChar)) {
       this.player.setTexture(nextChar);
+    }
+
+    if (window.ThreeInstance) {
+      window.ThreeInstance.loadCharacter(nextChar);
     }
   }
 
