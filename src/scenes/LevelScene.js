@@ -1,5 +1,5 @@
 /* ========================================
-   LEVEL SCENE — Auto-runner gameplay
+   LEVEL SCENE — Geometry Dash Mechanics
    ======================================== */
 
 class LevelScene extends Phaser.Scene {
@@ -8,958 +8,498 @@ class LevelScene extends Phaser.Scene {
   }
 
   init(data) {
-    this.worldId = data.worldId;
-    this.levelId = data.levelId;
-
-    // Find world and level data
-    this.worldData = WORLDS.find(w => w.id === this.worldId);
-    this.levelData = this.worldData.levels.find(l => l.id === this.levelId);
+    let saveStr = localStorage.getItem('ChronoverseSave');
+    this.levelNum = 1;
+    if (saveStr) {
+      try { this.levelNum = JSON.parse(saveStr).maxLevelUnlocked || 1; } catch (e) {}
+    }
+    this.config = LevelData.generateConfig(this.levelNum);
+    this.activeHero = localStorage.getItem('ChronoverseActiveHero') || 'spider_hero';
   }
 
   create() {
     const { width, height } = this.cameras.main;
-    const save = SaveSystem.load();
 
-    this.cameras.main.fadeIn(300);
-
-    // Init audio on first touch
+    // High-gravity Arcade physics for snappy GD feel
+    this.physics.world.gravity.y = 4000; 
     this.input.once('pointerdown', () => SoundFX.init());
-    SoundFX.init();
 
-    // Initialize 3D Engine
-    if (!window.ThreeInstance) {
-      window.ThreeInstance = new ThreeEngine();
-    }
-    window.ThreeInstance.setRunning(false);
-
-    this.score = 0;
-    this.shardsCollected = 0;
-    this.health = 3;
-    this.maxHealth = 3;
     this.isAlive = true;
-    this.gameSpeed = 3;
+    this.isRunning = false;
+    this.gameSpeed = this.config.gameSpeed;
     this.distanceTraveled = 0;
-    this.levelLength = (this.levelData.shards || 20) * 150; // Much longer levels
-    this.hitCooldown = false;
-    this.powerups = [];
-    this.powerupTimer = 0;
-    this.hasShield = false;
-    this.speedBoostTimer = 0;
+    this.shardsCollected = 0;
+    this.seed = this.levelNum * 12345; // Seed RNG for predictable layouts
 
-    this.isSwinging = false;
-    this.swingTimer = 0;
-    this.anchors = [];
-    this.swingWeb = this.add.rectangle(0, 0, 4, 100, 0xffffff).setOrigin(0.5, 0).setAlpha(0).setDepth(40);
-
-    // ── PARALLAX BACKGROUND ──
-    const bgKey = this.worldData.bg;
-    if (this.textures.exists(bgKey)) {
-      this.bg1 = this.add.tileSprite(width / 2, height / 2, width, height, bgKey);
-      this.bg1.setAlpha(0.5);
-    } else {
-      // Procedural background
-      const worldColor = Phaser.Display.Color.HexStringToColor(this.worldData.color);
-      const bgRect = this.add.rectangle(width / 2, height / 2, width, height,
-        Phaser.Display.Color.GetColor(
-          Math.floor(worldColor.red * 0.15),
-          Math.floor(worldColor.green * 0.15),
-          Math.floor(worldColor.blue * 0.15)
-        ));
-      bgRect.setAlpha(0); // Hide for 3D
-
-      // Starfield for space worlds
-      for (let i = 0; i < 50; i++) {
-        const star = this.add.circle(
-          Math.random() * width, Math.random() * height,
-          Math.random() * 2, 0xffffff, Math.random() * 0.5
-        );
-        star.setAlpha(0); // Hide for 3D
-        this.tweens.add({ targets: star, alpha: { from: star.alpha, to: 0 }, yoyo: true, repeat: -1, duration: 1000 + Math.random() * 2000 });
-      }
-    }
-
-    // ── GROUND ──
-    const groundY = height - 60;
-    this.groundY = groundY;
-    const groundColor = Phaser.Display.Color.HexStringToColor(this.worldData.color).color;
-
-    // Visual ground with platform look
-    const g1 = this.add.rectangle(width / 2, groundY + 30, width, 60, 0x111122, 0.9);
-    const g2 = this.add.rectangle(width / 2, groundY, width, 4, groundColor, 0.7);
-    const g3 = this.add.rectangle(width / 2, groundY + 2, width, 2, 0xffffff, 0.1);
-    g1.setAlpha(0); g2.setAlpha(0); g3.setAlpha(0); // Hide for 3D
-
-    // Scrolling ground grid lines
-    this.groundScroll = this.add.tileSprite(width / 2, groundY + 30, width, 60, '__DEFAULT');
-    this.groundScroll.setVisible(false);
-
-    // Ground hash marks for motion feel
-    for (let gx = 0; gx < width; gx += 40) {
-      this.add.rectangle(gx, groundY + 30, 1, 60, 0xffffff, 0.03);
-    }
-
-    // ── MOBILE TOUCH ZONES ──
-    // Subtle zone divider
-    const zoneY = height * 0.6;
-    this.add.rectangle(width / 2, zoneY, width, 1, 0xffffff, 0.04);
-
-    // Zone labels (fade out after 3 seconds)
-    const jumpHint = this.add.text(width - 60, zoneY - 30, '👆 JUMP', {
-      fontFamily: 'Arial', fontSize: '10px', color: '#ffffff',
-    }).setOrigin(0.5).setAlpha(0.3).setDepth(50);
-    const attackHint = this.add.text(width - 60, zoneY + 20, '👇 WEB!', {
-      fontFamily: 'Arial', fontSize: '10px', color: '#ffffff',
-    }).setOrigin(0.5).setAlpha(0.3).setDepth(50);
-    this.tweens.add({ targets: [jumpHint, attackHint], alpha: 0, delay: 3000, duration: 1000 });
-
-    // ── PLAYER ──
-    const charKey = save.selectedChar;
-    this.playerX = 100;
-    this.playerY = groundY - 50;
-    this.playerVY = 0;
-    this.isJumping = false;
-    this.isDucking = false;
-    this.primaryChar = save.selectedChar;
-    this.secondaryChar = 'jedi_kid';
-
-    if (window.ThreeInstance) {
-      window.ThreeInstance.loadCharacter(this.primaryChar);
-    }
-
-    if (this.textures.exists(charKey)) {
-      this.player = this.add.image(this.playerX, this.playerY, charKey);
-      this.player.setDisplaySize(120, 120);
-    } else {
-      // Fallback colored rectangle with emoji
-      this.player = this.add.rectangle(this.playerX, this.playerY, 40, 48, 0xe63946);
-      this.player.setStrokeStyle(2, 0xffffff, 0.5);
-    }
-    // Hide 2D player since Three.js renders the 3D version
-    this.player.setAlpha(0);
-
-    // Player glow effect
-    this.playerGlow = this.add.circle(this.playerX, this.playerY, 30, groundColor, 0);
-    this.tweens.add({ targets: this.playerGlow, alpha: { from: 0, to: 0.15 }, yoyo: true, repeat: -1, duration: 1000 });
-
-    // ── ENEMIES ──
-    this.enemies = [];
-    this.enemySpawnTimer = 0;
-    this.enemySpawnRate = this.levelData.isTutorial ? 180 : 70; // frames between spawns
-
-    // ── SHARDS (collectibles) ──
-    this.shards = [];
-    this.shardSpawnTimer = 0;
-
-    // ── ATTACK EFFECT ──
-    this.attackActive = false;
-    this.attackCooldown = 0;
-
-    // Web/attack line visual
-    this.attackLine = this.add.rectangle(this.playerX + 50, this.playerY, 80, 4, 0xffffff);
-    this.attackLine.setAlpha(0);
-
-    // ── HUD ──
-    // HUD background strip for readability
-    this.add.rectangle(width / 2, 28, width, 56, 0x000000, 0.4).setDepth(99);
-
-    // Hearts
-    this.heartsText = this.add.text(16, 16, '', {
-      fontSize: '22px',
-    }).setDepth(100);
-    this.updateHearts();
-
-    // Score / Shards
-    this.scoreText = this.add.text(width - 16, 16, `💎 0`, {
-      fontFamily: 'Arial Black',
-      fontSize: '16px',
-      color: '#06b6d4',
-    }).setOrigin(1, 0).setDepth(100);
-
-    // Level name
-    this.add.text(width / 2, 16, `${this.worldData.icon} ${this.levelData.name}`, {
-      fontFamily: 'Arial Black',
-      fontSize: '14px',
-      color: '#ffffff',
-    }).setOrigin(0.5, 0).setDepth(100);
-
-    // Progress bar (level completion)
-    const barWidth = 200;
-    this.progressBg = this.add.rectangle(width / 2, 42, barWidth, 6, 0x333333).setDepth(100);
-    this.progressFill = this.add.rectangle(width / 2 - barWidth / 2, 42, 1, 6, groundColor).setOrigin(0, 0.5).setDepth(100);
-
-    // Back button
-    const backBtn = this.add.text(16, height - 30, '← QUIT', {
-      fontFamily: 'Arial',
-      fontSize: '12px',
-      color: '#666666',
-      backgroundColor: '#111111',
-      padding: { x: 8, y: 4 },
-    }).setDepth(100).setInteractive({ useHandCursor: true });
-    backBtn.on('pointerdown', () => this.scene.start('HubScene'));
-
-    // Tap top = jump, Bottom left = duck, Bottom right = attack
-    this.input.on('pointerdown', (pointer) => {
-      if (!this.isAlive) return;
-      if (pointer.y < height * 0.6) {
-        this.jump();
-      } else {
-        if (pointer.x < width / 2) {
-          this.duck(true);
-        } else {
-          this.attack();
-        }
-      }
-    });
-
-    this.input.on('pointerup', () => {
-      if (this.isDucking) this.duck(false);
-    });
-
-    // Tag-Team Button
-    this.tagBtn = this.add.text(width / 2, 70, '🔄 TAG TEAM', {
-      fontFamily: 'Arial Black', fontSize: '12px', color: '#ffffff', backgroundColor: '#e63946', padding: { x: 8, y: 4 }, borderRadius: 4
-    }).setOrigin(0.5).setDepth(100).setInteractive({ useHandCursor: true });
-    this.tagBtn.on('pointerdown', () => this.tagSwap());
-
-    // ── TUTORIAL OVERLAY ──
-    if (this.levelData.isTutorial) {
-      this.showTutorial();
-    }
-
-    // ── BOSS MODE ──
-    this.isBossLevel = !!this.levelData.isBoss;
-    this.boss = null;
-    this.bossHP = 0;
-    this.bossMaxHP = 0;
-    this.bossPhase = 0;
-    this.bossAttackTimer = 0;
-
-    if (this.isBossLevel) {
-      this.levelLength = 999999; // Boss levels don't end by distance
-      const bossNames = { doc_ock: 'DOC OCK 🐙', goblin: 'GREEN GOBLIN 👺', dark_warrior: 'DARTH VENOM 😈', rift_king: 'RIFT KING 💀' };
-      const bossHP = { doc_ock: 8, goblin: 10, dark_warrior: 12, rift_king: 15 };
-      const bossKey = this.levelData.boss || 'doc_ock';
-
-      this.bossMaxHP = bossHP[bossKey] || 8;
-      this.bossHP = this.bossMaxHP;
-
-      // Boss sprite (large enemy)
-      const bx = width - 120;
-      const by = this.groundY - 50;
-      this.boss = this.add.circle(bx, by, 40, 0xff2222, 0.6);
-      this.boss.setStrokeStyle(3, 0xff4444);
-
-      const bossEmoji = bossKey === 'doc_ock' ? '🐙' : bossKey === 'goblin' ? '👺' : bossKey === 'dark_warrior' ? '😈' : '💀';
-      this.bossLabel = this.add.text(bx, by, bossEmoji, { fontSize: '40px' }).setOrigin(0.5);
-
-      // Boss name
-      const bossName = bossNames[bossKey] || 'BOSS';
-      this.add.text(width / 2, 56, `⚔️ ${bossName}`, {
-        fontFamily: 'Arial Black', fontSize: '13px', color: '#ff4444',
-        stroke: '#000000', strokeThickness: 2,
-      }).setOrigin(0.5).setDepth(100);
-
-      // Boss HP bar
-      this.bossHPBg = this.add.rectangle(width - 120, 20, 150, 10, 0x333333).setDepth(100);
-      this.bossHPFill = this.add.rectangle(width - 120, 20, 150, 10, 0xff2222).setDepth(100);
-
-      SoundFX.play('boss');
-    }
-
-    // ── GAME LOOP ──
-    this.isRunning = !this.levelData.isTutorial;
-  }
-
-  showTutorial() {
-    const { width, height } = this.cameras.main;
-    const overlay = this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.8).setDepth(200);
-
-    const title = this.add.text(width / 2, height / 2 - 80, `Ready, ${HERO_NAME}? 🕸️`, {
-      fontFamily: 'Arial Black',
-      fontSize: '28px',
-      color: '#e63946',
-    }).setOrigin(0.5).setDepth(201);
-
-    const instTop = this.add.text(width / 2, height / 2 - 20, '👆 TAP TOP = JUMP (Double-Tap to Swing!)', {
-      fontFamily: 'Arial Black',
-      fontSize: '18px',
-      color: '#22d3ee',
-    }).setOrigin(0.5).setDepth(201);
-
-    const instBot = this.add.text(width / 2, height / 2 + 20, '👇 LEFT = DUCK | RIGHT = ATTACK', {
-      fontFamily: 'Arial Black',
-      fontSize: '16px',
-      color: '#e63946',
-    }).setOrigin(0.5).setDepth(201);
-
-    const goBtn = this.add.rectangle(width / 2, height / 2 + 80, 200, 44, 0xe63946).setDepth(201).setInteractive({ useHandCursor: true });
-    const goText = this.add.text(width / 2, height / 2 + 80, 'GO WEB GO! 🕸️', {
-      fontFamily: 'Arial Black',
-      fontSize: '18px',
-      color: '#ffffff',
-    }).setOrigin(0.5).setDepth(202);
-
-    goBtn.on('pointerdown', () => {
-      overlay.destroy(); title.destroy(); instTop.destroy(); instBot.destroy(); goBtn.destroy(); goText.destroy();
-      this.isRunning = true;
-      if (window.ThreeInstance) window.ThreeInstance.setRunning(true);
-    });
-  }
-
-  jump() {
-    if (!this.isJumping && !this.isSwinging) {
-      this.playerVY = -12;
-      this.isJumping = true;
-      SoundFX.play('jump');
-    } else if (this.isJumping && !this.isSwinging) {
-      // Initiate Web Swing!
-      this.isSwinging = true;
-      this.swingTimer = 50; // frames to swing
-      this.playerVY = -5; // upward boost
-      SoundFX.play('web');
-      this.swingWeb.setAlpha(1);
-
-      // Find nearest anchor or spawn a temporary one
-      let anchor = this.anchors.find(a => a.x > this.playerX && a.x < this.playerX + 300);
-      if (!anchor) {
-        anchor = this.add.circle(this.playerX + 150, 40, 8, 0xaaaaaa);
-        this.anchors.push(anchor);
-      }
-      this.currentAnchor = anchor;
-    }
-  }
-
-  tagSwap() {
-    SoundFX.play('jump');
-    this.cameras.main.flash(200, 255, 255, 255);
-    const currentChar = this.player.texture.key;
-    const nextChar = currentChar === this.primaryChar ? this.secondaryChar : this.primaryChar;
+    // Worlds Collide Background
+    this.activeWorld = this.config.worlds[0];
+    this.cameras.main.setBackgroundColor(this.activeWorld.color);
     
-    if (this.textures.exists(nextChar)) {
-      this.player.setTexture(nextChar);
-    }
+    // Scrolling visual background instead of blank grid
+    this.bg = this.add.tileSprite(width/2, height/2, width, height, this.activeWorld.bg);
+    this.bg.setAlpha(0.6);
 
-    if (window.ThreeInstance) {
-      window.ThreeInstance.loadCharacter(nextChar);
-    }
+    // Player
+    this.player = this.physics.add.sprite(150, height / 2, this.activeHero);
+    this.player.setDisplaySize(80, 80);
+    // Removed setSize so it inherits the tight auto-cropped bounds
+    this.player.setCollideWorldBounds(true);
+
+    // Groups
+    this.blocks = this.physics.add.group({ immovable: true, allowGravity: false });
+    this.spikes = this.physics.add.group({ immovable: true, allowGravity: false });
+    this.portals = this.physics.add.group({ immovable: true, allowGravity: false });
+    this.shards = this.physics.add.group({ immovable: true, allowGravity: false });
+
+    this.projectiles = this.physics.add.group({ allowGravity: false });
+
+    // Generate procedural level
+    this.buildLevel();
+
+    // Floor
+    this.floor = this.add.rectangle(width/2, height, width*100, 40, 0x22d3ee).setDepth(10);
+    this.physics.add.existing(this.floor, true);
+
+    // Absolute Death Wall to prevent clipping through towers when crushed
+    this.deathWall = this.add.rectangle(-10, height/2, 20, height, 0xff0000, 0);
+    this.physics.add.existing(this.deathWall, true);
+    this.physics.add.overlap(this.player, this.deathWall, this.die, null, this);
+
+    // Colliders
+    this.physics.add.collider(this.player, this.floor);
+    this.physics.add.collider(this.player, this.blocks);
+    this.physics.add.overlap(this.player, this.spikes, this.die, null, this);
+    this.physics.add.overlap(this.player, this.portals, this.hitPortal, null, this);
+    this.physics.add.overlap(this.player, this.shards, this.collectShard, null, this);
+    this.physics.add.overlap(this.projectiles, this.spikes, this.hitEnemyWithProjectile, null, this);
+
+    // On-Screen Controls (Unified Dual-Action Pill)
+    const uiY = height - 40;
+    
+    // Left Half (Attack - Red)
+    const attackGraphics = this.add.graphics({ fillStyle: { color: 0xe63946, alpha: 0.8 } }).setDepth(100);
+    attackGraphics.fillRoundedRect(width/2 - 140, uiY - 25, 140, 50, { tl: 25, bl: 25, tr: 0, br: 0 });
+    const attackZone = this.add.zone(width/2 - 70, uiY, 140, 50).setInteractive().setDepth(101);
+    const attackText = this.add.text(width/2 - 70, uiY, 'ATTACK', { fontFamily: 'Arial Black', fontSize: '18px', color: '#fff' }).setOrigin(0.5).setDepth(102);
+
+    // Right Half (Jump - Green)
+    const jumpGraphics = this.add.graphics({ fillStyle: { color: 0x10b981, alpha: 0.8 } }).setDepth(100);
+    jumpGraphics.fillRoundedRect(width/2, uiY - 25, 140, 50, { tl: 0, bl: 0, tr: 25, br: 25 });
+    const jumpZone = this.add.zone(width/2 + 70, uiY, 140, 50).setInteractive().setDepth(101);
+    const jumpText = this.add.text(width/2 + 70, uiY, 'JUMP', { fontFamily: 'Arial Black', fontSize: '18px', color: '#fff' }).setOrigin(0.5).setDepth(102);
+
+    // Outline for the entire pill
+    const pillOutline = this.add.graphics({ lineStyle: { width: 4, color: 0xffffff } }).setDepth(103);
+    pillOutline.strokeRoundedRect(width/2 - 140, uiY - 25, 280, 50, 25);
+    pillOutline.lineBetween(width/2, uiY - 25, width/2, uiY + 25); // Center divider
+
+    const doJump = () => {
+      if (!this.isRunning && this.isAlive) { 
+        this.isRunning = true; 
+        this.player.body.allowGravity = true;
+        return; 
+      }
+      if (this.player.body.touching.down || this.player.body.onFloor()) {
+        this.player.setVelocityY(-1200); // Sharp GD jump
+        SoundFX.play('jump');
+      }
+    };
+
+    const doAttack = () => {
+      if (!this.isRunning || !this.isAlive) return;
+      this.fireProjectile();
+    };
+
+    jumpZone.on('pointerdown', doJump);
+    attackZone.on('pointerdown', doAttack);
+    this.input.keyboard.on('keydown-SPACE', doJump);
+    this.input.keyboard.on('keydown-F', doAttack);
+
+    // UI
+    this.scoreText = this.add.text(width - 20, 20, '💎 0', { fontFamily: 'Arial Black', fontSize: '24px', color: '#06b6d4' }).setOrigin(1, 0).setDepth(100);
+    this.levelText = this.add.text(20, 20, `LEVEL ${this.levelNum}`, { fontFamily: 'Arial Black', fontSize: '24px', color: '#ffffff' }).setDepth(100);
+    
+    // Progress bar
+    this.progressBarBg = this.add.rectangle(width/2, 30, 300, 10, 0x000000).setDepth(100);
+    this.progressBar = this.add.rectangle(width/2 - 150, 30, 0, 10, 0x22d3ee).setOrigin(0, 0.5).setDepth(101);
+
+    this.startText = this.add.text(width/2, height/2, 'TAP JUMP TO START!', { fontFamily: 'Arial Black', fontSize: '32px', color: '#e63946', stroke: '#fff', strokeThickness: 4 }).setOrigin(0.5);
+    this.tweens.add({ targets: this.startText, alpha: 0.5, yoyo: true, repeat: -1, duration: 500 });
+
+    // Quit Button
+    const quitBtn = this.add.text(width - 20, 60, '❌ QUIT', { fontFamily: 'Arial Black', fontSize: '18px', color: '#ff4444' }).setOrigin(1, 0).setDepth(100);
+    quitBtn.setInteractive({ useHandCursor: true });
+    quitBtn.on('pointerdown', () => this.exitToHub());
   }
 
-  duck(isDown) {
-    if (this.isJumping || this.isSwinging) return;
-    this.isDucking = isDown;
-    if (isDown) {
-      this.player.setDisplaySize(120, 70);
-      this.playerY = this.groundY - 25;
-    } else {
-      this.player.setDisplaySize(120, 120);
-      this.playerY = this.groundY - 50;
-    }
-  }
-
-  attack() {
-    if (this.attackCooldown > 0) return;
-    this.attackActive = true;
-    this.attackCooldown = 20;
-    const isJedi = this.player.texture.key.includes('jedi');
-    SoundFX.play(isJedi ? 'saber' : 'web');
-
-    // Show attack visual
-    this.attackLine.setPosition(this.playerX + 60, this.player.y);
-    this.attackLine.setAlpha(0.8);
-    this.tweens.add({
-      targets: this.attackLine,
-      scaleX: { from: 0.3, to: 1.5 },
-      alpha: { from: 0.8, to: 0 },
-      duration: 200,
-      onComplete: () => { this.attackActive = false; },
+  exitToHub() {
+    this.isAlive = false;
+    this.isRunning = false;
+    document.getElementById('game-container').style.display = 'none';
+    const hub = document.getElementById('game-hub');
+    hub.style.display = 'block';
+    setTimeout(() => hub.style.opacity = '1', 50);
+    if(window.updateCharacterLocks) window.updateCharacterLocks();
+    if(window.initHeroSelection) window.initHeroSelection();
+    
+    // Destroy game instance to completely reset it for next time
+    this.time.delayedCall(100, () => {
+      this.game.destroy(true);
+      window.game = null;
     });
+  }
 
-    // Check enemy hits
-    this.enemies.forEach((e) => {
-      if (!e.alive) return;
-      const dx = e.sprite.x - this.playerX;
-      const dy = Math.abs(e.sprite.y - this.player.y);
-      if (dx > 0 && dx < 150 && dy < 50) {
-        if (this.isDucking && !isJedi) {
-          this.webThrow(e);
-        } else {
-          this.hitEnemy(e);
+  // Linear Congruential Generator for predictable procedural layouts per level
+  seededRandom(max, min = 0) {
+    this.seed = (this.seed * 9301 + 49297) % 233280;
+    return min + (this.seed / 233280) * (max - min);
+  }
+
+  buildLevel() {
+    const { finishDistance, towerFreq, enemyFreq, portalFreq, shardFreq } = this.config;
+    const startX = 800;
+    const groundY = this.cameras.main.height - 20;
+    const blockSize = 80;
+
+    let currentX = startX;
+    let lastWasTower = false;
+
+    while (currentX < finishDistance) {
+      currentX += blockSize;
+      
+      // Don't spawn objects too close to each other, leave gaps for pacing
+      if (this.seededRandom(1) < 0.3) {
+        lastWasTower = false;
+        continue; 
+      }
+
+      if (this.seededRandom(1) < portalFreq && currentX > (finishDistance * 0.3)) {
+         // Rift Portal (Worlds Collide)
+         const portal = this.portals.create(currentX, groundY - 120, 'rift_portal');
+         portal.setDisplaySize(80, 160);
+         this.tweens.add({ targets: portal, angle: 360, repeat: -1, duration: 4000 });
+         currentX += blockSize * 3; // Leave a massive safe space after portal
+         lastWasTower = false;
+         continue;
+      }
+
+      if (this.seededRandom(1) < towerFreq && !lastWasTower) {
+        // Platform Tower
+        const heightMultiplier = Math.floor(this.seededRandom(3, 1)); // 1 to 2 blocks high
+        const towerHeight = heightMultiplier * blockSize;
+        const tower = this.blocks.create(currentX, groundY - (towerHeight/2), 'sci_fi_tower');
+        tower.setDisplaySize(blockSize, towerHeight);
+        lastWasTower = true;
+        
+        // Spawn enemy or shard on top
+        if (this.seededRandom(1) < enemyFreq) {
+          this.spawnEnemy(currentX, groundY - towerHeight);
+        } else if (this.seededRandom(1) < shardFreq) {
+          this.spawnShard(currentX, groundY - towerHeight - 40);
+        }
+        
+        // Enforce safe landing zone after tower
+        currentX += blockSize * 1.5;
+      } else {
+        lastWasTower = false;
+        // Ground Enemy
+        if (this.seededRandom(1) < enemyFreq) {
+          this.spawnEnemy(currentX, groundY);
+          // Enforce safe jump zone after enemy
+          currentX += blockSize * 1.5;
+        } else if (this.seededRandom(1) < shardFreq) {
+          this.spawnShard(currentX, groundY - 40);
         }
       }
-    });
-
-    // Check boss hit
-    if (this.isBossLevel && this.boss && this.bossHP > 0) {
-      const dx = this.boss.x - this.playerX;
-      const dy = Math.abs(this.boss.y - this.player.y);
-      if (dx > 0 && dx < 180 && dy < 60) {
-        this.bossHP--;
-        SoundFX.play('hit');
-        this.bossHPFill.width = 150 * (this.bossHP / this.bossMaxHP);
-
-        // Flash boss
-        this.tweens.add({ targets: [this.boss, this.bossLabel], alpha: 0.2, yoyo: true, duration: 100, repeat: 2 });
-
-        // Phase transitions
-        const phasePct = this.bossHP / this.bossMaxHP;
-        if (phasePct <= 0.3 && this.bossPhase < 2) {
-          this.bossPhase = 2;
-          this.boss.setStrokeStyle(4, 0xff0000);
-        } else if (phasePct <= 0.6 && this.bossPhase < 1) {
-          this.bossPhase = 1;
-          this.boss.setFillStyle(0xff4400, 0.7);
-        }
-
-        // Boss defeated
-        if (this.bossHP <= 0) {
-          this.boss.destroy();
-          this.bossLabel.destroy();
-          this.bossHPFill.destroy();
-          this.bossHPBg.destroy();
-          // Burst of particles
-          for (let i = 0; i < 20; i++) {
-            const p = this.add.circle(this.boss.x || 600, this.boss.y || 300, 4, 0xfbbf24);
-            this.tweens.add({ targets: p, x: p.x + (Math.random()-0.5)*200, y: p.y + (Math.random()-0.5)*200, alpha: 0, duration: 600, onComplete: () => p.destroy() });
-          }
-          SoundFX.play('levelup');
-          this.shardsCollected += this.levelData.shards || 40;
-          this.scoreText.setText(`💎 ${this.shardsCollected}`);
-          this.time.delayedCall(1000, () => this.completeLevel());
-        }
-      }
     }
+
+    // Finish Line Portal
+    const finishLine = this.portals.create(finishDistance + 500, groundY - 150, 'rift_portal');
+    finishLine.setDisplaySize(150, 300);
+    finishLine.setTint(0x10b981); // Emerald green finish line
+    finishLine.isFinishLine = true;
+    this.tweens.add({ targets: finishLine, angle: 360, repeat: -1, duration: 2000 });
   }
 
-  hitEnemy(enemy) {
-    enemy.alive = false;
-    this.score += 10;
-    this.shardsCollected += 2;
+  spawnEnemy(x, y) {
+    const enemyKey = this.activeWorld.enemies[Math.floor(this.seededRandom(this.activeWorld.enemies.length))];
+    const enemy = this.spikes.create(x, y - 40, enemyKey);
+    enemy.setDisplaySize(80, 80);
+    enemy.setFlipX(true); // Always face left toward the right-running player!
+  }
+
+  spawnShard(x, y) {
+    const shard = this.add.text(x, y, '💎', { fontSize: '32px' }).setOrigin(0.5);
+    this.tweens.add({ targets: shard, y: y - 10, yoyo: true, repeat: -1, duration: 500 });
+    this.shards.add(shard);
+  }
+
+  hitPortal(player, portal) {
+    if (portal.isFinishLine) return; // Finish line logic handled in update()
+    
+    portal.destroy();
+    SoundFX.play('levelup');
+    this.cameras.main.flash(300, 255, 255, 255);
+    
+    // Swap World Color (Worlds Collide feature)
+    const randomWorld = this.config.worlds[Math.floor(this.seededRandom(this.config.worlds.length))];
+    this.activeWorld = randomWorld; // Update the active world so new enemies map correctly!
+    this.cameras.main.setBackgroundColor(randomWorld.color);
+    this.bg.setTexture(randomWorld.bg);
+    this.floor.fillColor = Phaser.Display.Color.HexStringToColor(randomWorld.color).color;
+  }
+
+  collectShard(player, shard) {
+    shard.destroy();
+    this.shardsCollected++;
     this.scoreText.setText(`💎 ${this.shardsCollected}`);
     SoundFX.play('hit');
-
-    if (this.health < this.maxHealth && Math.random() < 0.3) {
-      this.spawnPowerup(enemy.sprite.x, enemy.sprite.y, 'heart');
-    }
-
-    this.explodeEnemy(enemy);
   }
 
-  webThrow(enemy) {
-    enemy.alive = false;
-    this.score += 20;
-    this.shardsCollected += 3;
+  fireProjectile() {
+    // Cooldown check to prevent spamming
+    if (this.lastFireTime && this.time.now - this.lastFireTime < 300) return;
+    this.lastFireTime = this.time.now;
+
+    SoundFX.play('jump'); // Play attack sound
+
+    let color = 0xffffff;
+    let isLaser = false;
+
+    if (this.activeHero === 'spider_hero') color = 0xffffff;
+    else if (this.activeHero === 'telekinetic_girl') color = 0x3b82f6; // Blue psi orb
+    else if (this.activeHero === 'super_girl') { color = 0xfacc15; isLaser = true; } // Yellow laser
+    else if (this.activeHero === 'mandalorian') { color = 0xef4444; isLaser = true; } // Red blaster
+    else if (this.activeHero === 'jedi_kid') { color = 0x22c55e; isLaser = true; } // Green saber
+    else if (this.activeHero === 'iron_kid') { color = 0x06b6d4; isLaser = true; } // Cyan repulsor
+    else if (this.activeHero === 'alien_brute') color = 0x000000; // Black symbiote glob
+
+    const w = isLaser ? 50 : 20;
+    const h = isLaser ? 8 : 20;
+
+    const proj = this.add.rectangle(this.player.x + 40, this.player.y, w, h, color).setDepth(50);
+    if (!isLaser) {
+        proj.isOrb = true;
+        this.tweens.add({ targets: proj, angle: 360, repeat: -1, duration: 500 });
+    }
+    
+    this.physics.add.existing(proj);
+    this.projectiles.add(proj);
+    
+    proj.body.setVelocityX(1400); // Shoot fast right
+  }
+
+  hitEnemyWithProjectile(proj, enemy) {
+    proj.destroy();
+    enemy.destroy();
+    SoundFX.play('hit');
+    this.cameras.main.shake(100, 0.01);
+
+    // Particles explosion
+    for (let i = 0; i < 15; i++) {
+      const p = this.add.rectangle(enemy.x, enemy.y, 8, 8, 0xffa500);
+      this.physics.add.existing(p);
+      p.body.setVelocity((Math.random()-0.5)*800, (Math.random()-0.5)*800);
+      this.tweens.add({ targets: p, alpha: 0, duration: 500, onComplete: () => p.destroy() });
+    }
+
+    // Bonus shards for defeating an enemy!
+    this.shardsCollected += 2;
     this.scoreText.setText(`💎 ${this.shardsCollected}`);
-    SoundFX.play('web');
     
-    // Draw web line to enemy
-    const web = this.add.line(0, 0, this.playerX, this.player.y, enemy.sprite.x, enemy.sprite.y, 0xffffff).setOrigin(0).setDepth(90);
-    web.setLineWidth(3);
-    
-    // Animate enemy spinning overhead and thrown backwards
-    this.tweens.add({
-      targets: enemy.sprite,
-      x: this.playerX - 250,
-      y: this.player.y - 150,
-      angle: -360,
-      duration: 400,
-      ease: 'Quad.easeOut',
-      onUpdate: () => {
-        web.setTo(this.playerX, this.player.y, enemy.sprite.x, enemy.sprite.y);
-        if (enemy.label) enemy.label.setPosition(enemy.sprite.x, enemy.sprite.y);
-      },
-      onComplete: () => {
-        web.destroy();
-        this.explodeEnemy(enemy);
-      }
-    });
-  }
-
-  explodeEnemy(enemy) {
-    if (window.ThreeInstance && enemy.id) {
-      window.ThreeInstance.removeEnemy(enemy.id);
-    }
-
-    // Burst of particles
-    for (let i = 0; i < 12; i++) {
-      const p = this.add.circle(enemy.sprite.x, enemy.sprite.y, 4, 0xffffff);
-      this.tweens.add({
-        targets: p,
-        x: p.x + (Math.random() - 0.5) * 150,
-        y: p.y + (Math.random() - 0.5) * 150,
-        alpha: 0,
-        duration: 400,
-        onComplete: () => p.destroy(),
-      });
-    }
-
-    // Dissolve / explode animation
-    this.tweens.add({
-      targets: enemy.sprite,
-      scaleX: 2.5,
-      scaleY: 2.5,
-      alpha: 0,
-      angle: 180,
-      duration: 300,
-      onComplete: () => {
-        if (enemy.sprite) enemy.sprite.destroy();
-      }
-    });
-
-    if (enemy.label) {
-      this.tweens.add({
-        targets: enemy.label,
-        y: enemy.label.y - 50,
-        alpha: 0,
-        duration: 300,
-        onComplete: () => enemy.label.destroy(),
-      });
-    }
-  }
-
-  takeDamage() {
-    if (this.hitCooldown || !this.isAlive) return;
-    this.health--;
-    this.updateHearts();
-    this.hitCooldown = true;
-
-    // Shield absorbs hit
-    if (this.hasShield) {
-      this.hasShield = false;
-      this.health++;
-      this.updateHearts();
-      if (this.shieldIcon) this.shieldIcon.destroy();
-      SoundFX.play('hit');
-      return;
-    }
-    SoundFX.play('hurt');
-    this.cameras.main.flash(200, 255, 0, 0);
-    this.player.setAlpha(0.4);
-    this.time.delayedCall(1000, () => {
-      this.hitCooldown = false;
-      if (this.player) this.player.setAlpha(1);
-    });
-
-    if (this.health <= 0) {
-      this.die();
-    }
+    const floatText = this.add.text(enemy.x, enemy.y - 40, '+2 💎', { fontFamily: 'Arial Black', fontSize: '20px', color: '#fbbf24', stroke: '#000', strokeThickness: 4 }).setOrigin(0.5);
+    this.tweens.add({ targets: floatText, y: enemy.y - 100, alpha: 0, duration: 1000, onComplete: () => floatText.destroy() });
   }
 
   die() {
+    if (!this.isAlive) return;
     this.isAlive = false;
     this.isRunning = false;
     SoundFX.play('die');
-
-    const { width, height } = this.cameras.main;
-    this.cameras.main.shake(300);
-
-    this.time.delayedCall(800, () => {
-      const overlay = this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.85).setDepth(200);
-      this.add.text(width / 2, height / 2 - 40, 'Try Again, Hero!', {
-        fontFamily: 'Arial Black',
-        fontSize: '24px',
-        color: '#e63946',
-      }).setOrigin(0.5).setDepth(201);
-
-      this.add.text(width / 2, height / 2 + 5, `💎 ${this.shardsCollected} shards collected`, {
-        fontFamily: 'Arial',
-        fontSize: '14px',
-        color: '#aaaaaa',
-      }).setOrigin(0.5).setDepth(201);
-
-      const retryBtn = this.add.rectangle(width / 2, height / 2 + 50, 140, 40, 0xe63946).setDepth(201).setInteractive({ useHandCursor: true });
-      this.add.text(width / 2, height / 2 + 50, 'RETRY', {
-        fontFamily: 'Arial Black',
-        fontSize: '16px',
-        color: '#ffffff',
-      }).setOrigin(0.5).setDepth(202);
-      retryBtn.on('pointerdown', () => this.scene.restart());
-
-      const hubBtn = this.add.rectangle(width / 2, height / 2 + 100, 140, 36, 0x333333).setDepth(201).setInteractive({ useHandCursor: true });
-      this.add.text(width / 2, height / 2 + 100, 'HUB', {
-        fontFamily: 'Arial',
-        fontSize: '14px',
-        color: '#888888',
-      }).setOrigin(0.5).setDepth(202);
-      hubBtn.on('pointerdown', () => this.scene.start('HubScene'));
-    });
+    
+    this.player.setVisible(false);
+    for (let i = 0; i < 20; i++) {
+      const p = this.add.rectangle(this.player.x, this.player.y, 8, 8, 0xffffff);
+      this.physics.add.existing(p);
+      p.body.setVelocity((Math.random()-0.5)*1000, (Math.random()-0.5)*1000);
+      this.tweens.add({ targets: p, alpha: 0, duration: 600, onComplete: () => p.destroy() });
+    }
+    
+    this.cameras.main.shake(200, 0.02);
+    this.time.delayedCall(800, () => this.scene.restart());
   }
 
   completeLevel() {
+    if (!this.isRunning) return;
     this.isRunning = false;
     this.isAlive = false;
-
-    const { width, height } = this.cameras.main;
-
-    // Calculate stars
-    const shardPct = this.shardsCollected / (this.levelData.shards || 20);
-    let stars = 1;
-    if (shardPct >= 0.8) stars = 2;
-    if (shardPct >= 0.8 && this.health >= 3) stars = 3;
-
-    // Save progress
-    SaveSystem.setStars(this.levelId, stars);
-    SaveSystem.addShards(this.shardsCollected);
-
-    // Check if world is complete — unlock next world + character
-    const world = this.worldData;
-    const allLevelsDone = world.levels.every(l => {
-      const s = SaveSystem.load().stars[l.id];
-      return s !== undefined && s > 0;
-    });
-
-    if (allLevelsDone && world.unlockChar) {
-      SaveSystem.unlockChar(world.unlockChar);
-      if (world.id < 4) SaveSystem.unlockWorld(world.id + 1);
-    }
-
-    // Victory screen
-    this.time.delayedCall(400, () => {
-      const overlay = this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.88).setDepth(200);
-
-      SoundFX.play('levelup');
-      this.add.text(width / 2, height / 2 - 70, '🎉 LEVEL COMPLETE!', {
-        fontFamily: 'Arial Black',
-        fontSize: '22px',
-        color: '#fbbf24',
-      }).setOrigin(0.5).setDepth(201);
-
-      // Stars
-      this.add.text(width / 2, height / 2 - 30, '⭐'.repeat(stars) + '☆'.repeat(3 - stars), {
-        fontSize: '32px',
-      }).setOrigin(0.5).setDepth(201);
-
-      this.add.text(width / 2, height / 2 + 10, `💎 ${this.shardsCollected} Rift Shards`, {
-        fontFamily: 'Arial',
-        fontSize: '16px',
-        color: '#06b6d4',
-      }).setOrigin(0.5).setDepth(201);
-
-      if (allLevelsDone && world.unlockChar) {
-        const charData = CHARACTERS[world.unlockChar];
-        this.add.text(width / 2, height / 2 + 40, `🎉 NEW CHARACTER: ${charData.name}!`, {
-          fontFamily: 'Arial Black',
-          fontSize: '14px',
-          color: '#22d3ee',
-        }).setOrigin(0.5).setDepth(201);
-      }
-
-      const nextBtn = this.add.rectangle(width / 2, height / 2 + 85, 160, 40, 0xe63946).setDepth(201).setInteractive({ useHandCursor: true });
-      this.add.text(width / 2, height / 2 + 85, 'CONTINUE', {
-        fontFamily: 'Arial Black',
-        fontSize: '16px',
-        color: '#ffffff',
-      }).setOrigin(0.5).setDepth(202);
-      nextBtn.on('pointerdown', () => {
-        // Check if story should be shown for world completion
-        if (allLevelsDone && STORY_PANELS[world.storyComplete] && !SaveSystem.isStoryViewed(world.storyComplete)) {
-          this.scene.start('StoryScene', {
-            storyId: world.storyComplete,
-            nextScene: 'HubScene',
-          });
-        } else {
-          this.scene.start('HubScene');
-        }
-      });
-    });
-  }
-
-  updateHearts() {
-    let txt = '';
-    for (let i = 0; i < this.maxHealth; i++) {
-      txt += i < this.health ? '❤️' : '🖤';
-    }
-    this.heartsText.setText(txt);
-  }
-
-  spawnEnemy() {
-    const { width } = this.cameras.main;
-    const types = this.levelData.enemies || ['thug'];
-    const type = types[Math.floor(Math.random() * types.length)];
-
-    const enemyKey = `enemy_${type}`;
-    const x = width + 40;
-    const y = this.groundY - 45;
-
-    let sprite;
-    if (this.textures.exists(enemyKey)) {
-      sprite = this.add.image(x, y, enemyKey);
-      sprite.setDisplaySize(100, 100);
-    } else {
-      sprite = this.add.rectangle(x, y, 36, 42, 0xff4444, 0.7);
-      sprite.setStrokeStyle(2, 0xff6666);
-    }
-
-    const emoji = type === 'trooper' ? '🪖' : type === 'symbiote' ? '🕷️' : type === 'drone' ? '🛸' : '👊';
-    const label = this.add.text(x, y, emoji, { fontSize: '20px' }).setOrigin(0.5);
-
-    const enemyId = 'enemy_' + Date.now() + '_' + Math.random();
     
-    this.enemies.push({
-      id: enemyId,
-      sprite: sprite,
-      label: label,
-      type: type,
-      speed: 1 + Math.random() * 2,
-      alive: true,
+    // Disable all physics colliders so the player doesn't get stuck or die while flying off
+    this.physics.world.colliders.destroy();
+    
+    // Blast through finish line
+    this.player.setVelocityX(800); 
+    this.player.setVelocityY(-400);
+    SoundFX.play('levelup');
+    
+    // Save progression
+    let saveStr = localStorage.getItem('ChronoverseSave');
+    let save = saveStr ? JSON.parse(saveStr) : { maxLevelUnlocked: 1, totalStars: 0, totalShards: 0 };
+    save.maxLevelUnlocked = Math.max(save.maxLevelUnlocked, this.levelNum + 1);
+    save.totalShards = (save.totalShards || 0) + this.shardsCollected;
+    localStorage.setItem('ChronoverseSave', JSON.stringify(save));
+
+    this.time.delayedCall(1500, () => {
+        this.showVictoryModal();
+    });
+  }
+
+  showVictoryModal() {
+    const { width, height } = this.cameras.main;
+    
+    // Stop background scroll
+    this.gameSpeed = 0;
+
+    // Dark Overlay
+    const overlay = this.add.rectangle(width/2, height/2, width, height, 0x000000, 0).setDepth(1000);
+    this.tweens.add({ targets: overlay, fillAlpha: 0.8, duration: 500 });
+
+    // Cinematic Panel
+    const panel = this.add.rectangle(width/2, height/2, Math.min(width * 0.8, 600), height * 0.75, 0x1a1c29, 1).setDepth(1001);
+    panel.setStrokeStyle(4, 0x22d3ee);
+    panel.setAlpha(0);
+    panel.y -= 100;
+
+    this.tweens.add({
+      targets: panel,
+      y: height/2,
+      alpha: 1,
+      duration: 600,
+      ease: 'Back.easeOut'
     });
 
-    if (window.ThreeInstance) {
-      window.ThreeInstance.spawnEnemy(enemyId);
-    }
-  }
+    // Character quotes
+    const chars = [
+      { id: 'spider_hero', quote: "Amazing run! My spider-sense didn't even tingle!" },
+      { id: 'bounty_hunter', quote: "This is the way. Outstanding work, kid." },
+      { id: 'telekinetic_girl', quote: "Awesome! You totally crushed that level!" },
+      { id: 'iron_kid', quote: "Armor systems nominal! Your reflexes are off the charts!" },
+      { id: 'jedi_kid', quote: "The Force is strong with you! Ready for the next one?" },
+      { id: 'alien_brute', quote: "WE ARE VENOM... AND WE ARE FAST! GOOD JOB!" }
+    ];
+    let heroData = chars.find(c => c.id === this.activeHero) || chars[0];
 
-  spawnPowerup(x, y, type) {
-    const emoji = type === 'heart' ? '❤️' : type === 'shield' ? '🛡️' : '⚡';
-    const pu = this.add.text(x, y, emoji, { fontSize: '22px' }).setOrigin(0.5);
-    this.tweens.add({ targets: pu, y: pu.y - 8, yoyo: true, repeat: -1, duration: 500 });
-    this.powerups.push({ sprite: pu, type, collected: false });
-  }
+    const portrait = this.add.image(width/2 - 160, height/2 + 20, heroData.id).setDepth(1002);
+    portrait.setDisplaySize(120, 120);
+    portrait.setAlpha(0);
+    this.tweens.add({ targets: portrait, alpha: 1, duration: 800, delay: 300 });
 
-  spawnShard() {
-    const { width } = this.cameras.main;
-    const x = width + 20;
-    const y = this.groundY - 40 - Math.random() * 100;
+    // Speech Bubble
+    const bubble = this.add.graphics({ fillStyle: { color: 0xffffff }, lineStyle: { width: 3, color: 0x22d3ee } }).setDepth(1002);
+    bubble.fillRoundedRect(width/2 - 100, height/2 - 100, 270, 80, 16);
+    bubble.strokeRoundedRect(width/2 - 100, height/2 - 100, 270, 80, 16);
+    
+    // Bubble pointer
+    bubble.fillTriangle(width/2 - 80, height/2 - 20, width/2 - 60, height/2 - 20, width/2 - 90, height/2);
+    bubble.strokeTriangle(width/2 - 80, height/2 - 20, width/2 - 60, height/2 - 20, width/2 - 90, height/2);
+    bubble.setAlpha(0);
 
-    const shard = this.add.text(x, y, '💎', { fontSize: '18px' }).setOrigin(0.5);
-    this.tweens.add({ targets: shard, y: shard.y - 5, yoyo: true, repeat: -1, duration: 600, ease: 'Sine.easeInOut' });
+    const quoteText = this.add.text(width/2 + 35, height/2 - 60, heroData.quote, {
+      fontFamily: 'Arial', fontSize: '15px', color: '#000000', fontStyle: 'bold', align: 'center', wordWrap: { width: 250 }
+    }).setOrigin(0.5).setDepth(1003).setAlpha(0);
 
-    this.shards.push({ sprite: shard, collected: false });
+    this.tweens.add({ targets: [bubble, quoteText], alpha: 1, duration: 500, delay: 600 });
+
+    // Title
+    const title = this.add.text(width/2, height/2 - 140, 'LEVEL CLEARED!', {
+      fontFamily: 'Arial Black', fontSize: '32px', color: '#fbbf24', stroke: '#000', strokeThickness: 5
+    }).setOrigin(0.5).setDepth(1002).setAlpha(0);
+    this.tweens.add({ targets: title, alpha: 1, y: height/2 - 120, duration: 500, delay: 200, ease: 'Bounce.easeOut' });
+
+    // Stats
+    const statsText = this.add.text(width/2 + 60, height/2 + 20, `💎 +${this.shardsCollected} Shards`, {
+      fontFamily: 'Arial Black', fontSize: '24px', color: '#06b6d4', stroke: '#000', strokeThickness: 3
+    }).setOrigin(0.5).setDepth(1002).setAlpha(0);
+    this.tweens.add({ targets: statsText, alpha: 1, duration: 500, delay: 400 });
+
+    // Buttons
+    const btnY = height/2 + 100;
+    
+    // Home Button
+    const homeBtn = this.add.rectangle(width/2 - 80, btnY, 140, 45, 0xe63946).setDepth(1002).setInteractive({ useHandCursor: true });
+    homeBtn.setStrokeStyle(3, 0xffffff);
+    const homeText = this.add.text(width/2 - 80, btnY, '🏠 HOME', { fontFamily: 'Arial Black', fontSize: '18px', color: '#fff' }).setOrigin(0.5).setDepth(1003);
+    
+    // Next Level Button
+    const nextBtn = this.add.rectangle(width/2 + 80, btnY, 140, 45, 0x10b981).setDepth(1002).setInteractive({ useHandCursor: true });
+    nextBtn.setStrokeStyle(3, 0xffffff);
+    const nextText = this.add.text(width/2 + 80, btnY, '▶ NEXT', { fontFamily: 'Arial Black', fontSize: '18px', color: '#fff' }).setOrigin(0.5).setDepth(1003);
+
+    const btns = [homeBtn, homeText, nextBtn, nextText];
+    btns.forEach(b => b.setAlpha(0));
+    this.tweens.add({ targets: btns, alpha: 1, duration: 500, delay: 800 });
+
+    // Hover effects
+    homeBtn.on('pointerover', () => homeBtn.setStrokeStyle(3, 0xffbaba));
+    homeBtn.on('pointerout', () => homeBtn.setStrokeStyle(3, 0xffffff));
+    nextBtn.on('pointerover', () => nextBtn.setStrokeStyle(3, 0x86efac));
+    nextBtn.on('pointerout', () => nextBtn.setStrokeStyle(3, 0xffffff));
+
+    // Clicks
+    homeBtn.on('pointerdown', () => this.exitToHub());
+    nextBtn.on('pointerdown', () => {
+      this.cameras.main.fadeOut(300, 0, 0, 0);
+      this.time.delayedCall(300, () => this.scene.restart());
+    });
   }
 
   update() {
-    if (!this.isRunning) return;
+    if (!this.isAlive) return;
 
-    const { width, height } = this.cameras.main;
-
-    // Scroll background
-    if (this.bg1) {
-      this.bg1.tilePositionX += this.gameSpeed * 0.3;
-    }
-
-    // Player physics (gravity + jump + swing)
-    if (this.isSwinging) {
-      this.swingTimer--;
-      this.playerVY += 0.15; // very low gravity for floaty arc
-      this.playerY += this.playerVY;
-
-      if (this.currentAnchor) {
-        this.swingWeb.x = this.currentAnchor.x;
-        this.swingWeb.y = this.currentAnchor.y;
-        this.swingWeb.height = Phaser.Math.Distance.Between(this.currentAnchor.x, this.currentAnchor.y, this.playerX, this.playerY);
-        this.swingWeb.rotation = Phaser.Math.Angle.Between(this.currentAnchor.x, this.currentAnchor.y, this.playerX, this.playerY) - Math.PI/2;
+    if (this.isRunning) {
+      if (this.startText) { 
+          this.startText.destroy(); 
+          this.startText = null; 
       }
 
-      if (this.swingTimer <= 0) {
-        this.isSwinging = false;
-        this.swingWeb.setAlpha(0);
-        this.playerVY = 0; // slight drop
+      // Update distance and progress bar
+      this.distanceTraveled += (this.gameSpeed * (this.game.loop.delta / 1000));
+      const progress = Math.min(this.distanceTraveled / this.config.finishDistance, 1);
+      this.progressBar.width = 300 * progress;
+
+      // Scroll background slowly
+      this.bg.tilePositionX += (this.gameSpeed * 0.1) * (this.game.loop.delta / 1000);
+
+      // Scroll objects left via physics velocity
+      let hitFinish = false;
+      [this.blocks, this.spikes, this.portals, this.shards].forEach(group => {
+        group.getChildren().forEach(obj => {
+          if (obj.body) obj.body.setVelocityX(-this.gameSpeed);
+          if (obj.isFinishLine && obj.x <= this.player.x) hitFinish = true;
+        });
+      });
+      
+      // Cleanup off-screen projectiles
+      this.projectiles.getChildren().forEach(p => {
+         if (p.x > this.cameras.main.width + 100) p.destroy();
+      });
+
+      if (hitFinish) this.completeLevel();
+
+      // Geometry Dash Dynamic Jump Arc (No upside down spinning!)
+      if (!this.player.body.onFloor() && !this.player.body.touching.down) {
+        if (this.player.body.velocity.y < 0) {
+            this.player.angle = -15; // Lean back slightly when jumping up
+        } else {
+            this.player.angle = 15; // Lean forward slightly when falling
+        }
+      } else {
+        this.player.angle = 0; // Snap perfectly flat on landing
       }
     } else {
-      this.playerVY += 0.6; // normal gravity
-      this.playerY += this.playerVY;
-    }
-
-    if (this.playerY >= this.groundY - 50) {
-      this.playerY = this.groundY - 50;
-      this.playerVY = 0;
-      this.isJumping = false;
-      if (this.isSwinging) {
-        this.isSwinging = false;
-        this.swingWeb.setAlpha(0);
-      }
-    }
-
-    this.player.y = this.playerY;
-    this.playerGlow.y = this.playerY;
-
-    if (window.ThreeInstance) {
-      window.ThreeInstance.setSpeed(this.gameSpeed);
-      window.ThreeInstance.syncPlayer(this.playerY, this.isDucking, this.isSwinging, this.player.texture.key);
-    }
-    if (this.attackLine.alpha > 0) {
-      this.attackLine.y = this.playerY;
-    }
-
-    // Bob animation when running
-    if (!this.isJumping) {
-      this.player.y += Math.sin(Date.now() * 0.008) * 2;
-    }
-
-    // Distance / progress
-    this.distanceTraveled += this.gameSpeed;
-    const progress = Math.min(this.distanceTraveled / this.levelLength, 1);
-    this.progressFill.width = 200 * progress;
-
-    // Speed increase
-    this.gameSpeed = 3 + progress * 2;
-
-    // Level complete
-    if (progress >= 1) {
-      this.completeLevel();
-      return;
-    }
-
-    // Attack cooldown
-    if (this.attackCooldown > 0) this.attackCooldown--;
-
-    // Boss attack pattern
-    if (this.isBossLevel && this.boss && this.bossHP > 0) {
-      this.bossAttackTimer++;
-      const attackRate = Math.max(40, 80 - this.bossPhase * 20);
-      if (this.bossAttackTimer >= attackRate) {
-        this.bossAttackTimer = 0;
-        // Launch projectile
-        const proj = this.add.circle(this.boss.x - 30, this.boss.y, 8, 0xff4444);
-        proj.setStrokeStyle(2, 0xff6666);
-        this.enemies.push({ sprite: proj, label: null, type: 'projectile', alive: true, speed: 4 + this.bossPhase * 2 });
-      }
-      // Boss bounce animation
-      this.boss.y = this.groundY - 50 + Math.sin(Date.now() * 0.003) * 15;
-      this.bossLabel.y = this.boss.y;
-    }
-
-    // Spawn enemies (reduced rate in boss levels)
-    this.enemySpawnTimer++;
-    const spawnThreshold = this.isBossLevel ? Math.max(120, this.enemySpawnRate) : this.enemySpawnRate;
-    if (this.enemySpawnTimer >= spawnThreshold) {
-      this.enemySpawnTimer = 0;
-      this.spawnEnemy();
-      this.enemySpawnRate = Math.max(40, this.enemySpawnRate - 2);
-    }
-
-    // Spawn swing anchors periodically
-    if (!this.isBossLevel && Math.random() < 0.02) {
-      const ax = width + 50;
-      const ay = 40 + Math.random() * 40;
-      const a = this.add.circle(ax, ay, 8, 0x555555);
-      a.setStrokeStyle(2, 0x888888);
-      this.anchors.push(a);
-    }
-
-    // Move anchors
-    for (let i = this.anchors.length - 1; i >= 0; i--) {
-      const a = this.anchors[i];
-      a.x -= this.gameSpeed;
-      if (a.x < -50) {
-        a.destroy();
-        this.anchors.splice(i, 1);
-      }
-    }
-
-    // Spawn shards
-    this.shardSpawnTimer++;
-    if (this.shardSpawnTimer >= 40) {
-      this.shardSpawnTimer = 0;
-      if (Math.random() < 0.6) this.spawnShard();
-    }
-
-    // Move enemies
-    for (let i = this.enemies.length - 1; i >= 0; i--) {
-      const e = this.enemies[i];
-      if (!e.alive) continue;
-      e.sprite.x -= this.gameSpeed + e.speed;
-      if (e.label) e.label.x = e.sprite.x;
-
-      // Player collision
-      const dx = Math.abs(e.sprite.x - this.playerX);
-      const dy = Math.abs(e.sprite.y - this.playerY);
-      if (dx < 45 && dy < 55) {
-        this.takeDamage();
-        e.alive = false;
-        this.explodeEnemy(e);
-        this.enemies.splice(i, 1);
-        continue;
-      }
-
-      // Off screen
-      if (e.sprite.x < -60) {
-        e.sprite.destroy();
-        if (e.label) e.label.destroy();
-        this.enemies.splice(i, 1);
-      }
-    }
-
-    // Move shards
-    for (let i = this.shards.length - 1; i >= 0; i--) {
-      const s = this.shards[i];
-      if (s.collected) continue;
-      s.sprite.x -= this.gameSpeed;
-
-      // Collection check
-      const dx = Math.abs(s.sprite.x - this.playerX);
-      const dy = Math.abs(s.sprite.y - this.playerY);
-      if (dx < 30 && dy < 40) {
-        s.collected = true;
-        this.shardsCollected++;
-        this.scoreText.setText(`💎 ${this.shardsCollected}`);
-        SoundFX.play('collect');
-
-        // Collect animation
-        this.tweens.add({
-          targets: s.sprite,
-          y: s.sprite.y - 30,
-          alpha: 0,
-          scaleX: 2,
-          scaleY: 2,
-          duration: 300,
-          onComplete: () => s.sprite.destroy(),
-        });
-        this.shards.splice(i, 1);
-        continue;
-      }
-
-      // Off screen
-      if (s.sprite.x < -30) {
-        s.sprite.destroy();
-        this.shards.splice(i, 1);
-      }
-    }
-
-    // Move power-ups
-    for (let i = this.powerups.length - 1; i >= 0; i--) {
-      const pu = this.powerups[i];
-      if (pu.collected) continue;
-      pu.sprite.x -= this.gameSpeed * 0.5;
-      const dx = Math.abs(pu.sprite.x - this.playerX);
-      const dy = Math.abs(pu.sprite.y - this.playerY);
-      if (dx < 35 && dy < 45) {
-        pu.collected = true;
-        SoundFX.play('powerup');
-        if (pu.type === 'heart' && this.health < this.maxHealth) {
-          this.health++;
-          this.updateHearts();
-        } else if (pu.type === 'shield') {
-          this.hasShield = true;
-          this.shieldIcon = this.add.text(this.playerX, this.playerY - 40, '🛡️', { fontSize: '16px' }).setOrigin(0.5);
-        } else if (pu.type === 'speed') {
-          this.speedBoostTimer = 180;
-        }
-        this.tweens.add({ targets: pu.sprite, y: pu.sprite.y - 30, alpha: 0, scale: 2, duration: 300, onComplete: () => pu.sprite.destroy() });
-        this.powerups.splice(i, 1);
-        continue;
-      }
-      if (pu.sprite.x < -30) { pu.sprite.destroy(); this.powerups.splice(i, 1); }
-    }
-
-    // Speed boost effect
-    if (this.speedBoostTimer > 0) {
-      this.speedBoostTimer--;
-      this.gameSpeed += 1;
-    }
-
-    // Spawn random powerups
-    this.powerupTimer++;
-    if (this.powerupTimer >= 300) {
-      this.powerupTimer = 0;
-      const types = ['shield', 'speed'];
-      const type = types[Math.floor(Math.random() * types.length)];
-      this.spawnPowerup(this.cameras.main.width + 20, this.groundY - 60 - Math.random() * 80, type);
-    }
-
-    // Shield follows player
-    if (this.hasShield && this.shieldIcon) {
-      this.shieldIcon.x = this.playerX;
-      this.shieldIcon.y = this.player.y - 40;
+      // Idle float waiting for start
+      this.player.body.allowGravity = false;
+      this.player.setVelocityY(Math.sin(this.time.now / 300) * 50);
     }
   }
 }

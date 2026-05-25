@@ -9,7 +9,7 @@
   <meta name="theme-color" content="#0a0a1a">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Aiden's World">
+  <meta name="apple-mobile-web-app-title" content="The Chronoverse">
   <link rel="apple-touch-icon" href="assets/ui/icon-192.png">
 
   <!-- iOS Splash screens -->
@@ -18,13 +18,16 @@
   <!-- Prevent text selection, callouts, etc on mobile -->
   <meta name="format-detection" content="telephone=no">
 
-  <title>Aiden's World</title>
+  <title>The Chronoverse - Action Portal</title>
+  <!-- Playful Kid-Friendly Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
       width: 100%; height: 100%;
       overflow: hidden;
       background: #0a0a1a;
+      font-family: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
       -webkit-tap-highlight-color: transparent;
       -webkit-touch-callout: none;
       -webkit-user-select: none;
@@ -121,16 +124,519 @@
       padding: 4px 8px;
       line-height: 1;
     }
+    /* ── Layer 1: Welcome Screen ── */
+    #welcome-screen {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: radial-gradient(circle at center, #1e1b4b 0%, #020617 100%);
+      z-index: 2000;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      transition: opacity 0.5s, transform 0.5s;
+    }
+    .welcome-title {
+      font-size: 80px;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: 6px;
+      text-align: center;
+      text-shadow: 0 6px 30px rgba(34, 211, 238, 0.9), 0 0 50px #22d3ee;
+      margin-bottom: 10px;
+      animation: floatWelcome 4s ease-in-out infinite;
+      z-index: 2002;
+    }
+    .welcome-subtitle {
+      display: none; /* Removed per user request */
+    }
+    @keyframes floatWelcome {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    .welcome-char {
+      position: absolute;
+      height: 180px; /* Force them all to be the exact same scale */
+      width: 180px;
+      object-fit: contain;
+      filter: drop-shadow(0 10px 15px rgba(0,0,0,0.8));
+      z-index: 2001;
+      animation: floatChar 4s ease-in-out infinite;
+      pointer-events: auto;
+      cursor: pointer;
+      transition: filter 0.3s;
+    }
+    .welcome-char:hover {
+      filter: drop-shadow(0 0 20px #fbbf24) drop-shadow(0 10px 15px rgba(0,0,0,0.8));
+    }
+    .locked-char {
+      filter: grayscale(1) brightness(0.3) drop-shadow(0 0 0 rgba(0,0,0,0)) !important;
+      opacity: 0.8;
+    }
+    @keyframes floatCharFlipped {
+      0%, 100% { transform: translateY(0) scaleX(-1); }
+      50% { transform: translateY(-15px) scaleX(-1); }
+    }
+    .welcome-char.flipped {
+      animation: floatCharFlipped 4s ease-in-out infinite;
+    }
+    .legal-disclaimer {
+      position: absolute;
+      bottom: 5px;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.4);
+      z-index: 2005;
+      pointer-events: none;
+      padding: 0 10px;
+    }
+
+    /* Confetti Animation */
+    .confetti {
+      position: absolute;
+      top: -50px; /* Hide off-screen during animation delay */
+      width: 10px; height: 20px;
+      background-color: #f00;
+      opacity: 0.8;
+      animation: fall 5s linear infinite;
+      z-index: 2001;
+    }
+    @keyframes fall {
+      0% { transform: translateY(-100vh) rotate(0deg); }
+      100% { transform: translateY(100vh) rotate(360deg); }
+    }
+
+    /* ── Layer 2: Portal Dashboard (Cockpit) ── */
+    #aiden-portal {
+      display: none; /* Shown after Welcome */
+      width: 100%; height: 100%;
+      background: url('assets/ui/cockpit_bg.png') no-repeat center center fixed;
+      background-size: cover;
+      color: white;
+      overflow-y: auto;
+      padding: 24px;
+      padding-top: env(safe-area-inset-top, 24px);
+      padding-bottom: env(safe-area-inset-bottom, 40px);
+    }
+    /* Dimmer overlay to make text readable */
+    #aiden-portal::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(10, 10, 30, 0.4);
+      z-index: -1;
+    }
+    
+    .portal-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .portal-header h1 {
+      font-size: 36px;
+      font-weight: 900;
+      color: #ffffff;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      text-shadow: 0 4px 15px rgba(0,0,0,0.8), 0 0 20px #22d3ee;
+    }
+    
+    /* ── Daily Message Card (Playful Glassmorphism) ── */
+    .message-card {
+      background: rgba(255, 255, 255, 0.15);
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 24px;
+      padding: 24px;
+      margin-bottom: 40px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5), inset 0 0 20px rgba(255,255,255,0.1);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      animation: floatCard 6s ease-in-out infinite;
+    }
+    @keyframes floatCard {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    .message-card h2 {
+      font-size: 20px;
+      color: #fbbf24;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    }
+    .message-card p {
+      font-size: 18px;
+      line-height: 1.6;
+      color: #ffffff;
+      font-weight: 700;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    }
+
+    /* ── App Grid (Bouncy & Vibrant) ── */
+    .app-section-title {
+      font-size: 24px;
+      font-weight: 900;
+      color: #ffffff;
+      margin-bottom: 20px;
+      padding-left: 8px;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+    }
+    .app-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 20px;
+    }
+    .app-card {
+      background: rgba(20, 22, 50, 0.85);
+      border: 4px solid #2a2b4a;
+      border-radius: 24px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+      backdrop-filter: blur(8px);
+    }
+    .app-card:hover {
+      transform: translateY(-8px) scale(1.05);
+    }
+    .app-card:active {
+      transform: scale(0.92);
+    }
+    .app-card.playable {
+      border-color: #22d3ee;
+      box-shadow: 0 8px 30px rgba(34, 211, 238, 0.4);
+    }
+    .app-card.locked {
+      border-color: #475569;
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+    .app-card.locked:hover {
+      transform: none;
+    }
+    .app-thumb {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 16px;
+      background: #0a0a1a;
+      margin-bottom: 16px;
+      object-fit: cover;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+      border: 2px solid rgba(255,255,255,0.1);
+    }
+    .app-title {
+      font-size: 18px;
+      font-weight: 900;
+      color: #ffffff;
+      margin-bottom: 6px;
+      text-shadow: 0 2px 5px rgba(0,0,0,0.8);
+    }
+    .app-desc {
+      font-size: 13px;
+      color: #cbd5e1;
+      font-weight: 700;
+    }
+
+    /* ── Layer 3: Game Hub ── */
+    #game-hub {
+      display: none;
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: #0a0a1a;
+      z-index: 1500;
+      transition: opacity 0.5s;
+    }
+    .hub-bg-container {
+      position: absolute; top:0; left:0; width:100%; height:100%;
+      display: flex; flex-direction: row; z-index: -1;
+    }
+    .hub-bg-zone {
+      flex: 1;
+      position: relative;
+      background-image: url('assets/ui/portal_bg_split_3way.png');
+      background-size: 300% 100%;
+      border-right: 3px solid rgba(255,255,255,0.1);
+    }
+    .hub-bg-zone:last-child { border-right: none; }
+    .hub-bg-zone.city { background-position: left center; }
+    .hub-bg-zone.upside { background-position: center center; }
+    .hub-bg-zone.desert { background-position: right center; }
+
+    .hub-header {
+      position: absolute;
+      top: 0; left: 0; width: 100%;
+      text-align: center;
+      padding-top: 20px;
+      z-index: 10;
+      pointer-events: none; /* Let clicks pass through to background if needed */
+    }
+    .hub-header > * {
+      pointer-events: auto; /* Re-enable clicks on the UI elements */
+    }
+    .hub-title {
+      font-size: 32px;
+      font-weight: 900;
+      color: #fff;
+      text-transform: uppercase;
+      text-shadow: 0 4px 15px rgba(0,0,0,0.8), 0 0 20px #fbbf24;
+      margin-bottom: 10px;
+    }
+    .stats-card {
+      background: rgba(20, 22, 50, 0.8);
+      border: 3px solid rgba(34, 211, 238, 0.5);
+      border-radius: 20px;
+      padding: 5px 15px;
+      display: inline-flex;
+      gap: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      backdrop-filter: blur(10px);
+      margin: 0;
+    }
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .stat-label { font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight: 900; }
+    .stat-value { font-size: 20px; color: #22d3ee; font-weight: 900; }
+
+    #start-game-btn {
+      background: linear-gradient(135deg, #10b981, #059669);
+      box-shadow: 0 8px 30px rgba(16, 185, 129, 0.6), inset 0 -4px 10px rgba(0,0,0,0.3);
+      position: absolute;
+      bottom: 5%;
+      left: 50%;
+      transform: translateX(-50%);
+      margin: 0;
+      z-index: 20;
+    }
+
+    #back-btn {
+      position: absolute;
+      top: 20px; left: 20px;
+      background: rgba(0,0,0,0.5);
+      color: white;
+      border: 2px solid white;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      z-index: 1501;
+    }
+
+    /* ── Enter Button ── */
+    .action-btn {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: white;
+      border: 4px solid #fff;
+      padding: 18px 40px;
+      border-radius: 40px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 24px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      box-shadow: 0 8px 30px rgba(217, 119, 6, 0.6), inset 0 -4px 10px rgba(0,0,0,0.3);
+      cursor: pointer;
+      animation: pulseBtn 1.5s infinite;
+      z-index: 2002;
+      transition: transform 0.1s;
+    }
+    .action-btn:active { transform: scale(0.9); }
+
+    @keyframes pulseBtn {
+      0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.8), 0 8px 30px rgba(217, 119, 6, 0.6); }
+      70% { box-shadow: 0 0 0 20px rgba(245, 158, 11, 0), 0 8px 30px rgba(217, 119, 6, 0.6); }
+      100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0), 0 8px 30px rgba(217, 119, 6, 0.6); }
+    }
+
+    @keyframes floatChar {
+      0%, 100% { transform: translate(-50%, 0) scale(1); }
+      50% { transform: translate(-50%, -15px) scale(1.02); }
+    }
+    .hub-bg-zone .splash-char {
+      position: absolute;
+      bottom: 22%;
+      left: 50%;
+      transform: translateX(-50%);
+      height: 40vh;
+      max-height: 400px;
+      object-fit: contain;
+      filter: drop-shadow(0 10px 15px rgba(0,0,0,0.8));
+      z-index: 1000;
+      animation: floatChar 4s ease-in-out infinite;
+      pointer-events: none;
+    }
+    /* Stagger the animations slightly so they don't bounce identically */
+    .hub-bg-zone.city .splash-char { animation-delay: 0s; }
+    .hub-bg-zone.upside .splash-char { animation-delay: -1.3s; }
+    .hub-bg-zone.desert .splash-char { animation-delay: -2.6s; }
+
+    @media (max-width: 800px) {
+      .hub-bg-container { flex-direction: column; }
+      .hub-bg-zone { 
+        border-right: none; 
+        border-bottom: 3px solid rgba(255,255,255,0.1); 
+        background-size: cover; 
+      }
+      .hub-bg-zone:last-child { border-bottom: none; }
+      .hub-bg-zone.city { background-position: 0% 50%; }
+      .hub-bg-zone.upside { background-position: 50% 50%; }
+      .hub-bg-zone.desert { background-position: 100% 50%; }
+      
+      .hub-bg-zone .splash-char {
+        height: 25vh; /* Fit comfortably in stacked mode */
+        bottom: 5%;
+      }
+    }
+
   </style>
 </head>
 <body>
-  <div id="game-container"></div>
+  <!-- Layer 1: Welcome Screen -->
+  <div id="welcome-screen">
+    <!-- Floating Characters (Clickable!) -->
+    <!-- Center Column -->
+    <img src="assets/bounty_hunter.png?v=cropped2" onclick="openLoreModal('mandalorian', 1)" class="welcome-char char-req-1" style="top: 5%; left: calc(50% - 160px); animation-delay: 0.6s;" alt="Mandalorian">
+    <img src="assets/characters/iron_kid.png?v=cropped2" onclick="openLoreModal('iron_kid', 1)" class="welcome-char char-req-1" style="bottom: 5%; left: 50%; animation-delay: 1.5s;" alt="Iron Kid">
+    
+    <!-- Left Side -->
+    <img src="assets/spider_hero.png?v=cropped2" onclick="openLoreModal('spider_man', 1)" class="welcome-char char-req-1" style="top: 10%; left: 10%; animation-delay: 0s;" alt="Spider-Man">
+    <img src="assets/characters/supergirl.png?v=greeneyes" onclick="openLoreModal('super_girl', 5)" class="welcome-char char-req-5" style="top: calc(30% - 168px); left: calc(25% + 550px); animation-delay: 0.8s;" alt="Supergirl">
+    <img src="assets/characters/telekinetic_girl.png?v=cropped6" onclick="openLoreModal('telekinetic_girl', 3)" class="welcome-char char-req-3" style="bottom: calc(30% - 60px); left: calc(25% + 40px); animation-delay: 0.3s;" alt="Eleven">
+    <img src="assets/characters/jedi_kid.png?v=cropped2" onclick="openLoreModal('jedi_kid', 2)" class="welcome-char char-req-2" style="bottom: 10%; left: 10%; animation-delay: 1.2s;" alt="Jedi">
+    
+    <!-- Right Side -->
+    <img src="assets/enemies/thug.png?v=cropped2" onclick="openLoreModal('thug', 4)" class="welcome-char flipped char-req-4" style="top: 10%; left: 80%; animation-delay: 1.8s;" alt="Thug">
+    <img src="assets/characters/alien_brute.png?v=cropped2" onclick="openLoreModal('alien_brute', 6)" class="welcome-char flipped char-req-6" style="top: calc(45% + 40px); left: calc(70% - 40px); animation-delay: 2.1s;" alt="Venom">
+    <img src="assets/enemies/trooper.png?v=cropped2" onclick="openLoreModal('trooper', 5)" class="welcome-char flipped char-req-5" style="bottom: 10%; left: 80%; animation-delay: 2.4s;" alt="Trooper">
+
+    <!-- Confetti container -->
+    <div id="confetti-container"></div>
+    <div class="welcome-title">The Chronoverse</div>
+    <button class="action-btn" onclick="showPortal()" ontouchstart="showPortal()" style="position:relative; margin-top: 20px; bottom:auto; left:auto; transform:translateY(-30px); z-index:2003;">ENTER</button>
+    <div class="legal-disclaimer">The Chronoverse is a fan-made educational project. All characters and concepts belong to their respective copyright holders. Not for commercial use.</div>
+  </div>
+
+  <!-- Lore Modal -->
+  <div id="lore-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index: 3000; justify-content:center; align-items:center;">
+    <div style="background: rgba(20, 22, 50, 0.95); border: 4px solid #22d3ee; border-radius: 20px; padding: 40px; max-width: 600px; width: 90%; position: relative; text-align: center; color: white; box-shadow: 0 0 50px rgba(34, 211, 238, 0.5);">
+      <button onclick="document.getElementById('lore-modal').style.display='none'" style="position:absolute; top:20px; right:20px; background:#ef4444; color:white; border:none; padding:10px 20px; border-radius:10px; font-weight:bold; cursor:pointer;">X</button>
+      <img id="lore-img" src="" style="height: 250px; margin-bottom: 20px; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.8));">
+      <h2 id="lore-title" style="font-size: 48px; color: #fbbf24; margin-bottom: 10px; font-weight: 900; text-transform: uppercase;">Character Name</h2>
+      <p id="lore-desc" style="font-size: 20px; line-height: 1.6; margin-bottom: 30px; font-weight: 700;">Lore goes here.</p>
+      <div id="lore-stats" style="display:flex; justify-content:center; gap: 20px;">
+        <!-- Stats injected here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Aiden's Portal Dashboard -->
+  <div id="aiden-portal">
+    <div class="portal-header">
+      <h1>Aiden's World</h1>
+    </div>
+
+    <!-- Daily Message from Grandpa -->
+    <div class="message-card">
+      <h2>✉️ Message from Grandpa</h2>
+      <p id="daily-message">"Aiden, hope this is something you enjoy! Can't wait to see you again next month. I love You! ❤️"</p>
+    </div>
+
+    <!-- Applications Grid -->
+    <div class="app-section-title">Games & Apps</div>
+    <div class="app-grid">
+      
+      <!-- App 1: Rift Runner (Playable) -->
+      <div class="app-card playable" onclick="showGameHub()">
+        <img class="app-thumb" src="assets/backgrounds/hub_bg.png" alt="Rift Runner Thumbnail">
+        <div class="app-title">Rift Runner</div>
+        <div class="app-desc">Dash through the multiverse!</div>
+      </div>
+
+      <!-- App 2: Jedi Training (Locked) -->
+      <div class="app-card locked">
+        <div class="app-thumb" style="display:flex; align-items:center; justify-content:center; font-size:32px;">🔒</div>
+        <div class="app-title">Jedi Training</div>
+        <div class="app-desc">Coming Soon</div>
+      </div>
+
+      <!-- App 3: Hero Database (Locked) -->
+      <div class="app-card locked">
+        <div class="app-thumb" style="display:flex; align-items:center; justify-content:center; font-size:32px;">🔒</div>
+        <div class="app-title">Hero Database</div>
+        <div class="app-desc">Coming Soon</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Layer 3: Rift Runner Game Hub -->
+  <div id="game-hub">
+    <!-- Responsive 3-Way Background Zones -->
+    <div class="hub-bg-container">
+      <div class="hub-bg-zone city">
+        <img src="assets/spider_hero.png?v=cropped2" class="splash-char" alt="Spider-Man">
+      </div>
+      <div class="hub-bg-zone upside">
+        <img src="assets/characters/telekinetic_girl.png?v=cropped6" class="splash-char" alt="Eleven">
+      </div>
+      <div class="hub-bg-zone desert">
+        <img src="assets/bounty_hunter.png?v=cropped2" class="splash-char" alt="Mandalorian">
+      </div>
+    </div>
+
+    <button id="back-btn" onclick="goBackToPortal()">← Back</button>
+    
+    <div class="hub-header">
+      <div class="hub-title">Rift Runner</div>
+      
+      <div style="display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <!-- HERO SELECTION -->
+        <div id="hero-selection-container" style="background: rgba(0,0,0,0.6); border: 2px solid rgba(34, 211, 238, 0.3); border-radius: 20px; padding: 5px; width: 180px; display: flex; align-items: center; justify-content: space-between; z-index: 1600; position: relative;">
+          <button onclick="prevHero()" style="background:none; border:none; color:#22d3ee; font-size:24px; cursor:pointer; text-shadow: 0 0 10px rgba(34, 211, 238, 0.8);">◀</button>
+          <div style="display:flex; flex-direction: column; align-items: center;">
+            <img id="selected-hero-img" src="assets/spider_hero.png" style="height: 40px; object-fit: contain; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8));">
+            <div id="selected-hero-name" style="color: #fbbf24; font-weight: 900; font-size: 11px; margin-top: 5px; text-transform: uppercase;">Spider-Man</div>
+          </div>
+          <button onclick="nextHero()" style="background:none; border:none; color:#22d3ee; font-size:24px; cursor:pointer; text-shadow: 0 0 10px rgba(34, 211, 238, 0.8);">▶</button>
+        </div>
+
+        <div class="stats-card">
+          <div class="stat-item">
+            <div class="stat-label">Level</div>
+            <div class="stat-value" id="hub-stat-level">1</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Stars</div>
+            <div class="stat-value" id="hub-stat-stars">0</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Shards</div>
+            <div class="stat-value" id="hub-stat-shards">0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button id="start-game-btn" class="action-btn" onclick="startGame()" ontouchstart="startGame()">START GAME</button>
+  </div>
+
+  <!-- Layer 4: Game Container -->
+  <div id="game-container" style="display:none;"></div>
 
   <!-- PWA Install Banner -->
   <div id="install-banner">
-    <img src="assets/ui/icon-192.png" alt="Aiden's World">
+    <img src="assets/ui/icon-192.png" alt="The Chronoverse">
     <div class="banner-text">
-      <div class="banner-title">🕷️ Aiden's World ⚔️</div>
+      <div class="banner-title">🌌 The Chronoverse ⚔️</div>
       <div class="banner-sub" id="install-instructions">Install the app to play anytime!</div>
     </div>
     <button id="install-btn">Install</button>
@@ -215,11 +721,6 @@
     });
 
     // ── Mobile Behaviors ──
-    document.addEventListener('touchmove', (e) => {
-      if (e.touches.length > 1) return;
-      e.preventDefault();
-    }, { passive: false });
-
     async function requestWakeLock() {
       try {
         if ('wakeLock' in navigator) {
@@ -232,7 +733,247 @@
       if (document.visibilityState === 'visible') requestWakeLock();
     });
 
+    // ── Confetti Logic ──
+    function createConfetti() {
+      const container = document.getElementById('confetti-container');
+      const colors = ['#f87171', '#60a5fa', '#34d399', '#fbbf24', '#a78bfa'];
+      for (let i = 0; i < 50; i++) {
+        const conf = document.createElement('div');
+        conf.className = 'confetti';
+        conf.style.left = Math.random() * 100 + 'vw';
+        conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        conf.style.animationDuration = (Math.random() * 3 + 2) + 's';
+        conf.style.animationDelay = (Math.random() * 5) + 's';
+        container.appendChild(conf);
+      }
+    }
+    createConfetti();
+
+    // ── OS Transition Logic ──
+    window.showPortal = function() {
+      const welcome = document.getElementById('welcome-screen');
+      if (!welcome) return;
+      welcome.style.opacity = '0';
+      welcome.style.transform = 'scale(1.1)';
+      setTimeout(() => {
+        welcome.style.display = 'none';
+        document.getElementById('aiden-portal').style.display = 'block';
+      }, 500);
+    };
+
+    window.showGameHub = function() {
+      document.getElementById('aiden-portal').style.opacity = '0';
+      setTimeout(() => {
+        document.getElementById('aiden-portal').style.display = 'none';
+        
+        // Update stats
+        let saveStr = localStorage.getItem('ChronoverseSave');
+        if (saveStr) {
+          let save = JSON.parse(saveStr);
+          document.getElementById('hub-stat-level').innerText = save.maxLevelUnlocked || 1;
+          document.getElementById('hub-stat-stars').innerText = save.totalStars || 0;
+          document.getElementById('hub-stat-shards').innerText = save.totalShards || 0;
+        }
+
+        initHeroSelection();
+        
+        const hub = document.getElementById('game-hub');
+        hub.style.display = 'block';
+        setTimeout(() => hub.style.opacity = '1', 50);
+      }, 500);
+    };
+
+    // ── Hero Selection Logic ──
+    let unlockedHeroes = [];
+    let currentHeroIndex = 0;
+
+    function initHeroSelection() {
+      let saveStr = localStorage.getItem('ChronoverseSave');
+      let currentLevel = 1;
+      if (saveStr) {
+        try { currentLevel = JSON.parse(saveStr).maxLevelUnlocked || 1; } catch (e) {}
+      }
+
+      const heroRoster = [
+        { id: 'spider_hero', name: 'Spider-Man', img: 'assets/spider_hero.png?v=fixed', req: 1 },
+        { id: 'bounty_hunter', name: 'Mandalorian', img: 'assets/bounty_hunter.png?v=fixed', req: 1 },
+        { id: 'iron_kid', name: 'Iron Kid', img: 'assets/characters/iron_kid.png?v=fixed', req: 1 },
+        { id: 'jedi_kid', name: 'Jedi Kid', img: 'assets/characters/jedi_kid.png?v=fixed', req: 2 },
+        { id: 'telekinetic_girl', name: 'Eleven', img: 'assets/characters/telekinetic_girl.png?v=fixed', req: 3 },
+        { id: 'super_girl', name: 'Supergirl', img: 'assets/characters/supergirl.png?v=fixed', req: 5 },
+        { id: 'alien_brute', name: 'Venom', img: 'assets/characters/alien_brute.png?v=fixed', req: 6 }
+      ];
+
+      unlockedHeroes = heroRoster.filter(h => currentLevel >= h.req);
+      currentHeroIndex = 0;
+      updateHeroUI();
+    }
+
+    function updateHeroUI() {
+      const hero = unlockedHeroes[currentHeroIndex];
+      document.getElementById('selected-hero-img').src = hero.img;
+      document.getElementById('selected-hero-name').innerText = hero.name;
+      localStorage.setItem('ChronoverseActiveHero', hero.id);
+    }
+
+    window.nextHero = function() {
+      currentHeroIndex = (currentHeroIndex + 1) % unlockedHeroes.length;
+      updateHeroUI();
+    };
+    window.prevHero = function() {
+      currentHeroIndex = (currentHeroIndex - 1 + unlockedHeroes.length) % unlockedHeroes.length;
+      updateHeroUI();
+    };
+
+    window.goBackToPortal = function() {
+      document.getElementById('game-hub').style.display = 'none';
+      document.getElementById('aiden-portal').style.display = 'block';
+    };
+
+    window.startGame = function() {
+      const hub = document.getElementById('game-hub');
+      hub.style.opacity = '0';
+      setTimeout(() => {
+        hub.style.display = 'none';
+        if (window.launchRiftRunner) window.launchRiftRunner();
+      }, 500);
+    };
+
+    // ── Character Lore & Unlock Logic ──
+    const characterLore = {
+      spider_man: {
+        name: "Spider Hero",
+        img: "assets/spider_hero.png?v=fixed",
+        desc: "A web-slinging hero who protects the city! He uses his super agility to swing between buildings.",
+        stats: { Speed: 95, Strength: 70, Web_Power: 100 }
+      },
+      mandalorian: {
+        name: "Bounty Hunter",
+        img: "assets/bounty_hunter.png?v=fixed",
+        desc: "A legendary galactic warrior wrapped in beskar armor. He never misses his target.",
+        stats: { Armor: 100, Accuracy: 95, Gadgets: 85 }
+      },
+      jedi_kid: {
+        name: "Jedi Padawan",
+        img: "assets/characters/jedi_kid.png?v=fixed",
+        desc: "A young apprentice learning the ways of the Force. He wields a glowing blue lightsaber!",
+        stats: { Force: 90, Agility: 80, Focus: 85 }
+      },
+      iron_kid: {
+        name: "Iron Kid",
+        img: "assets/characters/iron_kid.png?v=fixed",
+        desc: "A tech-genius boy in an advanced flying armor suit powered by a tiny arc reactor.",
+        stats: { Technology: 100, Flight: 95, Armor: 90 }
+      },
+      telekinetic_girl: {
+        name: "Telekinetic Girl",
+        img: "assets/characters/telekinetic_girl.png?v=fixed",
+        desc: "A mysterious girl with incredible mind powers! She can lift objects just by thinking about them.",
+        stats: { Mind_Power: 100, Mystery: 90, Waffles: 100 }
+      },
+      alien_brute: {
+        name: "Alien Brute",
+        img: "assets/characters/alien_brute.png?v=fixed",
+        desc: "A massive, gooey symbiote monster from deep space. He's scary but loves to play rough!",
+        stats: { Strength: 100, Appetite: 100, Agility: 75 }
+      },
+      super_girl: {
+        name: "Super Girl",
+        img: "assets/characters/supergirl.png?v=fixed",
+        desc: "A powerful flying superhero who protects the innocent! She has incredible strength and speed.",
+        stats: { Strength: 100, Flight: 100, Laser_Vision: 95 }
+      },
+      thug: {
+        name: "City Thug",
+        img: "assets/enemies/thug.png?v=fixed",
+        desc: "A tough guy causing trouble in the city streets. Watch out for his baseball bat!",
+        stats: { Toughness: 60, Speed: 50, Trouble: 80 }
+      },
+      trooper: {
+        name: "Space Trooper",
+        img: "assets/enemies/trooper.png?v=fixed",
+        desc: "An elite soldier working for the galactic empire. His blaster shots are dangerous!",
+        stats: { Armor: 70, Blaster: 85, Loyalty: 90 }
+      }
+    };
+
+    window.openLoreModal = function(charKey, reqLevel) {
+      let saveStr = localStorage.getItem('ChronoverseSave');
+      let currentLevel = 1;
+      if (saveStr) {
+        try { currentLevel = JSON.parse(saveStr).maxLevelUnlocked || 1; } catch (e) {}
+      }
+      
+      const modal = document.getElementById('lore-modal');
+      const title = document.getElementById('lore-title');
+      const desc = document.getElementById('lore-desc');
+      const img = document.getElementById('lore-img');
+      const stats = document.getElementById('lore-stats');
+      
+      const lore = characterLore[charKey];
+      title.innerText = lore.name;
+      desc.innerText = lore.desc;
+      img.src = lore.img;
+      img.style.filter = 'drop-shadow(0 10px 15px rgba(0,0,0,0.8))';
+      
+      let statsHtml = '';
+      for (const [key, val] of Object.entries(lore.stats)) {
+        statsHtml += `<div style="background:rgba(0,0,0,0.5); padding:10px 20px; border-radius:10px;">
+                        <div style="font-size:14px; color:#94a3b8; text-transform:uppercase;">${key.replace('_',' ')}</div>
+                        <div style="font-size:28px; color:#22d3ee; font-weight:bold;">${val}</div>
+                      </div>`;
+      }
+      stats.innerHTML = statsHtml;
+      
+      modal.style.display = 'flex';
+    };
+
+    function updateCharacterLocks() {
+      // Landing page is a showcase; no characters are visually locked here anymore!
+      const chars = document.querySelectorAll('.welcome-char');
+      chars.forEach(char => char.classList.remove('locked-char'));
+    }
+    // Check locks on load
+    updateCharacterLocks();
+
     document.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    // ── Multi-Tenant Personalization ──
+    function applyTenantPersonalization() {
+      const hostname = window.location.hostname;
+      let tenantName = 'Aiden'; // Default fallback
+      
+      // Extract tenant name from [name].tlid.io
+      if (hostname.includes('.tlid.io')) {
+        tenantName = hostname.split('.')[0];
+      } else if (hostname.includes('localhost') || hostname.includes('127.0.0.1')) {
+        tenantName = 'Aiden'; // Keep Aiden as default for local testing
+      }
+      
+      // Capitalize the first letter
+      tenantName = tenantName.charAt(0).toUpperCase() + tenantName.slice(1);
+      
+      // Determine time of day
+      const hour = new Date().getHours();
+      let timeOfDay = 'Evening';
+      if (hour < 12) timeOfDay = 'Morning';
+      else if (hour < 18) timeOfDay = 'Afternoon';
+      
+      // Apply personalization to the Portal Dashboard
+      const portalHeader = document.querySelector('.portal-header h1');
+      if (portalHeader) {
+        portalHeader.innerText = `${tenantName}'s World`;
+      }
+      
+      const dailyMsg = document.getElementById('daily-message');
+      if (dailyMsg) {
+        dailyMsg.innerText = `"Good ${timeOfDay}, ${tenantName}! Hope this is something you enjoy! Can't wait to see you again next month. I love You! ❤️"`;
+      }
+    }
+    
+    // Execute personalization on load
+    applyTenantPersonalization();
+
   </script>
 </body>
 </html>

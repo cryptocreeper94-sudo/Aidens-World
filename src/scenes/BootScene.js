@@ -10,48 +10,38 @@ class BootScene extends Phaser.Scene {
   preload() {
     const { width, height } = this.cameras.main;
 
-    // Splash background
-    this.add.rectangle(width / 2, height / 2, width, height, 0x0a0a1a);
+    // Background for loading screen
+    this.add.rectangle(width / 2, height / 2, width, height, 0x0f1020);
 
-    // Loading bar
-    const barBg = this.add.rectangle(width / 2, height / 2 + 50, 320, 22, 0x111122);
-    barBg.setStrokeStyle(2, 0xe63946, 0.5);
-    const bar = this.add.rectangle(width / 2 - 157, height / 2 + 50, 4, 18, 0xe63946);
+    // Sleek Loading Bar
+    const barWidth = 300;
+    const barBg = this.add.rectangle(width / 2, height / 2, barWidth + 6, 20, 0x15162a);
+    barBg.setStrokeStyle(2, 0x22d3ee, 0.5);
+    const bar = this.add.rectangle(width / 2 - barWidth/2, height / 2, 0, 14, 0x22d3ee);
     bar.setOrigin(0, 0.5);
 
-    // Title
-    this.add.text(width / 2, height / 2 - 80, '🕷️⚔️', { fontSize: '72px' }).setOrigin(0.5);
-    this.add.text(width / 2, height / 2 - 20, `${HERO_NAME}'s Hero HQ`, {
-      fontFamily: 'Arial Black, Arial',
-      fontSize: '30px',
-      color: '#e63946',
-      fontStyle: 'bold',
-      stroke: '#000000',
-      strokeThickness: 3,
-    }).setOrigin(0.5);
-
-    this.add.text(width / 2, height / 2 + 15, 'Spider-Man × Star Wars', {
-      fontFamily: 'Arial',
+    const loadingText = this.add.text(width / 2, height / 2 - 30, 'LOADING MULTIVERSE...', {
+      fontFamily: 'Arial Black',
       fontSize: '14px',
       color: '#22d3ee',
-    }).setOrigin(0.5);
-
-    const loadingText = this.add.text(width / 2, height / 2 + 80, 'Loading...', {
-      fontFamily: 'Arial',
-      fontSize: '13px',
-      color: '#888888',
+      letterSpacing: 2
     }).setOrigin(0.5);
 
     // Progress
     this.load.on('progress', (val) => {
-      bar.width = 314 * val;
-      loadingText.setText(`Loading... ${Math.round(val * 100)}%`);
+      bar.width = barWidth * val;
+      loadingText.setText(`LOADING... ${Math.round(val * 100)}%`);
     });
 
     // ── CHARACTERS ──
-    this.load.image('hero_red', 'assets/characters/hero_red.png');
+    this.load.image('spider_hero', 'assets/spider_hero.png?v=' + Date.now());
+    this.load.image('bounty_hunter', 'assets/bounty_hunter.png?v=' + Date.now());
     this.load.image('hero_black', 'assets/characters/hero_black.png');
     this.load.image('jedi_kid', 'assets/characters/jedi_kid.png');
+    this.load.image('iron_kid', 'assets/characters/iron_kid.png');
+    this.load.image('telekinetic_girl', 'assets/characters/telekinetic_girl.png?v=cropped6');
+    this.load.image('alien_brute', 'assets/characters/alien_brute.png');
+    this.load.image('super_girl', 'assets/characters/supergirl.png?v=greeneyes');
 
     // ── BACKGROUNDS (all worlds) ──
     this.load.image('hub_bg', 'assets/backgrounds/hub_bg.png');
@@ -59,10 +49,15 @@ class BootScene extends Phaser.Scene {
     this.load.image('space_station', 'assets/backgrounds/space_station.png');
     this.load.image('desert', 'assets/backgrounds/desert.png');
     this.load.image('rift', 'assets/backgrounds/rift.png');
+    this.load.image('portal_bg_split_3way', 'assets/ui/portal_bg_split_3way.png');
 
     // ── ENEMIES ──
-    this.load.image('enemy_thug', 'assets/enemies/thug.png');
-    this.load.image('enemy_trooper', 'assets/enemies/trooper.png');
+    this.load.image('enemy_thug', 'assets/enemies/thug.png?v=' + Date.now());
+    this.load.image('enemy_trooper', 'assets/enemies/trooper.png?v=' + Date.now());
+
+    // ── ENVIRONMENTS ──
+    this.load.image('sci_fi_tower', 'assets/environments/sci_fi_tower.png');
+    this.load.image('rift_portal', 'assets/environments/rift_portal.png');
 
     // ── UI ──
     this.load.image('hud_elements', 'assets/ui/hud_elements.png');
@@ -78,9 +73,9 @@ class BootScene extends Phaser.Scene {
   }
 
   create() {
-    this.cameras.main.fadeOut(600, 0, 0, 0);
-    this.time.delayedCall(700, () => {
-      this.scene.start('HubScene');
+    this.cameras.main.fadeOut(300, 0, 0, 0);
+    this.time.delayedCall(400, () => {
+      this.scene.start('LevelScene');
     });
   }
 }

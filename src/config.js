@@ -46,12 +46,26 @@ const gameConfig = {
   banner: false, // Hide Phaser banner in console
 };
 
-const game = new Phaser.Game(gameConfig);
+let game = null;
 
-// Handle orientation changes
-window.addEventListener('resize', () => {
-  game.scale.refresh();
-});
+window.launchRiftRunner = function() {
+  if (game) return; // Already running
+  
+  // Hide the portal DOM elements
+  const portal = document.getElementById('aiden-portal');
+  if (portal) portal.style.display = 'none';
 
-// Prevent right-click context menu
-document.addEventListener('contextmenu', (e) => e.preventDefault());
+  // Show the game container
+  const gameContainer = document.getElementById('game-container');
+  if (gameContainer) gameContainer.style.display = 'flex';
+
+  game = new Phaser.Game(gameConfig);
+
+  // Handle orientation changes
+  window.addEventListener('resize', () => {
+    if (game && game.scale) game.scale.refresh();
+  });
+
+  // Prevent right-click context menu
+  document.addEventListener('contextmenu', (e) => e.preventDefault());
+};
