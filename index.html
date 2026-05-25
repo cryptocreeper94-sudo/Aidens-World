@@ -517,17 +517,18 @@
       }
       
       /* Push characters strictly to the edges of the screen to clear the center */
-      .char-req-1[alt="Spider-Man"] { top: 10% !important; left: 5% !important; }
-      .char-req-3[alt="Eleven"] { top: 35% !important; left: 5% !important; bottom: auto !important; }
-      .char-req-1[alt="Iron Kid"] { top: 60% !important; left: 5% !important; bottom: auto !important; }
-      .char-req-2[alt="Jedi"] { top: 80% !important; left: 5% !important; bottom: auto !important; }
+      /* Note: floatChar animation applies translate(-50%, 0), shifting them 45px to the left. We offset this mathematically. */
+      .char-req-1[alt="Spider-Man"] { top: 10% !important; left: calc(5% + 45px) !important; }
+      .char-req-3[alt="Eleven"] { top: 35% !important; left: calc(5% + 45px) !important; bottom: auto !important; }
+      .char-req-1[alt="Iron Kid"] { top: 60% !important; left: calc(5% + 45px) !important; bottom: auto !important; }
+      .char-req-2[alt="Jedi"] { top: 80% !important; left: calc(5% + 45px) !important; bottom: auto !important; }
       
-      .char-req-1[alt="Mandalorian"] { top: 10% !important; left: auto !important; right: 5% !important; }
-      .char-req-4[alt="Thug"] { top: 35% !important; left: auto !important; right: 5% !important; }
-      .char-req-6[alt="Venom"] { top: 60% !important; left: auto !important; right: 5% !important; }
-      .char-req-5[alt="Supergirl"] { top: 80% !important; left: auto !important; right: 5% !important; bottom: auto !important; }
+      .char-req-1[alt="Mandalorian"] { top: 10% !important; left: auto !important; right: calc(5% - 45px) !important; }
+      .char-req-4[alt="Thug"] { top: 35% !important; left: auto !important; right: calc(5% - 45px) !important; }
+      .char-req-6[alt="Venom"] { top: 60% !important; left: auto !important; right: calc(5% - 45px) !important; }
+      .char-req-5[alt="Supergirl"] { top: 80% !important; left: auto !important; right: calc(5% - 45px) !important; bottom: auto !important; }
       
-      .char-req-5[alt="Trooper"] { top: auto !important; bottom: 5% !important; left: calc(50% - 45px) !important; }
+      .char-req-5[alt="Trooper"] { top: auto !important; bottom: 5% !important; left: 50% !important; }
       
       #welcome-screen .action-btn {
         transform: translateY(30px) !important;
