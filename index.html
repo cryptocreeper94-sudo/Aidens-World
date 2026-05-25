@@ -480,6 +480,38 @@
     .hub-bg-zone.desert .splash-char { animation-delay: -2.6s; }
 
     @media (max-width: 800px) {
+      /* Welcome Screen Fixes */
+      .welcome-title {
+        font-size: 42px !important;
+        letter-spacing: 2px !important;
+        padding: 0 10px;
+        line-height: 1.2;
+      }
+      .welcome-char {
+        height: 90px !important;
+        width: 90px !important;
+      }
+      
+      /* Push characters strictly to the edges of the screen to clear the center */
+      .char-req-1[alt="Spider-Man"] { top: 10% !important; left: 5% !important; }
+      .char-req-3[alt="Eleven"] { top: 35% !important; left: 5% !important; bottom: auto !important; }
+      .char-req-1[alt="Iron Kid"] { top: 60% !important; left: 5% !important; bottom: auto !important; }
+      .char-req-2[alt="Jedi"] { top: 80% !important; left: 5% !important; bottom: auto !important; }
+      
+      .char-req-1[alt="Mandalorian"] { top: 10% !important; left: auto !important; right: 5% !important; }
+      .char-req-4[alt="Thug"] { top: 35% !important; left: auto !important; right: 5% !important; }
+      .char-req-6[alt="Venom"] { top: 60% !important; left: auto !important; right: 5% !important; }
+      .char-req-5[alt="Supergirl"] { top: 80% !important; left: auto !important; right: 5% !important; bottom: auto !important; }
+      
+      .char-req-5[alt="Trooper"] { top: auto !important; bottom: 5% !important; left: calc(50% - 45px) !important; }
+      
+      #welcome-screen .action-btn {
+        transform: translateY(30px) !important;
+        padding: 14px 30px !important;
+        font-size: 20px !important;
+      }
+
+      /* Game Hub Fixes */
       .hub-bg-container { flex-direction: column; }
       .hub-bg-zone { 
         border-right: none; 
