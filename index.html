@@ -797,6 +797,29 @@
       if (document.visibilityState === 'visible') requestWakeLock();
     });
 
+    // ── Pull-to-Refresh Gesture ──
+    let touchStartY = 0;
+    let touchEndY = 0;
+    
+    document.addEventListener('touchstart', e => {
+      if (document.body.classList.contains('playing-game')) return;
+      touchStartY = e.changedTouches[0].screenY;
+    }, { passive: true });
+    
+    document.addEventListener('touchend', e => {
+      if (document.body.classList.contains('playing-game')) return;
+      touchEndY = e.changedTouches[0].screenY;
+      
+      const swipeDist = touchEndY - touchStartY;
+      if (swipeDist > 150) { // Significant downward swipe
+        const portal = document.getElementById('aiden-portal');
+        // If on the welcome screen (portal hidden), OR if on the portal and scrolled to the top
+        if (portal.style.display !== 'block' || portal.scrollTop === 0) {
+          window.location.reload();
+        }
+      }
+    }, { passive: true });
+
     // ── Confetti Logic ──
     function createConfetti() {
       const container = document.getElementById('confetti-container');
