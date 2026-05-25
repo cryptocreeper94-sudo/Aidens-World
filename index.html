@@ -536,21 +536,30 @@
         font-size: 20px !important;
       }
 
-      /* Game Hub Fixes */
-      .hub-bg-container { flex-direction: column; }
+      /* Game Hub Fixes: Fullscreen Carousel */
+      .hub-bg-container { display: block; }
       .hub-bg-zone { 
-        border-right: none; 
-        border-bottom: 3px solid rgba(255,255,255,0.1); 
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        border-right: none; border-bottom: none;
         background-size: cover; 
+        opacity: 0;
+        animation: fadeCarouselMobile 12s infinite;
       }
-      .hub-bg-zone:last-child { border-bottom: none; }
-      .hub-bg-zone.city { background-position: 0% 50%; }
-      .hub-bg-zone.upside { background-position: 50% 50%; }
-      .hub-bg-zone.desert { background-position: 100% 50%; }
+      .hub-bg-zone.city { background-position: 0% 50%; animation-delay: 0s; }
+      .hub-bg-zone.upside { background-position: 50% 50%; animation-delay: 4s; }
+      .hub-bg-zone.desert { background-position: 100% 50%; animation-delay: 8s; }
+      
+      @keyframes fadeCarouselMobile {
+        0%   { opacity: 0; }
+        8%   { opacity: 1; z-index: 1; }
+        25%  { opacity: 1; z-index: 1; }
+        33%  { opacity: 0; z-index: 0; }
+        100% { opacity: 0; z-index: 0; }
+      }
       
       .hub-bg-zone .splash-char {
-        height: 25vh; /* Fit comfortably in stacked mode */
-        bottom: 5%;
+        height: 40vh; /* Make character massive since it owns the screen */
+        bottom: 12%;
       }
     }
 
