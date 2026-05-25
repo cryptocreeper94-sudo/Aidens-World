@@ -541,20 +541,20 @@
       .hub-bg-zone { 
         position: absolute; top: 0; left: 0; width: 100%; height: 100%;
         border-right: none; border-bottom: none;
-        background-size: cover; 
+        background-size: 300% 100%; 
         opacity: 0;
-        animation: fadeCarouselMobile 12s infinite;
+        animation: fadeCarouselMobile 24s infinite;
       }
       .hub-bg-zone.city { background-position: 0% 50%; animation-delay: 0s; }
-      .hub-bg-zone.upside { background-position: 50% 50%; animation-delay: 4s; }
-      .hub-bg-zone.desert { background-position: 100% 50%; animation-delay: 8s; }
+      .hub-bg-zone.upside { background-position: 50% 50%; animation-delay: 8s; }
+      .hub-bg-zone.desert { background-position: 100% 50%; animation-delay: 16s; }
       
       @keyframes fadeCarouselMobile {
-        0%   { opacity: 0; }
-        8%   { opacity: 1; z-index: 1; }
-        25%  { opacity: 1; z-index: 1; }
-        33%  { opacity: 0; z-index: 0; }
-        100% { opacity: 0; z-index: 0; }
+        0%      { opacity: 0; }
+        5%      { opacity: 1; z-index: 1; }
+        28%     { opacity: 1; z-index: 1; }
+        33.33%  { opacity: 0; z-index: 0; }
+        100%    { opacity: 0; z-index: 0; }
       }
       
       .hub-bg-zone .splash-char {
