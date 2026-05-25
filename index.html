@@ -966,8 +966,21 @@
       }
       
       const dailyMsg = document.getElementById('daily-message');
-      if (dailyMsg) {
-        dailyMsg.innerText = `"Good ${timeOfDay}, ${tenantName}! Hope this is something you enjoy! Can't wait to see you again next month. I love You! ❤️"`;
+      const messageCard = document.querySelector('.message-card');
+      
+      if (tenantName.toLowerCase() === 'aiden') {
+        if (dailyMsg) {
+          dailyMsg.innerText = `"Good ${timeOfDay}, ${tenantName}! Hope this is something you enjoy! Can't wait to see you again next month. I love You! ❤️"`;
+        }
+      } else {
+        // Generic welcome message for all other kids (Maya, etc.)
+        if (messageCard) {
+          const h2 = messageCard.querySelector('h2');
+          if (h2) h2.innerText = '🌌 Chronoverse System';
+        }
+        if (dailyMsg) {
+          dailyMsg.innerText = `Good ${timeOfDay}, ${tenantName}! Welcome to your personal portal. The Chronoverse is online and ready for action!`;
+        }
       }
     }
     
