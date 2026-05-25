@@ -205,6 +205,30 @@
       100% { transform: translateY(100vh) rotate(360deg); }
     }
 
+    /* ── Rotate Device Overlay ── */
+    #rotate-overlay {
+      display: none;
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(10,10,26,0.98);
+      z-index: 9999;
+      flex-direction: column; align-items: center; justify-content: center;
+      color: white; text-align: center;
+    }
+    #rotate-overlay .rotate-icon {
+      font-size: 80px; margin-bottom: 20px;
+      animation: tiltPhone 2s infinite ease-in-out;
+    }
+    @keyframes tiltPhone {
+      0% { transform: rotate(0deg); }
+      50% { transform: rotate(-90deg); }
+      100% { transform: rotate(0deg); }
+    }
+    @media screen and (orientation: portrait) {
+      body.playing-game #rotate-overlay {
+        display: flex;
+      }
+    }
+
     /* ── Layer 2: Portal Dashboard (Cockpit) ── */
     #aiden-portal {
       display: none; /* Shown after Welcome */
@@ -675,6 +699,13 @@
     <button id="close-banner">&times;</button>
   </div>
 
+  <!-- Rotate Device Overlay -->
+  <div id="rotate-overlay">
+    <div class="rotate-icon">📱</div>
+    <h1 style="font-size: 32px; font-weight: 900; margin-bottom: 10px; color: #fbbf24; text-transform: uppercase;">Rotate Device</h1>
+    <p style="font-size: 18px; color: #cbd5e1; font-weight: 700; max-width: 80%;">Rift Runner requires Landscape Mode for action controls!</p>
+  </div>
+
   <!-- Phaser 3 -->
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
   <!-- Three.js & GLTFLoader -->
@@ -865,8 +896,17 @@
     window.startGame = function() {
       const hub = document.getElementById('game-hub');
       hub.style.opacity = '0';
+      
+      // Attempt to force landscape mode programmatically (Android/PWA)
+      try {
+        if (screen.orientation && screen.orientation.lock) {
+          screen.orientation.lock('landscape').catch(e => console.log('Orientation lock failed:', e));
+        }
+      } catch(e) {}
+
       setTimeout(() => {
         hub.style.display = 'none';
+        document.body.classList.add('playing-game');
         if (window.launchRiftRunner) window.launchRiftRunner();
       }, 500);
     };
