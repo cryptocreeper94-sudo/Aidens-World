@@ -58,12 +58,10 @@ class LevelScene extends Phaser.Scene {
       localStorage.setItem('ChronoverseActiveHero', 'spider_hero');
     }
     
-    this.player = this.physics.add.sprite(250, height / 2, this.activeHero);
+    this.player = this.physics.add.sprite(250, this.gameH / 2, this.activeHero);
     this.player.setDisplaySize(80, 80);
     this.player.setBounce(0);
     this.player.setDepth(10);
-    this.player.setSize(40, 60);
-    this.player.setOffset(20, 20);
 
     // Groups
     this.blocks = this.physics.add.group({ immovable: true, allowGravity: false });
@@ -76,8 +74,8 @@ class LevelScene extends Phaser.Scene {
     // Generate procedural level
     this.buildLevel();
 
-    // Floor — top edge at gameH (footer top), body hidden behind footer
-    this.floor = this.add.rectangle(width/2, this.gameH + 20, width*100, 40, 0x000000, 0).setDepth(10);
+    // Floor — top edge sits exactly at gameH (footer boundary)
+    this.floor = this.add.rectangle(width/2, this.gameH + 500, width*100, 1000, 0x000000, 0).setDepth(10);
     this.physics.add.existing(this.floor, true);
 
     // Absolute Death Wall to prevent clipping through towers when crushed
@@ -174,8 +172,9 @@ class LevelScene extends Phaser.Scene {
     }
     
     if (this.floor) {
-      this.floor.setPosition(width/2, gameH + 20);
+      this.floor.setPosition(width/2, gameH + 500);
       this.floor.width = width * 100;
+      this.floor.height = 1000;
       if (this.floor.body) {
         this.floor.body.updateFromGameObject();
       }
@@ -234,6 +233,15 @@ class LevelScene extends Phaser.Scene {
     this.isAlive = false;
     this.isRunning = false;
     document.getElementById('game-container').style.display = 'none';
+    document.body.classList.remove('playing-game');
+    
+    // Unlock orientation so portrait works again
+    try {
+      if (screen.orientation && screen.orientation.unlock) {
+        screen.orientation.unlock();
+      }
+    } catch(e) {}
+    
     const hub = document.getElementById('game-hub');
     hub.style.display = 'block';
     setTimeout(() => hub.style.opacity = '1', 50);
@@ -256,7 +264,7 @@ class LevelScene extends Phaser.Scene {
   buildLevel() {
     const { finishDistance, towerFreq, enemyFreq, portalFreq, shardFreq } = this.config;
     const startX = 800;
-    const groundY = this.gameH;
+    const groundY = this.gameH; // Floor top edge = this.gameH
     const blockSize = 80;
 
     let currentX = startX;

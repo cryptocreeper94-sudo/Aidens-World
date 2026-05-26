@@ -841,17 +841,17 @@
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 
   <!-- Game Modules -->
-  <script src="src/systems/SaveSystem.js?v=5.2"></script>
-  <script src="src/systems/SoundFX.js?v=5.2"></script>
-  <script src="src/systems/LevelData.js?v=5.2"></script>
-  <script src="src/systems/ThreeEngine.js?v=5.2"></script>
-  <script src="src/scenes/BootScene.js?v=5.2"></script>
-  <script src="src/scenes/HubScene.js?v=5.2"></script>
-  <script src="src/scenes/StoryScene.js?v=5.2"></script>
-  <script src="src/scenes/LevelScene.js?v=5.2"></script>
-  <script src="src/scenes/VaultDefender.js?v=5.2"></script>
-  <script src="src/systems/LumeCompiler.js?v=5.2"></script>
-  <script src="src/config.js?v=5.2"></script>
+  <script src="src/systems/SaveSystem.js?v=5.3"></script>
+  <script src="src/systems/SoundFX.js?v=5.3"></script>
+  <script src="src/systems/LevelData.js?v=5.3"></script>
+  <script src="src/systems/ThreeEngine.js?v=5.3"></script>
+  <script src="src/scenes/BootScene.js?v=5.3"></script>
+  <script src="src/scenes/HubScene.js?v=5.3"></script>
+  <script src="src/scenes/StoryScene.js?v=5.3"></script>
+  <script src="src/scenes/LevelScene.js?v=5.3"></script>
+  <script src="src/scenes/VaultDefender.js?v=5.3"></script>
+  <script src="src/systems/LumeCompiler.js?v=5.3"></script>
+  <script src="src/config.js?v=5.3"></script>
 
   <!-- Firebase App, Firestore, & Auth -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -1239,6 +1239,16 @@
         if (document.exitFullscreen) document.exitFullscreen().catch(()=>{});
         else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
       }
+      
+      // Remove game mode class so portrait rotate overlay goes away
+      document.body.classList.remove('playing-game');
+      
+      // Unlock orientation so user can go back to portrait
+      try {
+        if (screen.orientation && screen.orientation.unlock) {
+          screen.orientation.unlock();
+        }
+      } catch(e) {}
       
       document.getElementById('game-hub').style.display = 'none';
       document.getElementById('game-hub').style.opacity = '0';
