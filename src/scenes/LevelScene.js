@@ -320,7 +320,7 @@ class LevelScene extends Phaser.Scene {
     const enemyKey = this.activeWorld.enemies[Math.floor(this.seededRandom(this.activeWorld.enemies.length))];
     const enemy = this.spikes.create(x, y - 40, enemyKey);
     enemy.setDisplaySize(80, 80);
-    enemy.setFlipX(true); // Always face left toward the right-running player!
+    enemy.setFlipX(false); // Enemies face left by default (toward approaching player)
   }
 
   spawnShard(x, y) {
@@ -330,18 +330,36 @@ class LevelScene extends Phaser.Scene {
   }
 
   hitPortal(player, portal) {
-    if (portal.isFinishLine) return; // Finish line logic handled in update()
+    if (portal.isFinishLine) return;
     
     portal.destroy();
     SoundFX.play('levelup');
     this.cameras.main.flash(300, 255, 255, 255);
     
-    // Swap World Color (Worlds Collide feature)
-    const randomWorld = this.config.worlds[Math.floor(this.seededRandom(this.config.worlds.length))];
-    this.activeWorld = randomWorld; // Update the active world so new enemies map correctly!
-    this.cameras.main.setBackgroundColor(randomWorld.color);
-    this.bg.setTexture(randomWorld.bg);
-    this.floor.fillColor = Phaser.Display.Color.HexStringToColor(randomWorld.color).color;
+    // Worlds Collide: swap background, enemies, and color theme
+    let newWorld;
+    do {
+      newWorld = this.config.worlds[Math.floor(Math.random() * this.config.worlds.length)];
+    } while (newWorld.key === this.activeWorld.key && this.config.worlds.length > 1);
+    
+    this.activeWorld = newWorld;
+    this.cameras.main.setBackgroundColor(newWorld.color);
+    
+    // Rebuild tileSprite with new texture
+    const { width } = this.cameras.main;
+    const oldAlpha = this.bg.alpha;
+    const oldTilePosX = this.bg.tilePositionX;
+    this.bg.destroy();
+    this.bg = this.add.tileSprite(width/2, this.gameH/2, width, this.gameH, newWorld.bg);
+    this.bg.setAlpha(oldAlpha);
+    this.bg.setDepth(0);
+    this.bg.tilePositionX = oldTilePosX;
+    const frame = this.textures.getFrame(newWorld.bg);
+    if (frame) {
+      const scale = Math.max(width / frame.width, this.gameH / frame.height);
+      this.bg.tileScaleX = scale;
+      this.bg.tileScaleY = scale;
+    }
   }
 
   collectShard(player, shard) {

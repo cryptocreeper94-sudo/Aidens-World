@@ -5,26 +5,27 @@
 const LevelData = {
   // Geometry Dash-calibrated difficulty progression
   generateConfig: function(levelNum) {
-    // Speed: 220 at lvl 1, ramps to ~620 by lvl 20
-    const gameSpeed = 220 + Math.min(levelNum * 20, 600); 
+    // Speed: 300 at lvl 1 (real GD feel), ramps to ~700 by lvl 20
+    const gameSpeed = 300 + Math.min(levelNum * 20, 400); 
 
-    // Distance to finish — longer runs at higher levels
-    const finishDistance = 8000 + (levelNum * 800);
+    // Distance to finish — meaningful runs from the start
+    const finishDistance = 6000 + (levelNum * 600);
 
-    // Tower probability ramps up
-    const towerFreq = Math.min(0.12 + (levelNum * 0.015), 0.35);
+    // Tower probability — start with real obstacles
+    const towerFreq = Math.min(0.20 + (levelNum * 0.012), 0.40);
     
-    // Enemy probability ramps up  
-    const enemyFreq = Math.min(0.08 + (levelNum * 0.012), 0.25);
+    // Enemy probability — enemies from the start
+    const enemyFreq = Math.min(0.15 + (levelNum * 0.010), 0.30);
     
-    const portalFreq = 0.02; 
+    // More portals = more world swaps per level (at least 1-2 per run)
+    const portalFreq = Math.min(0.03 + (levelNum * 0.002), 0.06); 
     const shardFreq = 0.15;
 
-    // Obstacle gap shrinks as difficulty increases (GD feel)
-    const obstacleGap = Math.max(3 - (levelNum * 0.08), 1.5);
+    // Obstacle gap: tighter from the start, gets intense
+    const obstacleGap = Math.max(2.5 - (levelNum * 0.05), 1.2);
 
-    // Tower height: single blocks early, taller later
-    const maxTowerBlocks = levelNum >= 15 ? 2 : 1;
+    // Tower height: single blocks for 1-9, double for 10+
+    const maxTowerBlocks = levelNum >= 10 ? 2 : 1;
 
     const worlds = [
       { key: 'city', bg: 'nyc_skyline', color: '#1e1b4b', enemies: ['enemy_thug'] },
