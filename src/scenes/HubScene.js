@@ -293,14 +293,18 @@ class HubScene extends Phaser.Scene {
       if (playable) {
         lvlCircle.setInteractive({ useHandCursor: true });
         lvlCircle.on('pointerdown', () => {
+          // Calculate sequential level number across all worlds
+          const worldIdx = WORLDS.indexOf(world);
+          const levelNum = worldIdx * world.levels.length + i + 1;
+          
           if (i === 0 && !SaveSystem.isStoryViewed(world.storyIntro) && STORY_PANELS[world.storyIntro]) {
             this.scene.start('StoryScene', {
               storyId: world.storyIntro,
               nextScene: 'LevelScene',
-              nextData: { worldId: world.id, levelId: level.id },
+              nextData: { levelNum: levelNum },
             });
           } else {
-            this.scene.start('LevelScene', { worldId: world.id, levelId: level.id });
+            this.scene.start('LevelScene', { levelNum: levelNum });
           }
         });
         lvlCircle.on('pointerover', () => { lvlCircle.setFillStyle(0x1e1f3a, 1); lvlCircle.setStrokeStyle(3, color, 1); });

@@ -3,28 +3,29 @@
    ======================================== */
 
 const LevelData = {
-  // Generate infinite progression parameters based on Level number
+  // Geometry Dash-calibrated difficulty progression
   generateConfig: function(levelNum) {
-    const baseSpeed = 180;
-    // Cap max speed increase so it doesn't become literally impossible
-    const gameSpeed = baseSpeed + Math.min(levelNum * 15, 800); 
+    // Speed: 220 at lvl 1, ramps to ~620 by lvl 20
+    const gameSpeed = 220 + Math.min(levelNum * 20, 600); 
 
-    // Distance to reach the Finish Line
-    const finishDistance = 10000 + (levelNum * 1000);
+    // Distance to finish — longer runs at higher levels
+    const finishDistance = 8000 + (levelNum * 800);
 
-    // Frequencies (Chance per tick to spawn object)
-    // Tower probability (platforming)
-    const towerFreq = Math.min(0.15 + (levelNum * 0.02), 0.40);
+    // Tower probability ramps up
+    const towerFreq = Math.min(0.12 + (levelNum * 0.015), 0.35);
     
-    // Enemy probability (on ground or on tower)
-    const enemyFreq = Math.min(0.10 + (levelNum * 0.02), 0.30);
+    // Enemy probability ramps up  
+    const enemyFreq = Math.min(0.08 + (levelNum * 0.012), 0.25);
     
-    // Portal probability (Worlds Collide dimension swap)
     const portalFreq = 0.02; 
-
     const shardFreq = 0.15;
 
-    // The Worlds Collide backgrounds and colors
+    // Obstacle gap shrinks as difficulty increases (GD feel)
+    const obstacleGap = Math.max(3 - (levelNum * 0.08), 1.5);
+
+    // Tower height: single blocks early, taller later
+    const maxTowerBlocks = levelNum >= 15 ? 2 : 1;
+
     const worlds = [
       { key: 'city', bg: 'nyc_skyline', color: '#1e1b4b', enemies: ['enemy_thug'] },
       { key: 'upside_down', bg: 'rift', color: '#450a0a', enemies: ['alien_brute'] },
@@ -32,21 +33,15 @@ const LevelData = {
     ];
 
     return {
-      levelNum,
-      gameSpeed,
-      finishDistance,
-      towerFreq,
-      enemyFreq,
-      portalFreq,
-      shardFreq,
-      worlds
+      levelNum, gameSpeed, finishDistance, towerFreq, enemyFreq,
+      portalFreq, shardFreq, obstacleGap, maxTowerBlocks, worlds
     };
   }
 };
 
 /* ========================================
    LEVEL DATA — World/Level definitions
-   Spider-Man × Star Wars Crossover
+   Spider-Man x Star Wars Crossover
    ======================================== */
 
 const CHARACTERS = {
@@ -178,7 +173,7 @@ const STORY_PANELS = {
       { image: 'intro_2', text: 'BOOM! A giant portal rips open! The Rift King has merged Doc Ock tech with Sith Holocrons!', speaker: 'Narrator' },
       { image: 'intro_3', text: 'Stormtroopers march into Times Square! TIE Fighters zoom overhead!', speaker: 'Narrator' },
       { image: 'intro_4', text: '"My Spidey Sense is CRAZY! Anakin! Mando! I need backup!"', speaker: 'Spider-Man' },
-      { image: 'intro_5', text: `"Tag me in, Spidey! Let's GO!" ⚔️`, speaker: 'Anakin Skywalker' },
+      { image: 'intro_5', text: `"Tag me in, Spidey! Let's GO!"`, speaker: 'Anakin Skywalker' },
     ],
   },
   world1_complete: {
@@ -186,53 +181,53 @@ const STORY_PANELS = {
       { image: 'world1_complete_panel', text: 'Doc Ock is defeated! The first Rift Crystal is safe!', speaker: 'Narrator' },
       { image: 'world1_complete_panel', text: 'A glowing Jedi robe falls through the rift...', speaker: 'Narrator' },
       { image: 'world1_complete_panel', text: `${HERO_NAME} puts it on. A lightsaber ignites! The Force awakens!`, speaker: 'Narrator' },
-      { image: 'world1_complete_panel', text: `🎉 NEW: Jedi ${HERO_NAME}! May the Force be with you!`, speaker: 'System' },
+      { image: 'world1_complete_panel', text: `NEW: Jedi ${HERO_NAME}! May the Force be with you!`, speaker: 'System' },
     ],
   },
   world2_intro: {
     panels: [
       { image: 'world2_intro_panel', text: 'The portal leads to a massive Imperial Space Station...', speaker: 'Narrator' },
       { image: 'world2_intro_panel', text: 'Oscorp tech is fused with the Empire! Symbiotes in SPACE!', speaker: 'Narrator' },
-      { image: 'world2_intro_panel', text: '"Green Goblin stole a TIE Fighter!" 😱', speaker: HERO_NAME },
+      { image: 'world2_intro_panel', text: '"Green Goblin stole a TIE Fighter!"', speaker: HERO_NAME },
     ],
   },
   world2_complete: {
     panels: [
-      { image: 'world2_intro_panel', text: 'Green Goblin\'s TIE Glider crashes! Rift Crystal #2 secured!', speaker: 'Narrator' },
-      { image: 'world2_intro_panel', text: 'The symbiote bonds with Spider-Man\'s suit... it turns BLACK!', speaker: 'Narrator' },
-      { image: 'world2_intro_panel', text: '🎉 NEW: Black Suit Spider-Man!', speaker: 'System' },
+      { image: 'world2_intro_panel', text: "Green Goblin's TIE Glider crashes! Rift Crystal #2 secured!", speaker: 'Narrator' },
+      { image: 'world2_intro_panel', text: "The symbiote bonds with Spider-Man's suit... it turns BLACK!", speaker: 'Narrator' },
+      { image: 'world2_intro_panel', text: 'NEW: Black Suit Spider-Man!', speaker: 'System' },
     ],
   },
   world3_intro: {
     panels: [
-      { image: 'world3_intro_panel', text: 'A desert planet with two suns... that\'s Tatooine!', speaker: 'Spider-Man' },
+      { image: 'world3_intro_panel', text: "A desert planet with two suns... that's Tatooine!", speaker: 'Spider-Man' },
       { image: 'world3_intro_panel', text: '"The Mandalorian is waiting for us ahead!"', speaker: 'Anakin' },
-      { image: 'world3_intro_panel', text: '"Watch out... Darth Vader found a symbiote. He is DARTH VENOM!" 😈', speaker: 'Narrator' },
+      { image: 'world3_intro_panel', text: '"Watch out... Darth Vader found a symbiote. He is DARTH VENOM!"', speaker: 'Narrator' },
     ],
   },
   world3_complete: {
     panels: [
       { image: 'world3_intro_panel', text: 'Darth Venom is defeated! The symbiote releases Vader!', speaker: 'Narrator' },
       { image: 'world3_intro_panel', text: `${HERO_NAME} combines Spider powers AND the Force!`, speaker: 'Narrator' },
-      { image: 'world3_intro_panel', text: `🎉 NEW: Spider-Jedi ${HERO_NAME}! The ultimate hero!`, speaker: 'System' },
+      { image: 'world3_intro_panel', text: `NEW: Spider-Jedi ${HERO_NAME}! The ultimate hero!`, speaker: 'System' },
     ],
   },
   world4_intro: {
     panels: [
       { image: 'world4_intro_panel', text: 'Both worlds are fully colliding! NYC floats in space!', speaker: 'Narrator' },
-      { image: 'world4_intro_panel', text: 'The Rift King — Doc Ock fused with the Emperor — controls it all!', speaker: 'Narrator' },
-      { image: 'world4_intro_panel', text: '"This is it. Everything comes down to this fight." 💪', speaker: HERO_NAME },
+      { image: 'world4_intro_panel', text: 'The Rift King - Doc Ock fused with the Emperor - controls it all!', speaker: 'Narrator' },
+      { image: 'world4_intro_panel', text: '"This is it. Everything comes down to this fight."', speaker: HERO_NAME },
     ],
   },
   world4_complete: {
     panels: [
-      { image: 'victory_panel', text: 'THE RIFT KING IS DEFEATED! 🎉🎉🎉', speaker: 'Narrator' },
+      { image: 'victory_panel', text: 'THE RIFT KING IS DEFEATED!', speaker: 'Narrator' },
       { image: 'victory_panel', text: 'The Rift seals shut! Both worlds are saved!', speaker: 'Narrator' },
-      { image: 'victory_panel', text: '"May the Force be with you, Spidey!" ⚔️', speaker: 'Luke Skywalker' },
-      { image: 'victory_panel', text: '"You too! Call me anytime!" 🕸️', speaker: 'Spider-Man' },
-      { image: 'victory_panel', text: `"I saved TWO universes! Best. Day. EVER!" 🏆`, speaker: HERO_NAME },
-      { image: 'victory_panel', text: `🎉 CONGRATULATIONS ${HERO_NAME.toUpperCase()}! ULTIMATE HERO!`, speaker: 'System' },
-      { image: 'victory_panel', text: '🎉 VENOM UNLOCKED! "We... are... VENOM!" 🖤', speaker: 'System' },
+      { image: 'victory_panel', text: '"May the Force be with you, Spidey!"', speaker: 'Luke Skywalker' },
+      { image: 'victory_panel', text: '"You too! Call me anytime!"', speaker: 'Spider-Man' },
+      { image: 'victory_panel', text: `"I saved TWO universes! Best. Day. EVER!"`, speaker: HERO_NAME },
+      { image: 'victory_panel', text: `CONGRATULATIONS ${HERO_NAME.toUpperCase()}! ULTIMATE HERO!`, speaker: 'System' },
+      { image: 'victory_panel', text: 'VENOM UNLOCKED! "We... are... VENOM!"', speaker: 'System' },
     ],
   },
 };

@@ -8,11 +8,7 @@ class LevelScene extends Phaser.Scene {
   }
 
   init(data) {
-    let saveStr = localStorage.getItem('ChronoverseSave');
-    this.levelNum = 1;
-    if (saveStr) {
-      try { this.levelNum = JSON.parse(saveStr).maxLevelUnlocked || 1; } catch (e) {}
-    }
+    this.levelNum = data.levelNum || 1;
     this.config = LevelData.generateConfig(this.levelNum);
     this.activeHero = localStorage.getItem('ChronoverseActiveHero') || 'spider_hero';
   }
@@ -262,10 +258,11 @@ class LevelScene extends Phaser.Scene {
   }
 
   buildLevel() {
-    const { finishDistance, towerFreq, enemyFreq, portalFreq, shardFreq } = this.config;
+    const { finishDistance, towerFreq, enemyFreq, portalFreq, shardFreq, obstacleGap, maxTowerBlocks } = this.config;
     const startX = 800;
-    const groundY = this.gameH + 10; // Push 10px into floor to eliminate texture padding gap
+    const groundY = this.gameH + 10;
     const blockSize = 80;
+    const gap = obstacleGap || 3; // Fallback
 
     let currentX = startX;
     let lastWasTower = false;
@@ -273,44 +270,38 @@ class LevelScene extends Phaser.Scene {
     while (currentX < finishDistance) {
       currentX += blockSize;
       
-      // Don't spawn objects too close to each other, leave gaps for pacing
+      // Random pacing gaps
       if (this.seededRandom(1) < 0.3) {
         lastWasTower = false;
         continue; 
       }
 
       if (this.seededRandom(1) < portalFreq && currentX > (finishDistance * 0.3)) {
-         // Rift Portal (Worlds Collide)
          const portal = this.portals.create(currentX, groundY - 120, 'rift_portal');
          portal.setDisplaySize(80, 160);
          this.tweens.add({ targets: portal, angle: 360, repeat: -1, duration: 4000 });
-         currentX += blockSize * 3; // Leave a massive safe space after portal
+         currentX += blockSize * gap;
          lastWasTower = false;
          continue;
       }
 
       if (this.seededRandom(1) < towerFreq && !lastWasTower) {
-        // Platform Tower
-        const heightMultiplier = 1; // Single-block towers for fair gameplay
+        const heightMultiplier = maxTowerBlocks || 1;
         const towerHeight = heightMultiplier * blockSize;
         const tower = this.blocks.create(currentX, groundY - (towerHeight/2), 'sci_fi_tower');
         tower.setDisplaySize(blockSize, towerHeight);
         lastWasTower = true;
         
-        // Spawn enemy or shard on top of tower only
         if (this.seededRandom(1) < shardFreq) {
           this.spawnShard(currentX, groundY - towerHeight - 40);
         }
         
-        // Enforce safe landing zone after tower (big gap so enemies aren't at the base)
-        currentX += blockSize * 3;
+        currentX += blockSize * gap;
       } else {
         lastWasTower = false;
-        // Ground Enemy
         if (this.seededRandom(1) < enemyFreq) {
           this.spawnEnemy(currentX, groundY);
-          // Enforce safe jump zone after enemy
-          currentX += blockSize * 3;
+          currentX += blockSize * gap;
         } else if (this.seededRandom(1) < shardFreq) {
           this.spawnShard(currentX, groundY - 40);
         }
