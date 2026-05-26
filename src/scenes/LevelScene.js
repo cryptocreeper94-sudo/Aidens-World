@@ -62,7 +62,6 @@ class LevelScene extends Phaser.Scene {
     this.player.setBounce(0);
     this.player.setDepth(10);
     // Removed setSize so it inherits the tight auto-cropped bounds
-    this.player.setCollideWorldBounds(true);
 
     // Groups
     this.blocks = this.physics.add.group({ immovable: true, allowGravity: false });
@@ -161,9 +160,11 @@ class LevelScene extends Phaser.Scene {
     if (this.bg) {
       const frame = this.textures.getFrame(this.activeWorld.bg);
       if (frame) {
-        const scale = Math.max(width / frame.width, gameH / frame.height);
+        // Force the scale so the top half of the image (real buildings) covers gameH exactly
+        const scale = Math.max(width / frame.width, (gameH * 2) / frame.height);
         this.bg.setSize(width, frame.height * scale);
-        this.bg.setPosition(width/2, gameH - (frame.height * scale)/2);
+        // Align the horizontal center of the image (the water line) exactly to the floor (gameH)
+        this.bg.setPosition(width/2, gameH);
         this.bg.tileScaleX = scale;
         this.bg.tileScaleY = scale;
         this.bg.tilePositionY = 0;
@@ -174,8 +175,20 @@ class LevelScene extends Phaser.Scene {
     }
     
     if (this.floor) {
-      this.floor.setPosition(width/2, gameH + 20); // Center of 40px floor is gameH + 20, so top edge is perfectly gameH
+      this.floor.setPosition(width/2, gameH + 1000); // Massive 2000px thick floor to prevent clipping
+      this.floor.height = 2000;
       this.floor.width = width * 100;
+      if (this.floor.body) {
+        this.floor.body.updateFromGameObject();
+      }
+    }
+
+    if (this.deathWall) {
+      this.deathWall.setPosition(-20, gameH/2);
+      this.deathWall.height = gameH;
+      if (this.deathWall.body) {
+        this.deathWall.body.updateFromGameObject();
+      }
     }
 
     if (this.footerBg) {
