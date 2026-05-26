@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="google" content="notranslate">
 
-  <!-- PWA -->
-  <link rel="manifest" href="manifest.json">
+  <!-- PWA - Dynamically generated below based on subdomain -->
+  <link id="dynamic-manifest" rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0a0a1a">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="The Chronoverse">
-  <link rel="apple-touch-icon" href="assets/ui/icon-192.png">
+  <link id="dynamic-apple-icon" rel="apple-touch-icon" href="assets/ui/icon-192.png">
 
   <!-- iOS Splash screens -->
   <link rel="apple-touch-startup-image" href="assets/ui/splash.png">
@@ -22,6 +22,94 @@
   <title>The Chronoverse - Action Portal</title>
   <!-- Playful Kid-Friendly Font -->
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&display=swap" rel="stylesheet">
+  
+  <!-- Dynamic PWA Manifest Generator -->
+  <script>
+    (function() {
+      const hostname = window.location.hostname;
+      let appName = "The Chronoverse";
+      let shortName = "Chronoverse";
+      let initial = "CV";
+      let bgColor = "#0a0a1a";
+      let fgColor = "#22d3ee"; // Neon Cyan
+
+      if (hostname && hostname !== 'chronoverse.tlid.io' && hostname !== 'localhost' && hostname !== '127.0.0.1') {
+        const parts = hostname.split('.');
+        const kidName = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
+        appName = kidName + "'s Portal";
+        shortName = kidName;
+        initial = parts[0].charAt(0).toUpperCase();
+        fgColor = "#fbbf24"; // Amber/Gold for kids
+      }
+
+      // Generate a canvas-based icon
+      function generateIcon(size) {
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        
+        // Background
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(0, 0, size, size);
+        
+        // Border
+        ctx.strokeStyle = fgColor;
+        ctx.lineWidth = size * 0.05;
+        ctx.strokeRect(size * 0.05, size * 0.05, size * 0.9, size * 0.9);
+        
+        // Text
+        ctx.fillStyle = fgColor;
+        ctx.font = 'bold ' + (size * 0.6) + 'px "Arial Black", Arial, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        // Adjust baseline slightly down for Arial Black
+        ctx.fillText(initial, size / 2, size / 2 + (size * 0.05));
+        
+        return canvas.toDataURL('image/png');
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const icon192 = generateIcon(192);
+        const icon512 = generateIcon(512);
+
+        // Create Dynamic Manifest
+        const manifest = {
+          name: appName,
+          short_name: shortName,
+          description: "The ultimate multiverse action portal!",
+          start_url: "/",
+          scope: "/",
+          id: "chronoverse-" + initial.toLowerCase(),
+          display: "fullscreen",
+          orientation: "landscape",
+          background_color: bgColor,
+          theme_color: fgColor,
+          icons: [
+            { src: icon192, sizes: "192x192", type: "image/png", purpose: "any maskable" },
+            { src: icon512, sizes: "512x512", type: "image/png", purpose: "any maskable" }
+          ],
+          categories: ["games", "entertainment"]
+        };
+
+        const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+        const manifestUrl = URL.createObjectURL(manifestBlob);
+
+        const manifestLink = document.getElementById('dynamic-manifest');
+        if (manifestLink) manifestLink.href = manifestUrl;
+        
+        const appleIcon = document.getElementById('dynamic-apple-icon');
+        if (appleIcon) appleIcon.href = icon192;
+        
+        const titleTag = document.querySelector('title');
+        if (titleTag) titleTag.textContent = appName;
+        
+        const appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+        if (appleTitle) appleTitle.content = shortName;
+      });
+    })();
+  </script>
+
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
