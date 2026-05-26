@@ -991,7 +991,11 @@
       </div>
     </div>
     
-    <button id="select-hero-btn" onclick="selectHeroAndPlay()" style="margin-top:30px; background:linear-gradient(90deg, #10b981, #059669); color:white; border:none; padding:15px 40px; font-size:20px; font-weight:900; border-radius:30px; cursor:pointer; text-transform:uppercase; box-shadow:0 4px 15px rgba(16,185,129,0.5);">Select Hero</button>
+    <div style="margin-top: 20px; width: 100%; text-align: center; z-index: 10;">
+      <input type="text" id="custom-hero-name" placeholder="Enter your name..." style="width: 250px; padding: 12px; border-radius: 8px; border: 2px solid #22d3ee; background: rgba(0,0,0,0.8); color: white; font-size: 16px; text-align: center; font-weight: bold; font-family: 'Nunito', sans-serif;">
+    </div>
+    
+    <button id="select-hero-btn" onclick="selectHeroAndPlay()" style="margin-top:20px; background:linear-gradient(90deg, #10b981, #059669); color:white; border:none; padding:15px 40px; font-size:20px; font-weight:900; border-radius:30px; cursor:pointer; text-transform:uppercase; box-shadow:0 4px 15px rgba(16,185,129,0.5);">Select Hero</button>
   </div>
   <div id="learning-center" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:url('assets/ui/cockpit_bg.png') no-repeat center center fixed; background-size:cover; z-index:5500; overflow-y:auto;">
     <!-- Dimmer overlay -->
@@ -1768,6 +1772,11 @@
       document.getElementById('stat3-bar').style.width = data.s3[1] + '%';
       document.getElementById('stat3-bar').style.background = data.color;
 
+      const customInput = document.getElementById('custom-hero-name');
+      if(customInput) {
+        customInput.value = '';
+        customInput.placeholder = `Enter name (default: ${data.name})`;
+      }
       document.getElementById('refractor-modal').style.display = 'flex';
       
       // Foil animation
@@ -1781,7 +1790,16 @@
 
     window.selectHeroAndPlay = function() {
       const data = HERO_DATA[currentlyViewingHero];
+      const customNameInput = document.getElementById('custom-hero-name').value.trim();
+      if (customNameInput) {
+        localStorage.setItem('ChronoversePlayerName', customNameInput);
+      } else {
+        localStorage.setItem('ChronoversePlayerName', data.name);
+      }
       localStorage.setItem('ChronoverseActiveHero', data.sprite);
+      
+      // Update UI immediately if on the hub
+      applyTenantPersonalization();
       document.getElementById('refractor-modal').style.display = 'none';
       document.getElementById('hero-selector-hub').style.display = 'none';
       showGameHub();
@@ -1993,6 +2011,11 @@
 
       // Immediately capitalize tenant name for optimistic UI rendering
       let displayName = tenantName.charAt(0).toUpperCase() + tenantName.slice(1);
+      
+      const storedName = localStorage.getItem('ChronoversePlayerName');
+      if (storedName) {
+        displayName = storedName;
+      }
       
       // Optimistically apply personalization (prevents "Aiden" flash if Firestore takes time or errors)
       const portalHeader = document.querySelector('.portal-header h1');
