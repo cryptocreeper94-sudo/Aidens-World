@@ -525,13 +525,13 @@ class LevelScene extends Phaser.Scene {
     this.isRunning = false;
     this.isAlive = false;
     
-    // Disable all physics colliders so the player doesn't get stuck or die while flying off
-    this.physics.world.colliders.destroy();
+    // Freeze the player and hide them (they entered the portal)
+    this.player.body.moves = false;
+    this.player.setVisible(false);
+    if (this.overdriveAura) this.overdriveAura.setVisible(false);
     
-    // Blast through finish line
-    this.player.setVelocityX(800); 
-    this.player.setVelocityY(-400);
     SoundFX.play('levelup');
+    this.cameras.main.flash(500, 255, 255, 255);
     
     // Save progression
     let saveStr = localStorage.getItem('ChronoverseSave');
@@ -541,7 +541,7 @@ class LevelScene extends Phaser.Scene {
     save.overdriveMeter = this.overdriveMeter; // persist overdrive meter
     localStorage.setItem('ChronoverseSave', JSON.stringify(save));
 
-    this.time.delayedCall(1500, () => {
+    this.time.delayedCall(500, () => {
         this.showVictoryModal();
     });
   }
