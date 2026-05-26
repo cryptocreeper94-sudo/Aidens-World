@@ -297,22 +297,20 @@ class LevelScene extends Phaser.Scene {
         tower.setDisplaySize(blockSize, towerHeight);
         lastWasTower = true;
         
-        // Spawn enemy or shard on top
-        if (this.seededRandom(1) < enemyFreq) {
-          this.spawnEnemy(currentX, groundY - towerHeight);
-        } else if (this.seededRandom(1) < shardFreq) {
+        // Spawn enemy or shard on top of tower only
+        if (this.seededRandom(1) < shardFreq) {
           this.spawnShard(currentX, groundY - towerHeight - 40);
         }
         
-        // Enforce safe landing zone after tower
-        currentX += blockSize * 1.5;
+        // Enforce safe landing zone after tower (big gap so enemies aren't at the base)
+        currentX += blockSize * 3;
       } else {
         lastWasTower = false;
         // Ground Enemy
         if (this.seededRandom(1) < enemyFreq) {
           this.spawnEnemy(currentX, groundY);
           // Enforce safe jump zone after enemy
-          currentX += blockSize * 1.5;
+          currentX += blockSize * 3;
         } else if (this.seededRandom(1) < shardFreq) {
           this.spawnShard(currentX, groundY - 40);
         }
@@ -594,15 +592,12 @@ class LevelScene extends Phaser.Scene {
       
       if (this.player.x < 0) this.die();
 
-      // Geometry Dash Dynamic Jump Arc (No upside down spinning!)
+      // Geometry Dash full 360° flip when airborne!
       if (!this.player.body.onFloor() && !this.player.body.touching.down) {
-        if (this.player.body.velocity.y < 0) {
-            this.player.angle = -15; // Lean back slightly when jumping up
-        } else {
-            this.player.angle = 15; // Lean forward slightly when falling
-        }
+        this.player.angle += 8; // Continuous spin
       } else {
-        this.player.angle = 0; // Snap perfectly flat on landing
+        // Snap to nearest 360° on landing for clean look
+        this.player.angle = 0;
       }
     } else {
       // Idle float waiting for start
