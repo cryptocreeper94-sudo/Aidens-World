@@ -113,7 +113,7 @@ class LevelScene extends Phaser.Scene {
         this.jumpCount = 1;
         SoundFX.play('jump');
       } else if (this.jumpCount < 2 || this.isOverdrive) {
-        this.player.setVelocityY(-1500);
+        this.player.setVelocityY(-1000);
         this.jumpCount = this.isOverdrive ? this.jumpCount : 2;
         SoundFX.play('jump');
         

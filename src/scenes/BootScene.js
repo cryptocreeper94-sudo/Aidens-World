@@ -54,9 +54,14 @@ class BootScene extends Phaser.Scene {
     // ── BACKGROUNDS (all worlds) ──
     this.load.image('hub_bg', 'assets/backgrounds/hub_bg.png');
     this.load.image('nyc_skyline', 'assets/backgrounds/nyc_skyline.png');
+    this.load.image('nyc_skyline_sunset', 'assets/backgrounds/nyc_skyline_sunset.png');
+    this.load.image('nyc_skyline_night', 'assets/backgrounds/nyc_skyline_night.png');
     this.load.image('space_station', 'assets/backgrounds/space_station.png');
     this.load.image('desert', 'assets/backgrounds/desert.png');
+    this.load.image('desert_sunset', 'assets/backgrounds/desert_sunset.png');
+    this.load.image('desert_night', 'assets/backgrounds/desert_night.png');
     this.load.image('rift', 'assets/backgrounds/rift.png');
+    this.load.image('rift_blue', 'assets/backgrounds/rift_blue.png');
     this.load.image('portal_bg_split_3way', 'assets/ui/portal_bg_split_3way.png');
 
     // ── ENEMIES ──

@@ -28,9 +28,15 @@ const LevelData = {
     const maxTowerBlocks = levelNum >= 10 ? 3 : (levelNum >= 4 ? 2 : 1);
 
     const worlds = [
-      { key: 'city', bg: 'nyc_skyline', color: '#1e1b4b', enemies: ['enemy_thug'] },
-      { key: 'upside_down', bg: 'rift', color: '#450a0a', enemies: ['alien_brute'] },
-      { key: 'desert', bg: 'desert', color: '#1e3a8a', enemies: ['enemy_trooper'] }
+      { key: 'city_day', bg: 'nyc_skyline', color: '#1e1b4b', enemies: ['enemy_thug'] },
+      { key: 'city_sunset', bg: 'nyc_skyline_sunset', color: '#1e1b4b', enemies: ['enemy_thug'] },
+      { key: 'city_night', bg: 'nyc_skyline_night', color: '#0f172a', enemies: ['enemy_thug'] },
+      { key: 'upside_down_red', bg: 'rift', color: '#450a0a', enemies: ['alien_brute'] },
+      { key: 'upside_down_blue', bg: 'rift_blue', color: '#172554', enemies: ['alien_brute'] },
+      { key: 'desert_day', bg: 'desert', color: '#1e3a8a', enemies: ['enemy_trooper'] },
+      { key: 'desert_sunset', bg: 'desert_sunset', color: '#7c2d12', enemies: ['enemy_trooper'] },
+      { key: 'desert_night', bg: 'desert_night', color: '#020617', enemies: ['enemy_trooper'] },
+      { key: 'space_station', bg: 'space_station', color: '#0f172a', enemies: ['enemy_trooper'] }
     ];
 
     return {
