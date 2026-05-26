@@ -35,15 +35,12 @@ class LevelScene extends Phaser.Scene {
     this.activeWorld = this.config.worlds[0];
     this.cameras.main.setBackgroundColor('#000000');
     
-    // Background image — NOT tileSprite to avoid ALL tiling/repeat artifacts
-    this.bg = this.add.image(width/2, this.gameH/2, this.activeWorld.bg);
+    // Background — force exact screen dimensions, no scale math
+    this.bg = this.add.image(0, 0, this.activeWorld.bg);
+    this.bg.setOrigin(0, 0);
+    this.bg.setDisplaySize(width, height); // Fill ENTIRE canvas including footer area
     this.bg.setDepth(0);
-    // Scale to cover entire game area
-    const bgScaleX = width / this.bg.width;
-    const bgScaleY = this.gameH / this.bg.height;
-    const bgScale = Math.max(bgScaleX, bgScaleY);
-    this.bg.setScale(bgScale);
-    this.bg.setScrollFactor(0); // Fixed to camera
+    this.bg.setScrollFactor(0);
 
     // Player (Add fallback if localStorage has stale invalid key)
     if (!this.textures.exists(this.activeHero)) {
@@ -153,10 +150,7 @@ class LevelScene extends Phaser.Scene {
     this.gameH = gameH;
 
     if (this.bg) {
-      this.bg.setPosition(width/2, gameH/2);
-      const bgScaleX = width / this.bg.width;
-      const bgScaleY = gameH / this.bg.height;
-      this.bg.setScale(Math.max(bgScaleX, bgScaleY));
+      this.bg.setDisplaySize(width, height);
     }
     
     if (this.floor) {
@@ -337,14 +331,13 @@ class LevelScene extends Phaser.Scene {
     this.activeWorld = newWorld;
     this.cameras.main.setBackgroundColor('#000000');
     
-    // Swap background image (not tileSprite - no tiling artifacts)
-    const { width } = this.cameras.main;
+    // Swap background — force exact dimensions
+    const { width, height } = this.cameras.main;
     this.bg.destroy();
-    this.bg = this.add.image(width/2, this.gameH/2, newWorld.bg);
+    this.bg = this.add.image(0, 0, newWorld.bg);
+    this.bg.setOrigin(0, 0);
+    this.bg.setDisplaySize(width, height);
     this.bg.setDepth(0);
-    const bgScaleX = width / this.bg.width;
-    const bgScaleY = this.gameH / this.bg.height;
-    this.bg.setScale(Math.max(bgScaleX, bgScaleY));
     this.bg.setScrollFactor(0);
   }
 
