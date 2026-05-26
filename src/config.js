@@ -61,17 +61,10 @@ window.launchRiftRunner = function() {
   if (gameContainer) gameContainer.style.display = 'block';
 
   // Inject exact physical dimensions to bypass CSS reflow delays
-  gameConfig.scale.width = window.innerWidth;
-  gameConfig.scale.height = window.innerHeight;
+  gameConfig.scale.width = '100%';
+  gameConfig.scale.height = '100%';
   
   game = new Phaser.Game(gameConfig);
-  
-  // Add a global resize listener to keep the engine in sync with the viewport
-  window.addEventListener('resize', () => {
-    if (game && game.scale) {
-      game.scale.resize(window.innerWidth, window.innerHeight);
-    }
-  });
 };
 
   // Handle orientation changes
