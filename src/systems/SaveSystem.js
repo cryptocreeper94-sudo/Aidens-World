@@ -3,7 +3,7 @@
    ======================================== */
 
 const HERO_NAME = 'Aiden';
-const SAVE_KEY = 'heroHQ_save';
+const SAVE_KEY = 'ChronoverseSave';
 
 const SaveSystem = {
   getDefault() {
@@ -37,7 +37,12 @@ const SaveSystem = {
 
   save(data) {
     try {
+      data.lastUpdated = Date.now();
       localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+      // Background sync to Firebase
+      if (window.db && window.CHRONOVERSE_TENANT) {
+        window.db.collection('chronoverse_saves').doc(window.CHRONOVERSE_TENANT.toLowerCase()).set(data).catch(e => console.log('Firebase write error', e));
+      }
     } catch (e) {}
   },
 
