@@ -928,7 +928,7 @@
     
     <div style="max-width:1200px; margin:0 auto; padding:80px 20px 40px 20px; display:flex; flex-direction:column; align-items:center;">
       <h2 style="color:#3b82f6; font-size:32px; font-weight:900; text-transform:uppercase; letter-spacing:2px; margin-bottom:10px; text-shadow:0 2px 10px rgba(59,130,246,0.5);">Choose Your Hero</h2>
-      <p style="color:#cbd5e1; font-size:16px; margin-bottom:40px; font-weight:700;">Select a hero to dive into the Rift!</p>
+      <p style="color:#cbd5e1; font-size:16px; margin-bottom:40px; font-weight:700;">Pick your identity, then suit up for the Rift!</p>
       
       <div style="display:flex; overflow-x:auto; gap:30px; width:100%; padding-bottom:30px; scroll-snap-type: x mandatory; align-items: stretch; justify-content: flex-start; max-width: 1040px; padding-left: 20px; padding-right: 20px;">
         
@@ -1719,7 +1719,10 @@
       ];
 
       unlockedHeroes = heroRoster.filter(h => currentLevel >= h.req);
-      currentHeroIndex = 0;
+      // Start on the hero the player already has selected
+      const activeId = localStorage.getItem('ChronoverseActiveHero') || 'iron_kid';
+      const foundIdx = unlockedHeroes.findIndex(h => h.id === activeId);
+      currentHeroIndex = foundIdx >= 0 ? foundIdx : 0;
       updateHeroUI();
     }
 
@@ -1990,11 +1993,9 @@
       } else {
         localStorage.setItem('ChronoversePlayerName', data.name);
       }
-      // Use the currently equipped suit from Rift Locker (or the hero's default)
-      const equippedSuit = localStorage.getItem('ChronoverseActiveHero');
-      if (!equippedSuit) {
-        localStorage.setItem('ChronoverseActiveHero', data.sprite);
-      }
+      // ALWAYS set the active hero to the character the player just picked
+      localStorage.setItem('ChronoverseActiveHero', data.sprite);
+      localStorage.setItem('ChronoverseIdentity', currentlyViewingHero);
       
       // Update UI immediately if on the hub
       applyTenantPersonalization();
