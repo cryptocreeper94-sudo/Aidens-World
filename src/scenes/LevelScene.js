@@ -38,14 +38,17 @@ class LevelScene extends Phaser.Scene {
     // Scrolling visual background instead of blank grid
     this.bg = this.add.tileSprite(width/2, height/2, width, height, this.activeWorld.bg);
     this.bg.setAlpha(0.6);
-    this.bg.tilePositionY = 0; // Prevent vertical seam offsetting
+    this.bg.setDepth(0);
     
-    // Scale background texture to perfectly fit screen height
+    // Scale background texture to perfectly fit screen and align to bottom
     const frame = this.textures.getFrame(this.activeWorld.bg);
     if (frame) {
-      const scale = height / frame.height;
+      const scale = Math.max(width / frame.width, height / frame.height);
+      this.bg.setSize(width, frame.height * scale);
+      this.bg.setPosition(width/2, height - (frame.height * scale)/2);
       this.bg.tileScaleX = scale;
       this.bg.tileScaleY = scale;
+      this.bg.tilePositionY = 0;
     }
 
     // Player (Add fallback if localStorage has stale invalid key)
@@ -56,7 +59,6 @@ class LevelScene extends Phaser.Scene {
     
     this.player = this.physics.add.sprite(250, height / 2, this.activeHero);
     this.player.setDisplaySize(80, 80);
-    this.player.setGravityY(this.config.gravity);
     this.player.setBounce(0);
     this.player.setDepth(10);
     // Removed setSize so it inherits the tight auto-cropped bounds
@@ -155,15 +157,17 @@ class LevelScene extends Phaser.Scene {
     const height = gameSize.height;
 
     if (this.bg) {
-      this.bg.setPosition(width/2, height/2);
-      this.bg.setSize(width, height);
-      
       const frame = this.textures.getFrame(this.activeWorld.bg);
       if (frame) {
-        const scale = height / frame.height;
+        const scale = Math.max(width / frame.width, height / frame.height);
+        this.bg.setSize(width, frame.height * scale);
+        this.bg.setPosition(width/2, height - (frame.height * scale)/2);
         this.bg.tileScaleX = scale;
         this.bg.tileScaleY = scale;
         this.bg.tilePositionY = 0;
+      } else {
+        this.bg.setPosition(width/2, height/2);
+        this.bg.setSize(width, height);
       }
     }
     
