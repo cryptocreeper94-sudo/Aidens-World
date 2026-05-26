@@ -27,6 +27,9 @@ class LevelScene extends Phaser.Scene {
     this.distanceTraveled = 0;
     this.shardsCollected = 0;
     this.jumpCount = 0;
+    this.riftShardCounter = 0; // Tracks shards toward next portal (resets on portal hit)
+    this.portalShardsNeeded = 20; // Shards needed to summon a rift portal
+    this.hasActiveRiftPortal = false; // Is there a rift portal on screen right now?
     
     // Load persistent overdrive meter from save
     let initialSaveStr = localStorage.getItem('ChronoverseSave');
@@ -39,7 +42,7 @@ class LevelScene extends Phaser.Scene {
     for (let i = 0; i < 20; i++) this.seededRandom(1);
 
     // Worlds Collide Background
-    this.activeWorld = this.config.worlds[0];
+    this.activeWorld = this.config.worlds[this.config.startWorldIndex];
     this.cameras.main.setBackgroundColor('#000000');
     this.cameras.main.fadeIn(300);
     
@@ -284,7 +287,7 @@ class LevelScene extends Phaser.Scene {
   }
 
   buildLevel() {
-    const { finishDistance, towerFreq, enemyFreq, portalFreq, shardFreq, obstacleGap, maxTowerBlocks } = this.config;
+    const { finishDistance, towerFreq, enemyFreq, shardFreq, obstacleGap, maxTowerBlocks } = this.config;
     const startX = 800;
     const groundY = this.gameH + 10;
     const blockSize = 80;
@@ -300,16 +303,6 @@ class LevelScene extends Phaser.Scene {
       if (this.seededRandom(1) < 0.3) {
         lastWasTower = false;
         continue; 
-      }
-
-      if (this.seededRandom(1) < portalFreq && currentX > (finishDistance * 0.3) && !this.hasSpawnedPortal) {
-         this.hasSpawnedPortal = true;
-         const portal = this.portals.create(currentX, groundY - 120, 'rift_portal');
-         portal.setDisplaySize(80, 160);
-         this.tweens.add({ targets: portal, angle: 360, repeat: -1, duration: 4000 });
-         currentX += blockSize * 6; // Big safe zone after portal world-swap
-         lastWasTower = false;
-         continue;
       }
 
       if (this.seededRandom(1) < towerFreq && !lastWasTower) {
@@ -358,45 +351,125 @@ class LevelScene extends Phaser.Scene {
 
   hitPortal(player, portal) {
     if (portal.isFinishLine) return;
-    
-    portal.destroy();
-    SoundFX.play('levelup');
-    this.cameras.main.flash(300, 255, 255, 255);
-    
-    // Worlds Collide: swap background, enemies, and color theme
-    let newWorld;
-    do {
-      newWorld = this.config.worlds[Math.floor(Math.random() * this.config.worlds.length)];
-    } while (newWorld.key === this.activeWorld.key && this.config.worlds.length > 1);
-    
-    this.activeWorld = newWorld;
-    this.cameras.main.setBackgroundColor('#000000');
-    
-    // Update all existing enemies ahead of the player to the new world's theme
-    if (this.spikes) {
-      this.spikes.getChildren().forEach(enemy => {
-        if (enemy.x > this.player.x) {
-          const newEnemyKey = this.activeWorld.enemies[Math.floor(Math.random() * this.activeWorld.enemies.length)];
-          enemy.setTexture(newEnemyKey);
-          enemy.setDisplaySize(80, 80);
-        }
-      });
+    if (portal.isRiftPortal) {
+      portal.destroy();
+      this.hasActiveRiftPortal = false;
+      this.riftShardCounter = 0; // Reset counter for next portal
+      SoundFX.play('levelup');
+      
+      // Freeze the game while showing the rift modal
+      const savedSpeed = this.gameSpeed;
+      this.gameSpeed = 0;
+      this.player.body.moves = false;
+      this.player.setVisible(false);
+      
+      // Pick a new world
+      let newWorld;
+      do {
+        newWorld = this.config.worlds[Math.floor(Math.random() * this.config.worlds.length)];
+      } while (newWorld.key === this.activeWorld.key && this.config.worlds.length > 1);
+      
+      this.showRiftModal(newWorld, savedSpeed);
+      return;
     }
-    
-    // Swap background — force exact dimensions
+  }
+
+  showRiftModal(newWorld, savedSpeed) {
     const { width, height } = this.cameras.main;
-    this.bg.destroy();
-    this.bg = this.add.image(0, 0, newWorld.bg);
-    this.bg.setOrigin(0, 0);
-    this.bg.setDisplaySize(width, height);
-    this.bg.setDepth(-1);
-    this.bg.setScrollFactor(0);
-    this.bg.setTint(0x999999);
+    
+    this.cameras.main.flash(500, 255, 255, 255);
+    
+    // Dark overlay
+    const overlay = this.add.rectangle(width/2, height/2, width, height, 0x000000, 0).setDepth(2000).setScrollFactor(0);
+    this.tweens.add({ targets: overlay, fillAlpha: 0.9, duration: 400 });
+    
+    // Panel
+    const panel = this.add.rectangle(width/2, height/2, Math.min(width * 0.85, 500), 200, 0x0a0a1a, 1).setDepth(2001).setScrollFactor(0);
+    panel.setStrokeStyle(3, 0x7c3aed);
+    panel.setAlpha(0);
+    this.tweens.add({ targets: panel, alpha: 1, duration: 400, delay: 200 });
+    
+    // Rift icon
+    const riftIcon = this.add.text(width/2, height/2 - 60, '🌀', { fontSize: '42px' }).setOrigin(0.5).setDepth(2002).setScrollFactor(0).setAlpha(0);
+    this.tweens.add({ targets: riftIcon, alpha: 1, angle: 360, duration: 800, delay: 300 });
+    
+    // Title
+    const title = this.add.text(width/2, height/2 - 20, 'RIFT BREACH!', {
+      fontFamily: 'Arial Black', fontSize: '28px', color: '#7c3aed', stroke: '#000', strokeThickness: 5
+    }).setOrigin(0.5).setDepth(2002).setScrollFactor(0).setAlpha(0);
+    this.tweens.add({ targets: title, alpha: 1, duration: 400, delay: 400 });
+    
+    // Flavor text
+    const flavorTexts = [
+      `The rift tore open and dropped you into ${newWorld.name}!`,
+      `A dimensional fracture pulls you through to ${newWorld.name}!`,
+      `Reality shifted... you've landed in ${newWorld.name}!`,
+      `The portal ripped you across dimensions to ${newWorld.name}!`,
+    ];
+    const flavor = flavorTexts[Math.floor(Math.random() * flavorTexts.length)];
+    
+    const desc = this.add.text(width/2, height/2 + 20, flavor, {
+      fontFamily: 'Arial', fontSize: '16px', color: '#ffffff', align: 'center',
+      wordWrap: { width: Math.min(width * 0.7, 400) }
+    }).setOrigin(0.5).setDepth(2002).setScrollFactor(0).setAlpha(0);
+    this.tweens.add({ targets: desc, alpha: 1, duration: 400, delay: 600 });
+    
+    // Continue button
+    const btn = this.add.rectangle(width/2, height/2 + 70, 160, 40, 0x7c3aed).setDepth(2002).setScrollFactor(0).setAlpha(0);
+    btn.setStrokeStyle(2, 0xffffff);
+    const btnText = this.add.text(width/2, height/2 + 70, '▶ CONTINUE', {
+      fontFamily: 'Arial Black', fontSize: '16px', color: '#fff'
+    }).setOrigin(0.5).setDepth(2003).setScrollFactor(0).setAlpha(0);
+    this.tweens.add({ targets: [btn, btnText], alpha: 1, duration: 400, delay: 800 });
+    
+    btn.setInteractive({ useHandCursor: true });
+    btn.on('pointerdown', () => {
+      // Clean up modal
+      overlay.destroy();
+      panel.destroy();
+      riftIcon.destroy();
+      title.destroy();
+      desc.destroy();
+      btn.destroy();
+      btnText.destroy();
+      
+      // Apply the world swap
+      this.activeWorld = newWorld;
+      
+      // Update enemies ahead of the player
+      if (this.spikes) {
+        this.spikes.getChildren().forEach(enemy => {
+          if (enemy.x > this.player.x) {
+            const newEnemyKey = this.activeWorld.enemies[Math.floor(Math.random() * this.activeWorld.enemies.length)];
+            enemy.setTexture(newEnemyKey);
+            enemy.setDisplaySize(80, 80);
+          }
+        });
+      }
+      
+      // Swap background
+      const { width, height } = this.cameras.main;
+      this.bg.destroy();
+      this.bg = this.add.image(0, 0, newWorld.bg);
+      this.bg.setOrigin(0, 0);
+      this.bg.setDisplaySize(width, height);
+      this.bg.setDepth(-1);
+      this.bg.setScrollFactor(0);
+      this.bg.setTint(0x999999);
+      
+      // Resume gameplay
+      this.player.setVisible(true);
+      this.player.body.moves = true;
+      this.gameSpeed = savedSpeed;
+      
+      this.cameras.main.flash(300, 255, 255, 255);
+    });
   }
 
   collectShard(player, shard) {
     shard.destroy();
     this.shardsCollected++;
+    this.riftShardCounter++;
     this.scoreText.setText(`💎 ${this.shardsCollected}`);
     SoundFX.play('hit');
     
@@ -409,6 +482,32 @@ class LevelScene extends Phaser.Scene {
         this.enterOverdrive();
       }
     }
+    
+    // Spawn a rift portal when enough shards are collected
+    if (this.riftShardCounter >= this.portalShardsNeeded && !this.hasActiveRiftPortal) {
+      this.spawnRiftPortal();
+    }
+  }
+
+  spawnRiftPortal() {
+    this.hasActiveRiftPortal = true;
+    const groundY = this.gameH + 10;
+    
+    // Spawn it ahead of the player, elevated so you have to jump to hit it
+    const spawnX = this.player.x + this.cameras.main.width + 200;
+    const portal = this.portals.create(spawnX, groundY - 180, 'rift_portal');
+    portal.setDisplaySize(80, 160);
+    portal.isRiftPortal = true;
+    this.tweens.add({ targets: portal, angle: 360, repeat: -1, duration: 3000 });
+    
+    // Pulsing glow effect to make it obvious
+    this.tweens.add({ targets: portal, scaleX: 1.15, scaleY: 1.15, yoyo: true, repeat: -1, duration: 600 });
+    
+    // Alert the player
+    const alertText = this.add.text(this.cameras.main.width / 2, 140, '🌀 RIFT PORTAL AHEAD! 🌀', {
+      fontFamily: 'Arial Black', fontSize: '22px', color: '#7c3aed', stroke: '#000', strokeThickness: 4
+    }).setOrigin(0.5).setDepth(100).setScrollFactor(0);
+    this.tweens.add({ targets: alertText, alpha: 0, duration: 2500, delay: 500, onComplete: () => alertText.destroy() });
   }
 
   enterOverdrive() {

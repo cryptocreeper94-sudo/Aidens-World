@@ -5,8 +5,8 @@
 const LevelData = {
   // Geometry Dash-calibrated difficulty progression
   generateConfig: function(levelNum) {
-    // Speed: 300 at lvl 1 (real GD feel), ramps to ~700 by lvl 20
-    const gameSpeed = 300 + Math.min(levelNum * 20, 400); 
+    // Speed: 200 at lvl 1 (accessible mobile feel), ramps to ~500 by lvl 20
+    const gameSpeed = 200 + Math.min(levelNum * 15, 300); 
 
     // Distance to finish — meaningful runs from the start
     const finishDistance = 6000 + (levelNum * 600);
@@ -17,8 +17,6 @@ const LevelData = {
     // Enemy probability — enemies from the start
     const enemyFreq = Math.min(0.15 + (levelNum * 0.010), 0.30);
     
-    // More portals = more world swaps per level (at least 1-2 per run)
-    const portalFreq = Math.min(0.03 + (levelNum * 0.002), 0.06); 
     const shardFreq = 0.15;
 
     // Obstacle gap: tighter from the start, gets intense
@@ -28,20 +26,23 @@ const LevelData = {
     const maxTowerBlocks = levelNum >= 10 ? 3 : (levelNum >= 4 ? 2 : 1);
 
     const worlds = [
-      { key: 'city_day', bg: 'nyc_skyline', color: '#1e1b4b', enemies: ['enemy_thug'] },
-      { key: 'city_sunset', bg: 'nyc_skyline_sunset', color: '#1e1b4b', enemies: ['enemy_thug'] },
-      { key: 'city_night', bg: 'nyc_skyline_night', color: '#0f172a', enemies: ['enemy_thug'] },
-      { key: 'upside_down_red', bg: 'rift', color: '#450a0a', enemies: ['alien_brute'] },
-      { key: 'upside_down_blue', bg: 'rift_blue', color: '#172554', enemies: ['alien_brute'] },
-      { key: 'desert_day', bg: 'desert', color: '#1e3a8a', enemies: ['enemy_trooper'] },
-      { key: 'desert_sunset', bg: 'desert_sunset', color: '#7c2d12', enemies: ['enemy_trooper'] },
-      { key: 'desert_night', bg: 'desert_night', color: '#020617', enemies: ['enemy_trooper'] },
-      { key: 'space_station', bg: 'space_station', color: '#0f172a', enemies: ['enemy_trooper'] }
+      { key: 'city_day', bg: 'nyc_skyline', color: '#1e1b4b', enemies: ['enemy_thug'], name: 'New York City' },
+      { key: 'city_sunset', bg: 'nyc_skyline_sunset', color: '#1e1b4b', enemies: ['enemy_thug'], name: 'NYC at Sunset' },
+      { key: 'city_night', bg: 'nyc_skyline_night', color: '#0f172a', enemies: ['enemy_thug'], name: 'NYC After Dark' },
+      { key: 'upside_down_red', bg: 'rift', color: '#450a0a', enemies: ['alien_brute'], name: 'The Upside Down' },
+      { key: 'upside_down_blue', bg: 'rift_blue', color: '#172554', enemies: ['alien_brute'], name: 'The Shadow Rift' },
+      { key: 'desert_day', bg: 'desert', color: '#1e3a8a', enemies: ['enemy_trooper'], name: 'Tatooine' },
+      { key: 'desert_sunset', bg: 'desert_sunset', color: '#7c2d12', enemies: ['enemy_trooper'], name: 'Tatooine at Dusk' },
+      { key: 'desert_night', bg: 'desert_night', color: '#020617', enemies: ['enemy_trooper'], name: 'Tatooine Nightfall' },
+      { key: 'space_station', bg: 'space_station', color: '#0f172a', enemies: ['enemy_trooper'], name: 'Imperial Space Station' }
     ];
+
+    // Each level starts in a different world — rotate based on levelNum
+    const startWorldIndex = (levelNum - 1) % worlds.length;
 
     return {
       levelNum, gameSpeed, finishDistance, towerFreq, enemyFreq,
-      portalFreq, shardFreq, obstacleGap, maxTowerBlocks, worlds
+      shardFreq, obstacleGap, maxTowerBlocks, worlds, startWorldIndex
     };
   }
 };
