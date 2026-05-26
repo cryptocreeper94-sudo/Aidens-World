@@ -112,7 +112,7 @@ class LevelScene extends Phaser.Scene {
         return; 
       }
       if (this.player.body.touching.down || this.player.body.onFloor()) {
-        this.player.setVelocityY(-1200); // Sharp GD jump
+        this.player.setVelocityY(-1500); // Strong jump to clear tall towers
         SoundFX.play('jump');
       }
     };
@@ -264,7 +264,7 @@ class LevelScene extends Phaser.Scene {
   buildLevel() {
     const { finishDistance, towerFreq, enemyFreq, portalFreq, shardFreq } = this.config;
     const startX = 800;
-    const groundY = this.gameH; // Floor top edge = this.gameH
+    const groundY = this.gameH + 10; // Push 10px into floor to eliminate texture padding gap
     const blockSize = 80;
 
     let currentX = startX;
@@ -291,7 +291,7 @@ class LevelScene extends Phaser.Scene {
 
       if (this.seededRandom(1) < towerFreq && !lastWasTower) {
         // Platform Tower
-        const heightMultiplier = Math.floor(this.seededRandom(3, 1)); // 1 to 2 blocks high
+        const heightMultiplier = 1; // Single-block towers for fair gameplay
         const towerHeight = heightMultiplier * blockSize;
         const tower = this.blocks.create(currentX, groundY - (towerHeight/2), 'sci_fi_tower');
         tower.setDisplaySize(blockSize, towerHeight);
