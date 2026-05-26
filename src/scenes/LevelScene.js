@@ -76,8 +76,8 @@ class LevelScene extends Phaser.Scene {
     // Generate procedural level
     this.buildLevel();
 
-    // Floor — positioned at bottom of game area, above the footer
-    this.floor = this.add.rectangle(width/2, this.gameH, width*100, 40, 0x22d3ee).setDepth(10);
+    // Floor — top edge at gameH (footer top), body hidden behind footer
+    this.floor = this.add.rectangle(width/2, this.gameH + 20, width*100, 40, 0x000000, 0).setDepth(10);
     this.physics.add.existing(this.floor, true);
 
     // Absolute Death Wall to prevent clipping through towers when crushed
@@ -174,7 +174,7 @@ class LevelScene extends Phaser.Scene {
     }
     
     if (this.floor) {
-      this.floor.setPosition(width/2, gameH);
+      this.floor.setPosition(width/2, gameH + 20);
       this.floor.width = width * 100;
       if (this.floor.body) {
         this.floor.body.updateFromGameObject();
@@ -256,7 +256,7 @@ class LevelScene extends Phaser.Scene {
   buildLevel() {
     const { finishDistance, towerFreq, enemyFreq, portalFreq, shardFreq } = this.config;
     const startX = 800;
-    const groundY = this.gameH - 20;
+    const groundY = this.gameH;
     const blockSize = 80;
 
     let currentX = startX;
