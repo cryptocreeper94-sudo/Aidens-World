@@ -10,7 +10,8 @@ const gameHeight = isMobile ? 375 : 500; // iPhone SE landscape height
 const gameConfig = {
   type: Phaser.AUTO,
   parent: 'game-container',
-  transparent: true,
+  transparent: false,
+  backgroundColor: '#000000',
   scale: {
     mode: Phaser.Scale.RESIZE,
     autoCenter: Phaser.Scale.CENTER_BOTH,
