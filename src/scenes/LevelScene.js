@@ -35,21 +35,15 @@ class LevelScene extends Phaser.Scene {
     this.activeWorld = this.config.worlds[0];
     this.cameras.main.setBackgroundColor('#000000');
     
-    // Scrolling visual background — full opacity so no color bleed
-    this.bg = this.add.tileSprite(width/2, this.gameH/2, width, this.gameH, this.activeWorld.bg);
-    this.bg.setAlpha(1);
+    // Background image — NOT tileSprite to avoid ALL tiling/repeat artifacts
+    this.bg = this.add.image(width/2, this.gameH/2, this.activeWorld.bg);
     this.bg.setDepth(0);
-    
-    // Scale background texture to cover the game area (no tiling/repeat)
-    const frame = this.textures.getFrame(this.activeWorld.bg);
-    if (frame) {
-      const scaleX = width / frame.width;
-      const scaleY = this.gameH / frame.height;
-      const scale = Math.max(scaleX, scaleY);
-      this.bg.tileScaleX = scale;
-      this.bg.tileScaleY = scale;
-      this.bg.tilePositionY = 0;
-    }
+    // Scale to cover entire game area
+    const bgScaleX = width / this.bg.width;
+    const bgScaleY = this.gameH / this.bg.height;
+    const bgScale = Math.max(bgScaleX, bgScaleY);
+    this.bg.setScale(bgScale);
+    this.bg.setScrollFactor(0); // Fixed to camera
 
     // Player (Add fallback if localStorage has stale invalid key)
     if (!this.textures.exists(this.activeHero)) {
@@ -160,14 +154,9 @@ class LevelScene extends Phaser.Scene {
 
     if (this.bg) {
       this.bg.setPosition(width/2, gameH/2);
-      this.bg.setSize(width, gameH);
-      const frame = this.textures.getFrame(this.activeWorld.bg);
-      if (frame) {
-        const scale = Math.max(width / frame.width, gameH / frame.height);
-        this.bg.tileScaleX = scale;
-        this.bg.tileScaleY = scale;
-        this.bg.tilePositionY = 0;
-      }
+      const bgScaleX = width / this.bg.width;
+      const bgScaleY = gameH / this.bg.height;
+      this.bg.setScale(Math.max(bgScaleX, bgScaleY));
     }
     
     if (this.floor) {
@@ -283,7 +272,7 @@ class LevelScene extends Phaser.Scene {
          const portal = this.portals.create(currentX, groundY - 120, 'rift_portal');
          portal.setDisplaySize(80, 160);
          this.tweens.add({ targets: portal, angle: 360, repeat: -1, duration: 4000 });
-         currentX += blockSize * gap;
+         currentX += blockSize * 6; // Big safe zone after portal world-swap
          lastWasTower = false;
          continue;
       }
@@ -348,20 +337,15 @@ class LevelScene extends Phaser.Scene {
     this.activeWorld = newWorld;
     this.cameras.main.setBackgroundColor('#000000');
     
-    // Rebuild tileSprite with new texture at full opacity
+    // Swap background image (not tileSprite - no tiling artifacts)
     const { width } = this.cameras.main;
-    const oldTilePosX = this.bg.tilePositionX;
     this.bg.destroy();
-    this.bg = this.add.tileSprite(width/2, this.gameH/2, width, this.gameH, newWorld.bg);
-    this.bg.setAlpha(1);
+    this.bg = this.add.image(width/2, this.gameH/2, newWorld.bg);
     this.bg.setDepth(0);
-    this.bg.tilePositionX = oldTilePosX;
-    const frame = this.textures.getFrame(newWorld.bg);
-    if (frame) {
-      const scale = Math.max(width / frame.width, this.gameH / frame.height);
-      this.bg.tileScaleX = scale;
-      this.bg.tileScaleY = scale;
-    }
+    const bgScaleX = width / this.bg.width;
+    const bgScaleY = this.gameH / this.bg.height;
+    this.bg.setScale(Math.max(bgScaleX, bgScaleY));
+    this.bg.setScrollFactor(0);
   }
 
   collectShard(player, shard) {
