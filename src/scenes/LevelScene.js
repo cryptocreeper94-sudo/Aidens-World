@@ -33,11 +33,11 @@ class LevelScene extends Phaser.Scene {
 
     // Worlds Collide Background
     this.activeWorld = this.config.worlds[0];
-    this.cameras.main.setBackgroundColor(this.activeWorld.color);
+    this.cameras.main.setBackgroundColor('#000000');
     
-    // Scrolling visual background instead of blank grid
+    // Scrolling visual background — full opacity so no color bleed
     this.bg = this.add.tileSprite(width/2, this.gameH/2, width, this.gameH, this.activeWorld.bg);
-    this.bg.setAlpha(0.6);
+    this.bg.setAlpha(1);
     this.bg.setDepth(0);
     
     // Scale background texture to cover the game area (no tiling/repeat)
@@ -346,15 +346,14 @@ class LevelScene extends Phaser.Scene {
     } while (newWorld.key === this.activeWorld.key && this.config.worlds.length > 1);
     
     this.activeWorld = newWorld;
-    this.cameras.main.setBackgroundColor(newWorld.color);
+    this.cameras.main.setBackgroundColor('#000000');
     
-    // Rebuild tileSprite with new texture
+    // Rebuild tileSprite with new texture at full opacity
     const { width } = this.cameras.main;
-    const oldAlpha = this.bg.alpha;
     const oldTilePosX = this.bg.tilePositionX;
     this.bg.destroy();
     this.bg = this.add.tileSprite(width/2, this.gameH/2, width, this.gameH, newWorld.bg);
-    this.bg.setAlpha(oldAlpha);
+    this.bg.setAlpha(1);
     this.bg.setDepth(0);
     this.bg.tilePositionX = oldTilePosX;
     const frame = this.textures.getFrame(newWorld.bg);
