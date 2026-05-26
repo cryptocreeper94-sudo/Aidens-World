@@ -77,20 +77,16 @@ class LevelScene extends Phaser.Scene {
     const uiY = height - 50; // slightly higher so thumbs don't hit edge of screen
     
     // Left Corner (Jump - Green)
-    const jumpGraphics = this.add.graphics({ fillStyle: { color: 0x10b981, alpha: 0.8 } }).setDepth(100);
-    jumpGraphics.fillRoundedRect(20, uiY - 40, 140, 80, 20); // Massive thumb zone
-    const jumpZone = this.add.zone(90, uiY, 140, 80).setInteractive().setDepth(101);
-    const jumpText = this.add.text(90, uiY, 'JUMP', { fontFamily: 'Arial Black', fontSize: '20px', color: '#fff' }).setOrigin(0.5).setDepth(102);
-    const jumpOutline = this.add.graphics({ lineStyle: { width: 4, color: 0xffffff } }).setDepth(103);
-    jumpOutline.strokeRoundedRect(20, uiY - 40, 140, 80, 20);
+    this.jumpGraphics = this.add.graphics().setDepth(100);
+    this.jumpZone = this.add.zone(0, 0, 140, 80).setInteractive().setDepth(101);
+    this.jumpText = this.add.text(0, 0, 'JUMP', { fontFamily: 'Arial Black', fontSize: '20px', color: '#fff' }).setOrigin(0.5).setDepth(102);
+    this.jumpOutline = this.add.graphics().setDepth(103);
 
     // Right Corner (Attack - Red)
-    const attackGraphics = this.add.graphics({ fillStyle: { color: 0xe63946, alpha: 0.8 } }).setDepth(100);
-    attackGraphics.fillRoundedRect(width - 160, uiY - 40, 140, 80, 20);
-    const attackZone = this.add.zone(width - 90, uiY, 140, 80).setInteractive().setDepth(101);
-    const attackText = this.add.text(width - 90, uiY, 'ATTACK', { fontFamily: 'Arial Black', fontSize: '20px', color: '#fff' }).setOrigin(0.5).setDepth(102);
-    const attackOutline = this.add.graphics({ lineStyle: { width: 4, color: 0xffffff } }).setDepth(103);
-    attackOutline.strokeRoundedRect(width - 160, uiY - 40, 140, 80, 20);
+    this.attackGraphics = this.add.graphics().setDepth(100);
+    this.attackZone = this.add.zone(0, 0, 140, 80).setInteractive().setDepth(101);
+    this.attackText = this.add.text(0, 0, 'ATTACK', { fontFamily: 'Arial Black', fontSize: '20px', color: '#fff' }).setOrigin(0.5).setDepth(102);
+    this.attackOutline = this.add.graphics().setDepth(103);
 
     const doJump = () => {
       if (!this.isRunning && this.isAlive) { 
@@ -109,8 +105,8 @@ class LevelScene extends Phaser.Scene {
       this.fireProjectile();
     };
 
-    jumpZone.on('pointerdown', doJump);
-    attackZone.on('pointerdown', doAttack);
+    this.jumpZone.on('pointerdown', doJump);
+    this.attackZone.on('pointerdown', doAttack);
     this.input.keyboard.on('keydown-SPACE', doJump);
     this.input.keyboard.on('keydown-F', doAttack);
 
@@ -126,9 +122,64 @@ class LevelScene extends Phaser.Scene {
     this.tweens.add({ targets: this.startText, alpha: 0.5, yoyo: true, repeat: -1, duration: 500 });
 
     // Quit Button
-    const quitBtn = this.add.text(width - 20, 60, '❌ QUIT', { fontFamily: 'Arial Black', fontSize: '18px', color: '#ff4444' }).setOrigin(1, 0).setDepth(100);
-    quitBtn.setInteractive({ useHandCursor: true });
-    quitBtn.on('pointerdown', () => this.exitToHub());
+    this.quitBtn = this.add.text(width - 20, 60, '❌ QUIT', { fontFamily: 'Arial Black', fontSize: '18px', color: '#ff4444' }).setOrigin(1, 0).setDepth(100);
+    this.quitBtn.setInteractive({ useHandCursor: true });
+    this.quitBtn.on('pointerdown', () => this.exitToHub());
+
+    // Add resize listener
+    this.scale.on('resize', this.resize, this);
+    
+    // Initial UI positioning
+    this.resize({ width, height });
+  }
+
+  resize(gameSize) {
+    if (!this.scene.isActive()) return;
+    const width = gameSize.width;
+    const height = gameSize.height;
+
+    if (this.bg) {
+      this.bg.setPosition(width/2, height/2);
+      this.bg.setSize(width, height);
+    }
+    
+    if (this.floor) {
+      this.floor.setPosition(width/2, height);
+      this.floor.width = width * 100;
+    }
+
+    const uiY = height - 50;
+    
+    if (this.jumpGraphics) {
+       this.jumpGraphics.clear();
+       this.jumpGraphics.fillStyle(0x10b981, 0.8);
+       this.jumpGraphics.fillRoundedRect(20, uiY - 40, 140, 80, 20);
+       this.jumpZone.setPosition(90, uiY);
+       this.jumpZone.setSize(140, 80);
+       this.jumpText.setPosition(90, uiY);
+       this.jumpOutline.clear();
+       this.jumpOutline.lineStyle(4, 0xffffff);
+       this.jumpOutline.strokeRoundedRect(20, uiY - 40, 140, 80, 20);
+    }
+    
+    if (this.attackGraphics) {
+       this.attackGraphics.clear();
+       this.attackGraphics.fillStyle(0xe63946, 0.8);
+       this.attackGraphics.fillRoundedRect(width - 160, uiY - 40, 140, 80, 20);
+       this.attackZone.setPosition(width - 90, uiY);
+       this.attackZone.setSize(140, 80);
+       this.attackText.setPosition(width - 90, uiY);
+       this.attackOutline.clear();
+       this.attackOutline.lineStyle(4, 0xffffff);
+       this.attackOutline.strokeRoundedRect(width - 160, uiY - 40, 140, 80, 20);
+    }
+
+    if (this.scoreText) this.scoreText.setPosition(width - 20, 20);
+    if (this.levelText) this.levelText.setPosition(20, 20);
+    if (this.quitBtn) this.quitBtn.setPosition(width - 20, 60);
+    if (this.progressBarBg) this.progressBarBg.setPosition(width/2, 30);
+    if (this.progressBar) this.progressBar.setPosition(width/2 - 150, 30);
+    if (this.startText) this.startText.setPosition(width/2, height/2);
   }
 
   exitToHub() {

@@ -1,0 +1,12 @@
+{
+  "appId": "io.tlid.chronoverse",
+  "appName": "The Chronoverse",
+  "webDir": "dist_android",
+  "bundledWebRuntime": false,
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#0a0a1a"
+    }
+  }
+}

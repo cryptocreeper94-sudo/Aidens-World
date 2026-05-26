@@ -12,10 +12,10 @@ const gameConfig = {
   parent: 'game-container',
   transparent: true,
   scale: {
-    mode: Phaser.Scale.FIT,
+    mode: Phaser.Scale.RESIZE,
     autoCenter: Phaser.Scale.CENTER_BOTH,
-    width: 1280,
-    height: 720,
+    width: '100%',
+    height: '100%',
   },
   scene: [BootScene, HubScene, StoryScene, LevelScene],
   physics: {

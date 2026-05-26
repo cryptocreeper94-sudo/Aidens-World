@@ -1,0 +1,40 @@
+{
+  "name": "chronoverse",
+  "version": "1.0.0",
+  "description": "The Chronoverse - Educational Superhero Portal",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux"
+  },
+  "author": "DarkWave Ecosystem",
+  "license": "UNLICENSED",
+  "build": {
+    "appId": "io.tlid.chronoverse",
+    "productName": "The Chronoverse",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "assets/ui/icon-512.png"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "assets/ui/icon-512.png"
+    }
+  },
+  "devDependencies": {
+    "astral-regex": "^2.0.0",
+    "electron": "^42.2.0",
+    "electron-builder": "^26.8.1",
+    "fs-extra": "^11.3.5"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.3.4",
+    "@capacitor/cli": "^8.3.4",
+    "@capacitor/core": "^8.3.4"
+  }
+}

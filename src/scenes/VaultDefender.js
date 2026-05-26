@@ -15,7 +15,7 @@ class VaultDefender extends Phaser.Scene {
     const width = this.scale.width;
     const height = this.scale.height;
 
-    this.add.rectangle(0, 0, width, height, 0x020617).setOrigin(0);
+    this.bgRect = this.add.rectangle(0, 0, width, height, 0x020617).setOrigin(0);
 
     // Vault in the center
     this.vault = this.add.circle(width / 2, height / 2, 50, 0x22d3ee);
@@ -28,7 +28,7 @@ class VaultDefender extends Phaser.Scene {
     }).setOrigin(0.5);
 
     // Turret (Controlled by player)
-    this.turret = this.add.rectangle(width / 2, height / 2, 40, 10, 0fbbf24).setOrigin(0, 0.5);
+    this.turret = this.add.rectangle(width / 2, height / 2, 40, 10, 0xfbbf24).setOrigin(0, 0.5);
     
     // Projectiles group
     this.projectiles = this.physics.add.group();
@@ -59,6 +59,20 @@ class VaultDefender extends Phaser.Scene {
       fontSize: '20px',
       color: '#fff'
     });
+
+    // Add resize listener
+    this.scale.on('resize', this.resize, this);
+  }
+
+  resize(gameSize) {
+    if (!this.scene.isActive()) return;
+    const width = gameSize.width;
+    const height = gameSize.height;
+
+    if (this.bgRect) this.bgRect.setSize(width, height);
+    if (this.vault) this.vault.setPosition(width / 2, height / 2);
+    if (this.vaultText) this.vaultText.setPosition(width / 2, height / 2 - 80);
+    if (this.turret) this.turret.setPosition(width / 2, height / 2);
   }
 
   update() {
