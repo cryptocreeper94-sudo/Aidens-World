@@ -304,7 +304,7 @@ class LevelScene extends Phaser.Scene {
 
   spawnEnemy(x, y) {
     const enemyKey = this.activeWorld.enemies[Math.floor(this.seededRandom(this.activeWorld.enemies.length))];
-    const enemy = this.spikes.create(x, y - 40, enemyKey);
+    const enemy = this.spikes.create(x, y - 50, enemyKey); // -50 so feet sit exactly on floor
     enemy.setDisplaySize(80, 80);
     enemy.setFlipX(false); // Enemies face left by default (toward approaching player)
   }
