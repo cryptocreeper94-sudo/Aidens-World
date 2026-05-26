@@ -239,9 +239,7 @@
       justify-content: center;
     }
     #game-container canvas {
-      width: 100% !important;
-      height: 100% !important;
-      object-fit: contain !important; /* Perfect letterboxing */
+      display: block;
     }
 
     /* ── Layer 2: Portal Dashboard (Cockpit) ── */
@@ -845,17 +843,17 @@
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 
   <!-- Game Modules -->
-  <script src="src/systems/SaveSystem.js?v=2.2"></script>
-  <script src="src/systems/SoundFX.js?v=2.2"></script>
-  <script src="src/systems/LevelData.js?v=2.2"></script>
-  <script src="src/systems/ThreeEngine.js?v=2.2"></script>
-  <script src="src/scenes/BootScene.js?v=2.2"></script>
-  <script src="src/scenes/HubScene.js?v=2.2"></script>
-  <script src="src/scenes/StoryScene.js?v=2.2"></script>
-  <script src="src/scenes/LevelScene.js?v=2.2"></script>
-  <script src="src/scenes/VaultDefender.js?v=2.3"></script>
-  <script src="src/systems/LumeCompiler.js?v=2.3"></script>
-  <script src="src/config.js?v=2.3"></script>
+  <script src="src/systems/SaveSystem.js?v=2.4"></script>
+  <script src="src/systems/SoundFX.js?v=2.4"></script>
+  <script src="src/systems/LevelData.js?v=2.4"></script>
+  <script src="src/systems/ThreeEngine.js?v=2.4"></script>
+  <script src="src/scenes/BootScene.js?v=2.4"></script>
+  <script src="src/scenes/HubScene.js?v=2.4"></script>
+  <script src="src/scenes/StoryScene.js?v=2.4"></script>
+  <script src="src/scenes/LevelScene.js?v=2.4"></script>
+  <script src="src/scenes/VaultDefender.js?v=2.4"></script>
+  <script src="src/systems/LumeCompiler.js?v=2.4"></script>
+  <script src="src/config.js?v=2.4"></script>
 
   <!-- Firebase App, Firestore, & Auth -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -1173,10 +1171,10 @@
           parent: 'vault-defender',
           transparent: true,
           scale: {
-            mode: Phaser.Scale.RESIZE,
+            mode: Phaser.Scale.FIT,
             autoCenter: Phaser.Scale.CENTER_BOTH,
-            width: '100%',
-            height: '100%'
+            width: 1280,
+            height: 720
           },
           scene: [window.VaultDefender],
           physics: {
