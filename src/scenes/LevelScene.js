@@ -48,6 +48,7 @@ class LevelScene extends Phaser.Scene {
     this.bg.setDisplaySize(width, height); // Fill ENTIRE canvas including footer area
     this.bg.setDepth(-1);
     this.bg.setScrollFactor(0);
+    this.bg.setTint(0x999999); // Dim the background to pop the foreground characters
 
     // Player (Add fallback if localStorage has stale invalid key)
     if (!this.textures.exists(this.activeHero)) {
@@ -389,6 +390,7 @@ class LevelScene extends Phaser.Scene {
     this.bg.setDisplaySize(width, height);
     this.bg.setDepth(-1);
     this.bg.setScrollFactor(0);
+    this.bg.setTint(0x999999);
   }
 
   collectShard(player, shard) {
