@@ -26,7 +26,10 @@ class LevelScene extends Phaser.Scene {
     this.gameSpeed = this.config.gameSpeed;
     this.distanceTraveled = 0;
     this.shardsCollected = 0;
-    this.seed = this.levelNum * 12345; // Seed RNG for predictable layouts
+    // Strong seed mixing — every level gets a truly unique pattern
+    this.seed = ((this.levelNum * 2654435761) ^ (this.levelNum * 40503)) >>> 0;
+    // Warm up the RNG so close seeds diverge fully
+    for (let i = 0; i < 20; i++) this.seededRandom(1);
 
     // Worlds Collide Background
     this.activeWorld = this.config.worlds[0];
