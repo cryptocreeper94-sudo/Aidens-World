@@ -541,7 +541,7 @@ class LevelScene extends Phaser.Scene {
     homeBtn.on('pointerdown', () => this.exitToHub());
     nextBtn.on('pointerdown', () => {
       this.cameras.main.fadeOut(300, 0, 0, 0);
-      this.time.delayedCall(300, () => this.scene.restart());
+      this.time.delayedCall(300, () => this.scene.restart({ levelNum: this.levelNum + 1 }));
     });
   }
 
