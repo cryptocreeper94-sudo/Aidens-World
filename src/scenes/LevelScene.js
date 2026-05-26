@@ -503,14 +503,6 @@ class LevelScene extends Phaser.Scene {
       this.cameras.main.fadeOut(300, 0, 0, 0);
       this.time.delayedCall(300, () => this.scene.restart());
     });
-
-    this.scale.on('resize', this.resize, this);
-  }
-
-  resize() {
-    if (this.scene.isActive()) {
-      this.scene.restart();
-    }
   }
 
   update() {

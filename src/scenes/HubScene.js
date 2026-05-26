@@ -182,15 +182,6 @@ class HubScene extends Phaser.Scene {
     if (SaveSystem.checkDailyBonus()) {
       this.time.delayedCall(500, () => this.showDailyBonus());
     }
-
-    // Dynamic resize handler (exiting fullscreen or rotating)
-    this.scale.on('resize', this.resize, this);
-  }
-
-  resize() {
-    if (this.scene.isActive()) {
-      this.scene.restart();
-    }
   }
 
   showDailyBonus() {
