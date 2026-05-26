@@ -41,6 +41,7 @@ class LevelScene extends Phaser.Scene {
     // Worlds Collide Background
     this.activeWorld = this.config.worlds[0];
     this.cameras.main.setBackgroundColor('#000000');
+    this.cameras.main.fadeIn(300);
     
     // Background — force exact screen dimensions, no scale math
     this.bg = this.add.image(0, 0, this.activeWorld.bg);
@@ -642,8 +643,7 @@ class LevelScene extends Phaser.Scene {
     // Clicks
     homeBtn.on('pointerdown', () => this.exitToHub());
     nextBtn.on('pointerdown', () => {
-      this.cameras.main.fadeOut(300, 0, 0, 0);
-      this.time.delayedCall(300, () => this.scene.restart({ levelNum: this.levelNum + 1 }));
+      this.scene.restart({ levelNum: this.levelNum + 1 });
     });
   }
 
