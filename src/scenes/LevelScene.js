@@ -76,21 +76,21 @@ class LevelScene extends Phaser.Scene {
     // On-Screen Controls (Moved to Bottom Corners for Landscape Thumbs)
     const uiY = height - 50; // slightly higher so thumbs don't hit edge of screen
     
-    // Left Corner (Attack - Red)
-    const attackGraphics = this.add.graphics({ fillStyle: { color: 0xe63946, alpha: 0.8 } }).setDepth(100);
-    attackGraphics.fillRoundedRect(20, uiY - 40, 140, 80, 20); // Massive thumb zone
-    const attackZone = this.add.zone(90, uiY, 140, 80).setInteractive().setDepth(101);
-    const attackText = this.add.text(90, uiY, 'ATTACK', { fontFamily: 'Arial Black', fontSize: '20px', color: '#fff' }).setOrigin(0.5).setDepth(102);
-    const attackOutline = this.add.graphics({ lineStyle: { width: 4, color: 0xffffff } }).setDepth(103);
-    attackOutline.strokeRoundedRect(20, uiY - 40, 140, 80, 20);
-
-    // Right Corner (Jump - Green)
+    // Left Corner (Jump - Green)
     const jumpGraphics = this.add.graphics({ fillStyle: { color: 0x10b981, alpha: 0.8 } }).setDepth(100);
-    jumpGraphics.fillRoundedRect(width - 160, uiY - 40, 140, 80, 20);
-    const jumpZone = this.add.zone(width - 90, uiY, 140, 80).setInteractive().setDepth(101);
-    const jumpText = this.add.text(width - 90, uiY, 'JUMP', { fontFamily: 'Arial Black', fontSize: '20px', color: '#fff' }).setOrigin(0.5).setDepth(102);
+    jumpGraphics.fillRoundedRect(20, uiY - 40, 140, 80, 20); // Massive thumb zone
+    const jumpZone = this.add.zone(90, uiY, 140, 80).setInteractive().setDepth(101);
+    const jumpText = this.add.text(90, uiY, 'JUMP', { fontFamily: 'Arial Black', fontSize: '20px', color: '#fff' }).setOrigin(0.5).setDepth(102);
     const jumpOutline = this.add.graphics({ lineStyle: { width: 4, color: 0xffffff } }).setDepth(103);
-    jumpOutline.strokeRoundedRect(width - 160, uiY - 40, 140, 80, 20);
+    jumpOutline.strokeRoundedRect(20, uiY - 40, 140, 80, 20);
+
+    // Right Corner (Attack - Red)
+    const attackGraphics = this.add.graphics({ fillStyle: { color: 0xe63946, alpha: 0.8 } }).setDepth(100);
+    attackGraphics.fillRoundedRect(width - 160, uiY - 40, 140, 80, 20);
+    const attackZone = this.add.zone(width - 90, uiY, 140, 80).setInteractive().setDepth(101);
+    const attackText = this.add.text(width - 90, uiY, 'ATTACK', { fontFamily: 'Arial Black', fontSize: '20px', color: '#fff' }).setOrigin(0.5).setDepth(102);
+    const attackOutline = this.add.graphics({ lineStyle: { width: 4, color: 0xffffff } }).setDepth(103);
+    attackOutline.strokeRoundedRect(width - 160, uiY - 40, 140, 80, 20);
 
     const doJump = () => {
       if (!this.isRunning && this.isAlive) { 
