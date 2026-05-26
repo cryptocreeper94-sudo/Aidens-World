@@ -576,6 +576,48 @@
   </style>
 </head>
 <body>
+
+  <!-- Layer 0: Generic Landing Page (chronoverse.tlid.io) -->
+  <div id="generic-landing" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:#0a0a1a; z-index:9000; overflow-y:auto; padding:20px;">
+    <div style="max-width:600px; margin:0 auto; text-align:center; padding-top:10vh;">
+      <h1 style="color:#fff; font-size:48px; margin-bottom:20px; text-transform:uppercase; text-shadow:0 0 20px #22d3ee; font-weight:900;">The Chronoverse</h1>
+      <p style="color:#cbd5e1; font-size:20px; margin-bottom:40px; line-height:1.5;">The ultimate superhero action portal. Register your kiddo to instantly deploy their personalized, secure web-app.</p>
+      
+      <button onclick="loginWithGoogle()" style="background:#fff; color:#0f172a; padding:15px 30px; border-radius:30px; font-size:20px; font-weight:900; cursor:pointer; border:none; display:flex; align-items:center; justify-content:center; margin:0 auto; gap:15px; box-shadow:0 10px 20px rgba(0,0,0,0.5);">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:28px; height:28px;">
+        Continue with Google
+      </button>
+    </div>
+  </div>
+
+  <!-- Layer 0.5: Parent Dashboard -->
+  <div id="parent-dashboard" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:#0f172a; z-index:9000; overflow-y:auto; padding:20px;">
+    <div style="max-width:600px; margin:0 auto; padding-top:20px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
+        <h2 style="color:#fff; font-size:28px; font-weight:900;">Parent Dashboard</h2>
+        <button onclick="firebase.auth().signOut()" style="background:transparent; color:#ef4444; border:2px solid #ef4444; padding:8px 16px; border-radius:12px; cursor:pointer; font-weight:bold;">Sign Out</button>
+      </div>
+
+      <!-- Registration Form -->
+      <div style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:20px; padding:24px; margin-bottom:40px;">
+        <h3 style="color:#22d3ee; margin-bottom:20px; font-size:20px;">Deploy New Portal</h3>
+        <input type="text" id="reg-name" placeholder="Kid's Display Name (e.g. Austin)" style="width:100%; padding:15px; margin-bottom:15px; border-radius:12px; border:none; background:rgba(0,0,0,0.5); color:#fff; font-size:16px;">
+        
+        <div style="display:flex; align-items:center; margin-bottom:20px; background:rgba(0,0,0,0.5); border-radius:12px; overflow:hidden;">
+          <input type="text" id="reg-subdomain" placeholder="username" style="flex:1; padding:15px; border:none; background:transparent; color:#fff; font-size:16px; text-align:right;">
+          <div style="padding:15px; color:#94a3b8; font-size:16px; font-weight:bold;">.tlid.io</div>
+        </div>
+
+        <button onclick="registerKid()" style="width:100%; background:linear-gradient(135deg, #10b981, #059669); color:#fff; border:none; padding:15px; border-radius:12px; font-size:18px; font-weight:bold; cursor:pointer; box-shadow:0 5px 15px rgba(16,185,129,0.4);">Create Web-App</button>
+        <p id="reg-error" style="color:#ef4444; margin-top:15px; font-size:14px; display:none; font-weight:bold;"></p>
+      </div>
+
+      <!-- List of Registered Kids -->
+      <h3 style="color:#fff; margin-bottom:15px; font-size:20px;">Active Portals</h3>
+      <div id="kids-list"></div>
+    </div>
+  </div>
+
   <!-- Layer 1: Welcome Screen -->
   <div id="welcome-screen">
     <!-- Floating Characters (Clickable!) -->
@@ -743,9 +785,10 @@
   <script src="src/scenes/LevelScene.js"></script>
   <script src="src/config.js"></script>
 
-  <!-- Firebase App & Firestore -->
+  <!-- Firebase App, Firestore, & Auth -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
   <script>
     // ── FIREBASE INITIALIZATION ──
@@ -768,13 +811,129 @@
         const doc = await db.collection('chronoverse_saves').doc(tenant.toLowerCase()).get();
         if (doc.exists) {
           const cloudData = doc.data();
-          // Write directly to local storage to unify the state
           localStorage.setItem('ChronoverseSave', JSON.stringify(cloudData));
         }
       } catch (e) {
         console.log('[Firebase] Sync error:', e);
       }
     };
+
+    // ── AUTH & DASHBOARD LOGIC ──
+    firebase.auth().onAuthStateChanged(user => {
+      const isLanding = (window.location.hostname === 'chronoverse.tlid.io' || window.location.hostname.includes('localhost'));
+      
+      if (user) {
+        // Only show parent dashboard if they are on the landing page/localhost
+        if (isLanding) {
+          document.getElementById('generic-landing').style.display = 'none';
+          document.getElementById('parent-dashboard').style.display = 'block';
+          loadParentDashboard(user.uid);
+        }
+      } else {
+        if (isLanding) {
+          document.getElementById('parent-dashboard').style.display = 'none';
+          document.getElementById('generic-landing').style.display = 'block';
+        }
+      }
+    });
+
+    function loginWithGoogle() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      firebase.auth().signInWithPopup(provider).catch(e => {
+        console.error(e);
+        alert("Login failed: " + e.message);
+      });
+    }
+
+    async function loadParentDashboard(uid) {
+      const list = document.getElementById('kids-list');
+      list.innerHTML = '<p style="color:#94a3b8;">Loading portals...</p>';
+      
+      try {
+        const snap = await db.collection('kids').where('parentUid', '==', uid).get();
+        if (snap.empty) {
+          list.innerHTML = '<p style="color:#94a3b8;">No kids registered yet.</p>';
+          return;
+        }
+        
+        let html = '';
+        snap.forEach(doc => {
+          const kid = doc.data();
+          const url = window.location.hostname.includes('localhost') 
+                      ? `http://${doc.id}.localhost:3000` // For local dev testing
+                      : `https://${doc.id}.tlid.io`;
+          
+          html += `<div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:10px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="color:#fff; font-weight:bold; font-size:18px;">${kid.displayName}</div>
+              <div style="color:#22d3ee; font-size:14px;">${doc.id}.tlid.io</div>
+            </div>
+            <a href="${url}" target="_blank" style="background:#3b82f6; color:#fff; text-decoration:none; padding:8px 16px; border-radius:8px; font-weight:bold;">Visit Portal</a>
+          </div>`;
+        });
+        list.innerHTML = html;
+      } catch (e) {
+        list.innerHTML = '<p style="color:#ef4444;">Error loading portals.</p>';
+      }
+    }
+
+    async function registerKid() {
+      const name = document.getElementById('reg-name').value.trim();
+      const sub = document.getElementById('reg-subdomain').value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
+      const err = document.getElementById('reg-error');
+      
+      if (!name || !sub) {
+        err.innerText = "Please fill out both fields.";
+        err.style.display = 'block';
+        return;
+      }
+      
+      err.style.display = 'none';
+      const user = firebase.auth().currentUser;
+      if (!user) return;
+
+      try {
+        // Check if subdomain exists
+        const docRef = db.collection('kids').doc(sub);
+        const doc = await docRef.get();
+        if (doc.exists) {
+          err.innerText = "That username is already taken! Please choose another.";
+          err.style.display = 'block';
+          return;
+        }
+
+        // Save
+        await docRef.set({
+          parentUid: user.uid,
+          displayName: name,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // Initialize empty save so the sync system doesn't error out
+        await db.collection('chronoverse_saves').doc(sub).set({
+          shards: 0,
+          stars: {},
+          unlockedChars: ['spider_hero', 'super_girl', 'iron_kid', 'bounty_hunter'],
+          selectedChar: 'spider_hero',
+          currentWorld: 1,
+          currentLevel: 1,
+          unlockedWorlds: [1],
+          storyViewed: [],
+          costumes: [],
+          totalPlayTime: 0,
+          lastVisit: null,
+          dailyBonusClaimed: false,
+        });
+
+        document.getElementById('reg-name').value = '';
+        document.getElementById('reg-subdomain').value = '';
+        loadParentDashboard(user.uid);
+        
+      } catch (e) {
+        err.innerText = e.message;
+        err.style.display = 'block';
+      }
+    }
   </script>
 
   <!-- Service Worker + Install Banner Logic -->
@@ -1087,56 +1246,89 @@
 
     document.addEventListener('contextmenu', (e) => e.preventDefault());
 
-    // ── Multi-Tenant Personalization ──
-    function applyTenantPersonalization() {
+    // ── Serverless Edge Routing & Personalization ──
+    async function applyTenantPersonalization() {
       const hostname = window.location.hostname;
-      let tenantName = 'Aiden'; // Default fallback
       
-      // Extract tenant name from [name].tlid.io
+      // If we are on the generic landing page, hide the game portal entirely
+      if (hostname === 'chronoverse.tlid.io') {
+        document.getElementById('welcome-screen').style.display = 'none';
+        return; // AuthStateObserver will show the parent dashboard/landing UI
+      }
+
+      // Extract the tenant name from the wildcard subdomain
+      let tenantName = 'Aiden'; // Default fallback
       if (hostname.includes('.tlid.io')) {
         tenantName = hostname.split('.')[0];
       } else if (hostname.includes('localhost') || hostname.includes('127.0.0.1')) {
-        tenantName = 'Aiden'; // Keep Aiden as default for local testing
+        // Localhost dev mode: treat subdomains if present, else fallback
+        const parts = hostname.split('.');
+        if (parts.length > 1 && parts[0] !== 'localhost') {
+          tenantName = parts[0];
+        } else {
+          // If no subdomain, hide portal and show generic landing for testing
+          document.getElementById('welcome-screen').style.display = 'none';
+          return;
+        }
       }
-      
-      // Capitalize the first letter
-      tenantName = tenantName.charAt(0).toUpperCase() + tenantName.slice(1);
-      
-      // Determine time of day
-      const hour = new Date().getHours();
-      let timeOfDay = 'Evening';
-      if (hour < 12) timeOfDay = 'Morning';
-      else if (hour < 18) timeOfDay = 'Afternoon';
-      
-      // Apply personalization to the Portal Dashboard
-      const portalHeader = document.querySelector('.portal-header h1');
-      if (portalHeader) {
-        portalHeader.innerText = `${tenantName}'s World`;
-      }
-      
-      // Init Firebase sync for this tenant
-      if (window.syncFirebaseSave) window.syncFirebaseSave(tenantName);
-      
-      const dailyMsg = document.getElementById('daily-message');
-      const messageCard = document.querySelector('.message-card');
-      
-      if (tenantName.toLowerCase() === 'aiden') {
-        if (dailyMsg) {
-          dailyMsg.innerText = `"Good ${timeOfDay}, ${tenantName}! Hope this is something you enjoy! Can't wait to see you again next month. I love You! ❤️"`;
+
+      try {
+        // Query Firestore to verify this is a registered kid
+        const kidDoc = await db.collection('kids').doc(tenantName.toLowerCase()).get();
+        
+        if (!kidDoc.exists) {
+          // Unregistered Subdomain -> Redirect to main page!
+          if (!hostname.includes('localhost')) {
+            window.location.href = 'https://chronoverse.tlid.io';
+            return;
+          }
         }
-      } else {
-        // Generic welcome message for all other kids (Maya, etc.)
-        if (messageCard) {
-          const h2 = messageCard.querySelector('h2');
-          if (h2) h2.innerText = '🌌 Chronoverse System';
+        
+        // It is registered! Get their real Display Name
+        const kidData = kidDoc.exists ? kidDoc.data() : { displayName: tenantName };
+        const displayName = kidData.displayName;
+        
+        // Expose globally for SaveSystem
+        window.CHRONOVERSE_TENANT = tenantName;
+        
+        // Init Firebase sync for this tenant
+        if (window.syncFirebaseSave) window.syncFirebaseSave(tenantName);
+
+        // Determine time of day
+        const hour = new Date().getHours();
+        let timeOfDay = 'Evening';
+        if (hour < 12) timeOfDay = 'Morning';
+        else if (hour < 18) timeOfDay = 'Afternoon';
+        
+        // Apply personalization to the Portal Dashboard
+        const portalHeader = document.querySelector('.portal-header h1');
+        if (portalHeader) {
+          portalHeader.innerText = `${displayName}'s World`;
         }
-        if (dailyMsg) {
-          dailyMsg.innerText = `Good ${timeOfDay}, ${tenantName}! Welcome to your personal portal. The Chronoverse is online and ready for action!`;
+        
+        const dailyMsg = document.getElementById('daily-message');
+        const messageCard = document.querySelector('.message-card');
+        
+        if (tenantName.toLowerCase() === 'aiden') {
+          if (dailyMsg) {
+            dailyMsg.innerText = `"Good ${timeOfDay}, ${displayName}! Hope this is something you enjoy! Can't wait to see you again next month. I love You! ❤️"`;
+          }
+        } else {
+          // Generic welcome message for all other kids
+          if (messageCard) {
+            const h2 = messageCard.querySelector('h2');
+            if (h2) h2.innerText = '🌌 Chronoverse System';
+          }
+          if (dailyMsg) {
+            dailyMsg.innerText = `Good ${timeOfDay}, ${displayName}! Welcome to your personal portal. The Chronoverse is online and ready for action!`;
+          }
         }
+      } catch (e) {
+        console.log("Edge Routing Error:", e);
       }
     }
     
-    // Execute personalization on load
+    // Execute Edge Routing immediately
     applyTenantPersonalization();
 
   </script>
