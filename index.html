@@ -840,17 +840,17 @@
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 
   <!-- Game Modules -->
-  <script src="src/systems/SaveSystem.js?v=3.2"></script>
-  <script src="src/systems/SoundFX.js?v=3.2"></script>
-  <script src="src/systems/LevelData.js?v=3.2"></script>
-  <script src="src/systems/ThreeEngine.js?v=3.2"></script>
-  <script src="src/scenes/BootScene.js?v=3.2"></script>
-  <script src="src/scenes/HubScene.js?v=3.2"></script>
-  <script src="src/scenes/StoryScene.js?v=3.2"></script>
-  <script src="src/scenes/LevelScene.js?v=3.2"></script>
-  <script src="src/scenes/VaultDefender.js?v=3.2"></script>
-  <script src="src/systems/LumeCompiler.js?v=3.2"></script>
-  <script src="src/config.js?v=3.2"></script>
+  <script src="src/systems/SaveSystem.js?v=3.3"></script>
+  <script src="src/systems/SoundFX.js?v=3.3"></script>
+  <script src="src/systems/LevelData.js?v=3.3"></script>
+  <script src="src/systems/ThreeEngine.js?v=3.3"></script>
+  <script src="src/scenes/BootScene.js?v=3.3"></script>
+  <script src="src/scenes/HubScene.js?v=3.3"></script>
+  <script src="src/scenes/StoryScene.js?v=3.3"></script>
+  <script src="src/scenes/LevelScene.js?v=3.3"></script>
+  <script src="src/scenes/VaultDefender.js?v=3.3"></script>
+  <script src="src/systems/LumeCompiler.js?v=3.3"></script>
+  <script src="src/config.js?v=3.3"></script>
 
   <!-- Firebase App, Firestore, & Auth -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -1170,8 +1170,8 @@
           scale: {
             mode: Phaser.Scale.RESIZE,
             autoCenter: Phaser.Scale.CENTER_BOTH,
-            width: '100%',
-            height: '100%'
+            width: window.innerWidth,
+            height: window.innerHeight
           },
           scene: [window.VaultDefender],
           physics: {
@@ -1183,8 +1183,8 @@
         // Debounced refresh for Vault Defender
         window.addEventListener('resize', () => {
           setTimeout(() => {
-            if (window.vaultGame && window.vaultGame.scale && !window.vaultGame.scale.isFullScreen) {
-              window.vaultGame.scale.refresh();
+            if (window.vaultGame && window.vaultGame.scale) {
+              window.vaultGame.scale.resize(window.innerWidth, window.innerHeight);
             }
           }, 500);
         });

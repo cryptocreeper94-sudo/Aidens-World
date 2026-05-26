@@ -61,25 +61,21 @@ window.launchRiftRunner = function() {
   if (gameContainer) gameContainer.style.display = 'block';
 
   // Inject exact physical dimensions to bypass CSS reflow delays
-  gameConfig.scale.width = '100%';
-  gameConfig.scale.height = '100%';
+  gameConfig.scale.width = window.innerWidth;
+  gameConfig.scale.height = window.innerHeight;
   
   game = new Phaser.Game(gameConfig);
 
-  // Debounced refresh to fix Android 0-dimension rotation bugs
+  // Debounced explicit resize to fix Android 0-dimension rotation bugs
   window.addEventListener('resize', () => {
     setTimeout(() => {
-      if (game && game.scale && !game.scale.isFullScreen) {
-        game.scale.refresh();
+      if (game && game.scale) {
+        // Force exact pixel dimensions, completely ignoring CSS parent bounds
+        game.scale.resize(window.innerWidth, window.innerHeight);
       }
     }, 500);
   });
 };
-
-  // Handle orientation changes
-  window.addEventListener('resize', () => {
-    if (game && game.scale) game.scale.refresh();
-  });
 
   // Prevent right-click context menu
   document.addEventListener('contextmenu', (e) => e.preventDefault());
