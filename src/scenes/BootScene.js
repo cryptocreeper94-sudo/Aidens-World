@@ -92,7 +92,36 @@ class BootScene extends Phaser.Scene {
   create() {
     this.cameras.main.fadeOut(300, 0, 0, 0);
     this.time.delayedCall(400, () => {
-      this.scene.start('HubScene');
+      if (window.PhaserStartLevel) {
+         const lvl = window.PhaserStartLevel;
+         const save = SaveSystem.load();
+         
+         // Helper function to check if a world's intro story should play
+         const shouldPlayStory = (levelNum, storyId) => {
+           return !save.storySeen[storyId];
+         };
+         
+         let targetScene = 'LevelScene';
+         let sceneData = { levelNum: lvl };
+         
+         if (lvl === 1 && shouldPlayStory(1, 'world1_intro')) {
+           targetScene = 'StoryScene';
+           sceneData.storyId = 'world1_intro';
+         } else if (lvl === 4 && shouldPlayStory(4, 'world2_intro')) {
+           targetScene = 'StoryScene';
+           sceneData.storyId = 'world2_intro';
+         } else if (lvl === 7 && shouldPlayStory(7, 'world3_intro')) {
+           targetScene = 'StoryScene';
+           sceneData.storyId = 'world3_intro';
+         } else if (lvl === 10 && shouldPlayStory(10, 'world4_intro')) {
+           targetScene = 'StoryScene';
+           sceneData.storyId = 'world4_intro';
+         }
+         
+         this.scene.start(targetScene, sceneData);
+      } else {
+         this.scene.start('HubScene');
+      }
     });
   }
 

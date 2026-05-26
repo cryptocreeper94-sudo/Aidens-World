@@ -19,6 +19,7 @@ class LevelScene extends Phaser.Scene {
 
   create() {
     const { width, height } = this.cameras.main;
+    this.gameH = height - 60; // Define game area height to exclude the 60px UI footer
 
     // High-gravity Arcade physics for snappy GD feel
     this.physics.world.gravity.y = 4000; 
@@ -61,7 +62,8 @@ class LevelScene extends Phaser.Scene {
     this.player.setDisplaySize(80, 80);
     this.player.setBounce(0);
     this.player.setDepth(10);
-    // Removed setSize so it inherits the tight auto-cropped bounds
+    this.player.setSize(40, 60);
+    this.player.setOffset(20, 20);
 
     // Groups
     this.blocks = this.physics.add.group({ immovable: true, allowGravity: false });
