@@ -238,6 +238,11 @@
       align-items: center;
       justify-content: center;
     }
+    #game-container canvas {
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: contain !important; /* Perfect letterboxing */
+    }
 
     /* ── Layer 2: Portal Dashboard (Cockpit) ── */
     #aiden-portal {
