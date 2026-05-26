@@ -11,7 +11,7 @@ class BootScene extends Phaser.Scene {
     const { width, height } = this.cameras.main;
 
     // Background for loading screen
-    this.add.rectangle(width / 2, height / 2, width, height, 0x0f1020);
+    // Background handled by resize ref
 
     // Sleek Loading Bar
     const barWidth = 300;
@@ -32,6 +32,26 @@ class BootScene extends Phaser.Scene {
       bar.width = barWidth * val;
       loadingText.setText(`LOADING... ${Math.round(val * 100)}%`);
     });
+
+    this.scale.on('resize', this.resize, this);
+    
+    // Save refs for resize
+    this.bgRect = this.add.rectangle(width / 2, height / 2, width, height, 0x0f1020).setDepth(-1);
+    this.barBg = barBg;
+    this.bar = bar;
+    this.loadingText = loadingText;
+  }
+
+  resize(gameSize) {
+    const { width, height } = gameSize;
+    if (this.bgRect) {
+      this.bgRect.setPosition(width/2, height/2);
+      this.bgRect.setSize(width, height);
+    }
+    if (this.barBg) this.barBg.setPosition(width/2, height/2);
+    if (this.bar) this.bar.setPosition(width/2 - 150, height/2);
+    if (this.loadingText) this.loadingText.setPosition(width/2, height/2 - 30);
+  }
 
     // ── CHARACTERS ──
     this.load.image('spider_hero', 'assets/spider_hero.png?v=' + Date.now());

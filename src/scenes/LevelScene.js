@@ -40,8 +40,10 @@ class LevelScene extends Phaser.Scene {
     this.bg.setAlpha(0.6);
 
     // Player
-    this.player = this.physics.add.sprite(150, height / 2, this.activeHero);
-    this.player.setDisplaySize(80, 80);
+    this.player = this.physics.add.sprite(250, height / 2, this.activeHero);
+    this.player.setGravityY(this.config.gravity);
+    this.player.setBounce(0);
+    this.player.setDepth(10);
     // Removed setSize so it inherits the tight auto-cropped bounds
     this.player.setCollideWorldBounds(true);
 
@@ -534,6 +536,8 @@ class LevelScene extends Phaser.Scene {
       });
 
       if (hitFinish) this.completeLevel();
+      
+      if (this.player.x < 0) this.die();
 
       // Geometry Dash Dynamic Jump Arc (No upside down spinning!)
       if (!this.player.body.onFloor() && !this.player.body.touching.down) {
