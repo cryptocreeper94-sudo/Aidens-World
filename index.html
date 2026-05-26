@@ -1269,12 +1269,7 @@
     };
 
     window.startGame = function() {
-      // Force native Fullscreen to permanently hide Android URL bar and prevent epileptic resize pulsing
-      if (document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen().catch(e => console.log('FS error:', e));
-      } else if (document.documentElement.webkitRequestFullscreen) {
-        document.documentElement.webkitRequestFullscreen().catch(e => console.log('FS error:', e));
-      }
+      // CSS fullscreen (position:fixed) used instead of Fullscreen API to allow screenshots
 
       const hub = document.getElementById('game-hub');
       hub.style.opacity = '0';
