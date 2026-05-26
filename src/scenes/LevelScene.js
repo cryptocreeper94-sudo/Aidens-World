@@ -134,7 +134,6 @@ class LevelScene extends Phaser.Scene {
   }
 
   resize(gameSize) {
-    if (!this.scene.isActive()) return;
     const width = gameSize.width;
     const height = gameSize.height;
 

@@ -65,6 +65,15 @@ window.launchRiftRunner = function() {
   gameConfig.scale.height = '100%';
   
   game = new Phaser.Game(gameConfig);
+
+  // Debounced refresh to fix Android 0-dimension rotation bugs
+  window.addEventListener('resize', () => {
+    setTimeout(() => {
+      if (game && game.scale && !game.scale.isFullScreen) {
+        game.scale.refresh();
+      }
+    }, 500);
+  });
 };
 
   // Handle orientation changes
