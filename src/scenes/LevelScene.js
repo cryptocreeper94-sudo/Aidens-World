@@ -300,7 +300,8 @@ class LevelScene extends Phaser.Scene {
         continue; 
       }
 
-      if (this.seededRandom(1) < portalFreq && currentX > (finishDistance * 0.3)) {
+      if (this.seededRandom(1) < portalFreq && currentX > (finishDistance * 0.3) && !this.hasSpawnedPortal) {
+         this.hasSpawnedPortal = true;
          const portal = this.portals.create(currentX, groundY - 120, 'rift_portal');
          portal.setDisplaySize(80, 160);
          this.tweens.add({ targets: portal, angle: 360, repeat: -1, duration: 4000 });
@@ -369,6 +370,17 @@ class LevelScene extends Phaser.Scene {
     this.activeWorld = newWorld;
     this.cameras.main.setBackgroundColor('#000000');
     
+    // Update all existing enemies ahead of the player to the new world's theme
+    if (this.spikes) {
+      this.spikes.getChildren().forEach(enemy => {
+        if (enemy.x > this.player.x) {
+          const newEnemyKey = this.activeWorld.enemies[Math.floor(Math.random() * this.activeWorld.enemies.length)];
+          enemy.setTexture(newEnemyKey);
+          enemy.setDisplaySize(80, 80);
+        }
+      });
+    }
+    
     // Swap background — force exact dimensions
     const { width, height } = this.cameras.main;
     this.bg.destroy();
@@ -402,8 +414,13 @@ class LevelScene extends Phaser.Scene {
     SoundFX.play('levelup');
     
     if (this.overdriveAura) this.overdriveAura.destroy();
-    this.overdriveAura = this.add.rectangle(this.player.x, this.player.y, 100, 100, 0xfbbf24, 0.4).setDepth(9);
-    this.tweens.add({ targets: this.overdriveAura, scaleX: 1.5, scaleY: 1.5, alpha: 0, yoyo: true, repeat: -1, duration: 400 });
+    
+    this.overdriveAura = this.add.graphics();
+    this.overdriveAura.fillStyle(0xfbbf24, 0.5);
+    this.overdriveAura.fillCircle(0, 0, 70);
+    this.overdriveAura.setDepth(9);
+    
+    this.tweens.add({ targets: this.overdriveAura, scaleX: 1.4, scaleY: 1.4, alpha: 0.1, yoyo: true, repeat: -1, duration: 300 });
     
     this.overdriveText = this.add.text(this.cameras.main.width/2, 100, 'OVERDRIVE!', { fontFamily: 'Arial Black', fontSize: '48px', color: '#fbbf24', stroke: '#000', strokeThickness: 6 }).setOrigin(0.5).setDepth(100);
     this.tweens.add({ targets: this.overdriveText, scale: 1.2, yoyo: true, repeat: -1, duration: 300 });
@@ -452,8 +469,8 @@ class LevelScene extends Phaser.Scene {
   }
 
   hitEnemyWithProjectile(proj, enemy) {
-    proj.destroy();
-    enemy.destroy();
+    if (proj) proj.destroy();
+    if (enemy) enemy.destroy();
     SoundFX.play('hit');
     this.cameras.main.shake(100, 0.01);
 
@@ -473,9 +490,14 @@ class LevelScene extends Phaser.Scene {
     this.tweens.add({ targets: floatText, y: enemy.y - 100, alpha: 0, duration: 1000, onComplete: () => floatText.destroy() });
   }
 
-  die() {
+  die(player, hazard) {
     if (!this.isAlive) return;
-    if (this.isOverdrive) return; // Invincible!
+    if (this.isOverdrive) {
+      if (hazard && hazard.destroy && hazard !== this.deathWall) {
+         this.hitEnemyWithProjectile(null, hazard);
+      }
+      return; // Invincible!
+    }
     this.isAlive = false;
     this.isRunning = false;
     SoundFX.play('die');
@@ -659,6 +681,13 @@ class LevelScene extends Phaser.Scene {
 
       if (this.overdriveAura) {
         this.overdriveAura.setPosition(this.player.x, this.player.y);
+      }
+
+      if (this.isOverdrive && Math.random() < 0.4) {
+        const p = this.add.rectangle(this.player.x + (Math.random()-0.5)*100, this.player.y + (Math.random()-0.5)*100, 10, 10, 0xfbbf24);
+        this.physics.add.existing(p);
+        p.body.setVelocityY(Math.random() * -200 - 100);
+        this.tweens.add({ targets: p, scaleX: 0, scaleY: 0, duration: 600, onComplete: () => p.destroy() });
       }
 
       // Reset jump count if landed (just in case they fall off an edge without jumping)
