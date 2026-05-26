@@ -16,9 +16,8 @@ const gameConfig = {
     autoCenter: Phaser.Scale.CENTER_BOTH,
     width: gameWidth,
     height: gameHeight,
-    // Fill the whole screen
-    min: { width: 320, height: 180 },
-    max: { width: 1280, height: 720 },
+    // Fill the whole screen with no maximum cap
+    min: { width: 320, height: 180 }
   },
   scene: [BootScene, HubScene, StoryScene, LevelScene],
   physics: {
