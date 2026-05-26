@@ -1290,14 +1290,47 @@
       if (hostname.includes('.tlid.io')) {
         tenantName = hostname.split('.')[0];
       } else if (hostname.includes('localhost') || hostname.includes('127.0.0.1')) {
-        // Localhost dev mode: treat subdomains if present, else fallback
         const parts = hostname.split('.');
         if (parts.length > 1 && parts[0] !== 'localhost') {
           tenantName = parts[0];
         } else {
-          // If no subdomain, hide portal and show generic landing for testing
           document.getElementById('welcome-screen').style.display = 'none';
           return;
+        }
+      }
+
+      // Immediately capitalize tenant name for optimistic UI rendering
+      let displayName = tenantName.charAt(0).toUpperCase() + tenantName.slice(1);
+      
+      // Optimistically apply personalization (prevents "Aiden" flash if Firestore takes time or errors)
+      const portalHeader = document.querySelector('.portal-header h1');
+      if (portalHeader) {
+        portalHeader.innerText = `${displayName}'s World`;
+      }
+      
+      // Expose globally for SaveSystem
+      window.CHRONOVERSE_TENANT = tenantName;
+      if (window.syncFirebaseSave) window.syncFirebaseSave(tenantName);
+
+      const hour = new Date().getHours();
+      let timeOfDay = 'Evening';
+      if (hour < 12) timeOfDay = 'Morning';
+      else if (hour < 18) timeOfDay = 'Afternoon';
+
+      const dailyMsg = document.getElementById('daily-message');
+      const messageCard = document.querySelector('.message-card');
+
+      if (tenantName.toLowerCase() === 'aiden') {
+        if (dailyMsg) {
+          dailyMsg.innerText = `"Good ${timeOfDay}, ${displayName}! Hope this is something you enjoy! Can't wait to see you again next month. I love You! ❤️"`;
+        }
+      } else {
+        if (messageCard) {
+          const h2 = messageCard.querySelector('h2');
+          if (h2) h2.innerText = '🌌 Chronoverse System';
+        }
+        if (dailyMsg) {
+          dailyMsg.innerText = `Good ${timeOfDay}, ${displayName}! Welcome to your personal portal. The Chronoverse is online and ready for action!`;
         }
       }
 
@@ -1314,45 +1347,16 @@
           }
         }
         
-        // It is registered! Get their real Display Name
-        const kidData = kidDoc.exists ? kidDoc.data() : { displayName: tenantName };
-        const displayName = kidData.displayName;
-        
-        // Expose globally for SaveSystem
-        window.CHRONOVERSE_TENANT = tenantName;
-        
-        // Init Firebase sync for this tenant
-        if (window.syncFirebaseSave) window.syncFirebaseSave(tenantName);
-
-        // Determine time of day
-        const hour = new Date().getHours();
-        let timeOfDay = 'Evening';
-        if (hour < 12) timeOfDay = 'Morning';
-        else if (hour < 18) timeOfDay = 'Afternoon';
-        
-        // Apply personalization to the Portal Dashboard
-        const portalHeader = document.querySelector('.portal-header h1');
-        if (portalHeader) {
-          portalHeader.innerText = `${displayName}'s World`;
-        }
-        
-        const dailyMsg = document.getElementById('daily-message');
-        const messageCard = document.querySelector('.message-card');
-        
-        if (tenantName.toLowerCase() === 'aiden') {
-          if (dailyMsg) {
-            dailyMsg.innerText = `"Good ${timeOfDay}, ${displayName}! Hope this is something you enjoy! Can't wait to see you again next month. I love You! ❤️"`;
-          }
-        } else {
-          // Generic welcome message for all other kids
-          if (messageCard) {
-            const h2 = messageCard.querySelector('h2');
-            if (h2) h2.innerText = '🌌 Chronoverse System';
-          }
-          if (dailyMsg) {
+        // It is registered! Get their real Display Name if available and update UI again
+        if (kidDoc.exists && kidDoc.data().displayName) {
+          displayName = kidDoc.data().displayName;
+          if (portalHeader) portalHeader.innerText = `${displayName}'s World`;
+          if (tenantName.toLowerCase() !== 'aiden' && dailyMsg) {
             dailyMsg.innerText = `Good ${timeOfDay}, ${displayName}! Welcome to your personal portal. The Chronoverse is online and ready for action!`;
           }
         }
+
+
       } catch (e) {
         console.log("Edge Routing Error:", e);
       }
