@@ -24,8 +24,8 @@ const LevelData = {
     // Obstacle gap: tighter from the start, gets intense
     const obstacleGap = Math.max(2.5 - (levelNum * 0.05), 1.2);
 
-    // Tower height: single blocks for 1-9, double for 10+
-    const maxTowerBlocks = levelNum >= 10 ? 2 : 1;
+    // Tower height variety: 1 block (lvl 1-3), up to 2 (lvl 4-9), up to 3 (lvl 10+)
+    const maxTowerBlocks = levelNum >= 10 ? 3 : (levelNum >= 4 ? 2 : 1);
 
     const worlds = [
       { key: 'city', bg: 'nyc_skyline', color: '#1e1b4b', enemies: ['enemy_thug'] },

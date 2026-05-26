@@ -272,7 +272,7 @@ class LevelScene extends Phaser.Scene {
       }
 
       if (this.seededRandom(1) < towerFreq && !lastWasTower) {
-        const heightMultiplier = maxTowerBlocks || 1;
+        const heightMultiplier = Math.ceil(this.seededRandom(maxTowerBlocks || 1, 1)); // Random 1 to max
         const towerHeight = heightMultiplier * blockSize;
         const tower = this.blocks.create(currentX, groundY - (towerHeight/2), 'sci_fi_tower');
         tower.setDisplaySize(blockSize, towerHeight);
