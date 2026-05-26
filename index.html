@@ -25,7 +25,8 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
-      width: 100%; height: 100%;
+      width: 100%; height: 100vh;
+      height: 100dvh; /* Dynamic viewport height - accounts for browser chrome */
       overflow: hidden;
       background: #0a0a1a;
       font-family: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -1269,7 +1270,12 @@
     };
 
     window.startGame = function() {
-      // CSS fullscreen (position:fixed) used instead of Fullscreen API to allow screenshots
+      // Request fullscreen for gameplay (hides browser bar in landscape)
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(e => console.log('FS:', e));
+      } else if (document.documentElement.webkitRequestFullscreen) {
+        document.documentElement.webkitRequestFullscreen();
+      }
 
       const hub = document.getElementById('game-hub');
       hub.style.opacity = '0';
