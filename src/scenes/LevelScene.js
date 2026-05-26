@@ -38,6 +38,14 @@ class LevelScene extends Phaser.Scene {
     // Scrolling visual background instead of blank grid
     this.bg = this.add.tileSprite(width/2, height/2, width, height, this.activeWorld.bg);
     this.bg.setAlpha(0.6);
+    
+    // Scale background texture to perfectly fit screen height
+    const bgImage = this.textures.get(this.activeWorld.bg).getSourceImage();
+    if (bgImage && bgImage.height) {
+      const scale = height / bgImage.height;
+      this.bg.tileScaleX = scale;
+      this.bg.tileScaleY = scale;
+    }
 
     // Player
     this.player = this.physics.add.sprite(250, height / 2, this.activeHero);
@@ -143,6 +151,13 @@ class LevelScene extends Phaser.Scene {
     if (this.bg) {
       this.bg.setPosition(width/2, height/2);
       this.bg.setSize(width, height);
+      
+      const bgImg = this.textures.get(this.activeWorld.bg).getSourceImage();
+      if (bgImg && bgImg.height) {
+        const scale = height / bgImg.height;
+        this.bg.tileScaleX = scale;
+        this.bg.tileScaleY = scale;
+      }
     }
     
     if (this.floor) {
@@ -150,30 +165,32 @@ class LevelScene extends Phaser.Scene {
       this.floor.width = width * 100;
     }
 
-    const uiY = height - 50;
+    const uiY = height - 40;
     
     if (this.jumpGraphics) {
        this.jumpGraphics.clear();
        this.jumpGraphics.fillStyle(0x10b981, 0.8);
-       this.jumpGraphics.fillRoundedRect(20, uiY - 40, 140, 80, 20);
-       this.jumpZone.setPosition(90, uiY);
-       this.jumpZone.setSize(140, 80);
-       this.jumpText.setPosition(90, uiY);
+       this.jumpGraphics.fillRoundedRect(10, uiY - 30, 100, 60, 15);
+       this.jumpZone.setPosition(60, uiY);
+       this.jumpZone.setSize(100, 60);
+       this.jumpText.setPosition(60, uiY);
+       this.jumpText.setFontSize('14px');
        this.jumpOutline.clear();
        this.jumpOutline.lineStyle(4, 0xffffff);
-       this.jumpOutline.strokeRoundedRect(20, uiY - 40, 140, 80, 20);
+       this.jumpOutline.strokeRoundedRect(10, uiY - 30, 100, 60, 15);
     }
     
     if (this.attackGraphics) {
        this.attackGraphics.clear();
        this.attackGraphics.fillStyle(0xe63946, 0.8);
-       this.attackGraphics.fillRoundedRect(width - 160, uiY - 40, 140, 80, 20);
-       this.attackZone.setPosition(width - 90, uiY);
-       this.attackZone.setSize(140, 80);
-       this.attackText.setPosition(width - 90, uiY);
+       this.attackGraphics.fillRoundedRect(width - 110, uiY - 30, 100, 60, 15);
+       this.attackZone.setPosition(width - 60, uiY);
+       this.attackZone.setSize(100, 60);
+       this.attackText.setPosition(width - 60, uiY);
+       this.attackText.setFontSize('14px');
        this.attackOutline.clear();
        this.attackOutline.lineStyle(4, 0xffffff);
-       this.attackOutline.strokeRoundedRect(width - 160, uiY - 40, 140, 80, 20);
+       this.attackOutline.strokeRoundedRect(width - 110, uiY - 30, 100, 60, 15);
     }
 
     if (this.scoreText) this.scoreText.setPosition(width - 20, 20);
