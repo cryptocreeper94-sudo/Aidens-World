@@ -1234,8 +1234,18 @@
     };
 
     window.goBackToPortal = function() {
+      // Exit fullscreen if active
+      if (document.fullscreenElement || document.webkitFullscreenElement) {
+        if (document.exitFullscreen) document.exitFullscreen().catch(()=>{});
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+      }
+      
       document.getElementById('game-hub').style.display = 'none';
-      document.getElementById('aiden-portal').style.display = 'block';
+      document.getElementById('game-hub').style.opacity = '0';
+      
+      const portal = document.getElementById('aiden-portal');
+      portal.style.display = 'block';
+      setTimeout(() => { portal.style.opacity = '1'; }, 50);
     };
 
     window.startGame = function() {
