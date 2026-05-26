@@ -113,14 +113,32 @@ class StoryScene extends Phaser.Scene {
       },
     });
 
-    // Play audio
+    // Play audio and setup auto-advance
     if (this.currentVoice) {
       this.currentVoice.stop();
     }
+    if (this.autoAdvanceTimer) {
+      this.autoAdvanceTimer.remove();
+    }
+
     const audioKey = `voice_${this.storyId}_${idx}`;
     if (this.cache.audio.exists(audioKey)) {
       this.currentVoice = this.sound.add(audioKey);
       this.currentVoice.play();
+      this.currentVoice.once('complete', () => {
+        this.autoAdvanceTimer = this.time.delayedCall(1500, () => {
+          if (this.currentPanel === idx) {
+            this.input.emit('pointerdown');
+          }
+        });
+      });
+    } else {
+      // Fallback timer if no audio
+      this.autoAdvanceTimer = this.time.delayedCall(4000, () => {
+        if (this.currentPanel === idx) {
+          this.input.emit('pointerdown');
+        }
+      });
     }
 
     // Counter

@@ -38,16 +38,22 @@ class LevelScene extends Phaser.Scene {
     // Scrolling visual background instead of blank grid
     this.bg = this.add.tileSprite(width/2, height/2, width, height, this.activeWorld.bg);
     this.bg.setAlpha(0.6);
+    this.bg.tilePositionY = 0; // Prevent vertical seam offsetting
     
     // Scale background texture to perfectly fit screen height
-    const bgImage = this.textures.get(this.activeWorld.bg).getSourceImage();
-    if (bgImage && bgImage.height) {
-      const scale = height / bgImage.height;
+    const frame = this.textures.getFrame(this.activeWorld.bg);
+    if (frame) {
+      const scale = height / frame.height;
       this.bg.tileScaleX = scale;
       this.bg.tileScaleY = scale;
     }
 
-    // Player
+    // Player (Add fallback if localStorage has stale invalid key)
+    if (!this.textures.exists(this.activeHero)) {
+      this.activeHero = 'spider_hero';
+      localStorage.setItem('ChronoverseActiveHero', 'spider_hero');
+    }
+    
     this.player = this.physics.add.sprite(250, height / 2, this.activeHero);
     this.player.setDisplaySize(80, 80);
     this.player.setGravityY(this.config.gravity);
@@ -152,11 +158,12 @@ class LevelScene extends Phaser.Scene {
       this.bg.setPosition(width/2, height/2);
       this.bg.setSize(width, height);
       
-      const bgImg = this.textures.get(this.activeWorld.bg).getSourceImage();
-      if (bgImg && bgImg.height) {
-        const scale = height / bgImg.height;
+      const frame = this.textures.getFrame(this.activeWorld.bg);
+      if (frame) {
+        const scale = height / frame.height;
         this.bg.tileScaleX = scale;
         this.bg.tileScaleY = scale;
+        this.bg.tilePositionY = 0;
       }
     }
     
