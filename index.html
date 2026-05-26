@@ -971,8 +971,8 @@
       const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
       const isSafari = /Safari/.test(navigator.userAgent) && !/CriOS|FxiOS|Chrome/.test(navigator.userAgent);
       if (isIOS && isSafari) {
-        instructions.innerHTML = 'Tap <svg class="ios-icon" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg"><rect width="50" height="50" rx="8" fill="#007AFF"/><path d="M25 8 L25 32 M16 17 L25 8 L34 17" stroke="white" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 28 L14 38 C14 40 16 42 18 42 L32 42 C34 42 36 40 36 38 L36 28" stroke="white" stroke-width="3" fill="none" stroke-linecap="round"/></svg> then <b>"Add to Home Screen"</b>';
-        installBtn.textContent = 'GOT IT!';
+        instructions.innerHTML = 'To install: Tap the <svg style="width:28px; height:28px; vertical-align:middle; margin:0 5px;" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg"><rect width="50" height="50" rx="8" fill="#007AFF"/><path d="M25 8 L25 32 M16 17 L25 8 L34 17" stroke="white" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 28 L14 38 C14 40 16 42 18 42 L32 42 C34 42 36 40 36 38 L36 28" stroke="white" stroke-width="3" fill="none" stroke-linecap="round"/></svg> Share icon, then scroll down and tap <br><b style="color:#fbbf24; font-size:18px;">"Add to Home Screen"</b>';
+        installBtn.textContent = 'I GOT IT';
         // Show banner after a short delay
         setTimeout(() => banner.classList.add('show'), 2000);
       }
@@ -1275,8 +1275,9 @@
       try {
         // Query Firestore to verify this is a registered kid
         const kidDoc = await db.collection('kids').doc(tenantName.toLowerCase()).get();
+        const isWhitelisted = (tenantName.toLowerCase() === 'aiden' || tenantName.toLowerCase() === 'maya');
         
-        if (!kidDoc.exists) {
+        if (!kidDoc.exists && !isWhitelisted) {
           // Unregistered Subdomain -> Redirect to main page!
           if (!hostname.includes('localhost')) {
             window.location.href = 'https://chronoverse.tlid.io';
