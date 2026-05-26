@@ -793,31 +793,121 @@
       <p id="daily-message">"Aiden, hope this is something you enjoy! Can't wait to see you again next month. I love You! ❤️"</p>
     </div>
 
-    <!-- Applications Grid -->
-    <div class="app-section-title">Games & Apps</div>
+    <!-- The Three Learning Modes -->
+    <div class="app-section-title">The Three Learning Modes</div>
     <div class="app-grid">
       
-      <!-- App 1: Rift Runner (Playable) -->
-      <div class="app-card playable" onclick="showGameHub()">
-        <img class="app-thumb" src="assets/backgrounds/hub_bg.png" alt="Rift Runner Thumbnail">
-        <div class="app-title">Rift Runner</div>
-        <div class="app-desc">Dash through the multiverse!</div>
+      <!-- App 1: Play Mode (Kid-First) -->
+      <div class="app-card playable" onclick="showGameHub()" style="border-color:#10b981; box-shadow:0 8px 30px rgba(16,185,129,0.4);">
+        <img class="app-thumb" src="assets/backgrounds/hub_bg.png" alt="Rift Runner Thumbnail" style="border-color:#10b981;">
+        <div class="app-title" style="color:#10b981;">Play Mode</div>
+        <div class="app-desc">Rift Runner & Puzzles</div>
       </div>
 
-      <!-- App 2: Lume Sandbox (Playable) -->
-      <div class="app-card playable" onclick="showLumeSandbox()">
-        <div class="app-thumb" style="display:flex; align-items:center; justify-content:center; font-size:32px; background:#0f172a; color:#22d3ee; border: 2px solid #22d3ee;">&lt;/&gt;</div>
-        <div class="app-title">Lume Sandbox</div>
-        <div class="app-desc">Learn to Code!</div>
+      <!-- App 2: Learn Mode (Parent + Child Together) -->
+      <div class="app-card playable" onclick="showLearningCenter()" style="border-color:#fbbf24; box-shadow:0 8px 30px rgba(251,191,36,0.4);">
+        <div class="app-thumb" style="display:flex; align-items:center; justify-content:center; font-size:40px; background:rgba(251,191,36,0.1); color:#fbbf24; border:2px solid #fbbf24;">👨‍👧</div>
+        <div class="app-title" style="color:#fbbf24;">Learn Mode</div>
+        <div class="app-desc">Parent + Child Discovery</div>
       </div>
 
-      <!-- App 3: Vault Defender (Coming Soon) -->
-      <div class="app-card" style="opacity: 0.6; cursor: not-allowed; position: relative;">
-        <div class="app-thumb" style="display:flex; align-items:center; justify-content:center; font-size:32px; background:#450a0a; color:#ef4444; border: 2px solid #ef4444;">🛡️</div>
-        <div class="app-title">Vault Defender</div>
-        <div class="app-desc" style="color: #fbbf24; font-weight: bold;">Coming Soon!</div>
+      <!-- App 3: Create Mode (Kid-Driven) -->
+      <div class="app-card playable" onclick="showLumeSandbox()" style="border-color:#22d3ee; box-shadow:0 8px 30px rgba(34,211,238,0.4);">
+        <div class="app-thumb" style="display:flex; align-items:center; justify-content:center; font-size:40px; background:rgba(34,211,238,0.1); color:#22d3ee; border: 2px solid #22d3ee;">&lt;/&gt;</div>
+        <div class="app-title" style="color:#22d3ee;">Create Mode</div>
+        <div class="app-desc">Lume Voice Sandbox</div>
       </div>
 
+    </div>
+  </div>
+
+  <!-- Layer 2.5: Learning Center (Parent + Child) -->
+  <div id="learning-center" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:url('assets/ui/cockpit_bg.png') no-repeat center center fixed; background-size:cover; z-index:5500; overflow-y:auto;">
+    <!-- Dimmer overlay -->
+    <div style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(10,10,30,0.85); z-index:-1;"></div>
+    
+    <button onclick="document.getElementById('learning-center').style.display='none'; document.getElementById('aiden-portal').style.display='block';" style="position:absolute; top:20px; left:20px; background:rgba(0,0,0,0.5); color:white; border:2px solid white; padding:10px 20px; border-radius:20px; font-size:16px; font-weight:bold; cursor:pointer; z-index:5505;">← Back</button>
+    
+    <div style="max-width:1200px; margin:0 auto; padding:80px 20px 40px 20px; display:flex; flex-wrap:wrap; gap:40px;">
+      
+      <!-- Left Column: Curriculum -->
+      <div style="flex:1; min-width:300px;">
+        <h2 style="color:#fbbf24; font-size:32px; font-weight:900; text-transform:uppercase; letter-spacing:2px; margin-bottom:10px; text-shadow:0 2px 10px rgba(251,191,36,0.5);">Learning Center</h2>
+        <p style="color:#cbd5e1; font-size:16px; margin-bottom:30px; font-weight:700;">Explore how technology works together as a family. You are the guide!</p>
+        
+        <div style="display:flex; flex-direction:column; gap:15px;">
+          <!-- Section 1 -->
+          <div style="background:rgba(255,255,255,0.05); border-left:4px solid #10b981; padding:15px; border-radius:8px;">
+            <h3 style="color:#10b981; font-size:18px; margin-bottom:5px;">1. How Games Work</h3>
+            <p style="color:#94a3b8; font-size:13px;">Characters, physics, collisions, and gravity.</p>
+          </div>
+          <!-- Section 2 -->
+          <div style="background:rgba(255,255,255,0.05); border-left:4px solid #3b82f6; padding:15px; border-radius:8px;">
+            <h3 style="color:#3b82f6; font-size:18px; margin-bottom:5px;">2. How Computers Think</h3>
+            <p style="color:#94a3b8; font-size:13px;">Step-by-step logic, cause and effect.</p>
+          </div>
+          <!-- Section 3 -->
+          <div style="background:rgba(255,255,255,0.05); border-left:4px solid #8b5cf6; padding:15px; border-radius:8px;">
+            <h3 style="color:#8b5cf6; font-size:18px; margin-bottom:5px;">3. Basic Syntax</h3>
+            <p style="color:#94a3b8; font-size:13px;">Commands, conditions, and loops made simple.</p>
+          </div>
+          <!-- Section 4 -->
+          <div style="background:rgba(255,255,255,0.05); border-left:4px solid #22d3ee; padding:15px; border-radius:8px;">
+            <h3 style="color:#22d3ee; font-size:18px; margin-bottom:5px;">4. Building with Lume</h3>
+            <p style="color:#94a3b8; font-size:13px;">Speaking intentions and watching code appear.</p>
+          </div>
+          <!-- Section 5 -->
+          <div style="background:rgba(255,255,255,0.05); border-left:4px solid #e63946; padding:15px; border-radius:8px;">
+            <h3 style="color:#e63946; font-size:18px; margin-bottom:5px;">5. My World, My Identity</h3>
+            <p style="color:#94a3b8; font-size:13px;">Digital identity, data ownership, and safety.</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Right Column: Hands-On Activities (Lume) -->
+      <div style="flex:1; min-width:300px;">
+        <h2 style="color:#22d3ee; font-size:32px; font-weight:900; text-transform:uppercase; letter-spacing:2px; margin-bottom:10px; text-shadow:0 2px 10px rgba(34,211,238,0.5);">Hands-On Activities</h2>
+        <p style="color:#cbd5e1; font-size:16px; margin-bottom:30px; font-weight:700;">Practice together using the Lume Voice Sandbox!</p>
+        
+        <div style="display:grid; grid-template-columns:1fr; gap:20px;">
+          <!-- Activity A -->
+          <button onclick="startLumeActivity('A')" class="app-card playable" style="text-align:left; border-color:#22d3ee; flex-direction:row; padding:20px; align-items:center;">
+            <div style="font-size:30px; margin-right:20px;">🔧</div>
+            <div style="text-align:left;">
+              <div class="app-title" style="color:#22d3ee; font-size:20px;">Activity A: Fix the Level</div>
+              <div class="app-desc" style="font-size:14px;">Use Lume to fix broken logic and test it together.</div>
+            </div>
+          </button>
+          
+          <!-- Activity B -->
+          <button onclick="startLumeActivity('B')" class="app-card playable" style="text-align:left; border-color:#fbbf24; flex-direction:row; padding:20px; align-items:center;">
+            <div style="font-size:30px; margin-right:20px;">🎨</div>
+            <div style="text-align:left;">
+              <div class="app-title" style="color:#fbbf24; font-size:20px;">Activity B: Design a Character</div>
+              <div class="app-desc" style="font-size:14px;">Describe a character and let Lume generate it.</div>
+            </div>
+          </button>
+          
+          <!-- Activity C -->
+          <button onclick="startLumeActivity('C')" class="app-card playable" style="text-align:left; border-color:#10b981; flex-direction:row; padding:20px; align-items:center;">
+            <div style="font-size:30px; margin-right:20px;">📜</div>
+            <div style="text-align:left;">
+              <div class="app-title" style="color:#10b981; font-size:20px;">Activity C: Build a Rule</div>
+              <div class="app-desc" style="font-size:14px;">"What happens if the hero touches the star?" Speak the rule.</div>
+            </div>
+          </button>
+          
+          <!-- Activity D -->
+          <button onclick="startLumeActivity('D')" class="app-card playable" style="text-align:left; border-color:#8b5cf6; flex-direction:row; padding:20px; align-items:center;">
+            <div style="font-size:30px; margin-right:20px;">🐛</div>
+            <div style="text-align:left;">
+              <div class="app-title" style="color:#8b5cf6; font-size:20px;">Activity D: Debug Together</div>
+              <div class="app-desc" style="font-size:14px;">Experiment with solutions and celebrate the "Aha!" moment.</div>
+            </div>
+          </button>
+        </div>
+      </div>
+      
     </div>
   </div>
 
@@ -1255,6 +1345,41 @@
           document.querySelector('.hub-bg-zone.desert').style.animationDelay = `${(8 + offset) % 12}s`;
         }, 50);
       }, 500);
+    };
+
+    window.showLearningCenter = function() {
+      document.getElementById('aiden-portal').style.display = 'none';
+      document.getElementById('learning-center').style.display = 'block';
+    };
+
+    window.startLumeActivity = function(activity) {
+      // Hide learning center and show Sandbox
+      document.getElementById('learning-center').style.display = 'none';
+      document.getElementById('lume-sandbox').style.display = 'flex';
+      
+      const out = document.getElementById('lume-terminal-output');
+      const input = document.getElementById('lume-input');
+      if (out) {
+        out.innerHTML = `<div>[SYS] Trust Layer Connected.</div>
+                         <div>[SYS] Lume Speech-to-Code interface active.</div>`;
+        if (activity === 'A') {
+          out.innerHTML += `<div style="color:#fbbf24; margin-top:10px; font-weight:bold;">[LEARN] Activity A: Fix the Level!</div>
+                            <div style="color:#cbd5e1; margin-bottom:10px;">&gt; The hero cannot jump high enough to reach the platform. Can you tell Lume to increase the hero's jump force?</div>`;
+          if (input) input.value = "increase hero jump force";
+        } else if (activity === 'B') {
+          out.innerHTML += `<div style="color:#fbbf24; margin-top:10px; font-weight:bold;">[LEARN] Activity B: Design a Character!</div>
+                            <div style="color:#cbd5e1; margin-bottom:10px;">&gt; Describe a character and Lume will create it! For example: 'Create a blue alien with super speed'.</div>`;
+          if (input) input.value = "create a blue alien with super speed";
+        } else if (activity === 'C') {
+          out.innerHTML += `<div style="color:#fbbf24; margin-top:10px; font-weight:bold;">[LEARN] Activity C: Build a Rule!</div>
+                            <div style="color:#cbd5e1; margin-bottom:10px;">&gt; What should happen if the hero touches the star? Let's write a rule!</div>`;
+          if (input) input.value = "if hero touches star then add 10 points";
+        } else if (activity === 'D') {
+          out.innerHTML += `<div style="color:#fbbf24; margin-top:10px; font-weight:bold;">[LEARN] Activity D: Debug Together!</div>
+                            <div style="color:#cbd5e1; margin-bottom:10px;">&gt; The game loop is repeating too fast! Try telling Lume to slow down the game loop.</div>`;
+          if (input) input.value = "slow down game loop to 30 fps";
+        }
+      }
     };
 
     window.showLumeSandbox = function() {

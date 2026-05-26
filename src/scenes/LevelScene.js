@@ -26,6 +26,13 @@ class LevelScene extends Phaser.Scene {
     this.gameSpeed = this.config.gameSpeed;
     this.distanceTraveled = 0;
     this.shardsCollected = 0;
+    this.jumpCount = 0;
+    
+    // Load persistent overdrive meter from save
+    let initialSaveStr = localStorage.getItem('ChronoverseSave');
+    let initialSave = initialSaveStr ? JSON.parse(initialSaveStr) : {};
+    this.overdriveMeter = initialSave.overdriveMeter || 0;
+    this.isOverdrive = false;
     // Strong seed mixing — every level gets a truly unique pattern
     this.seed = ((this.levelNum * 2654435761) ^ (this.levelNum * 40503)) >>> 0;
     // Warm up the RNG so close seeds diverge fully
@@ -103,7 +110,15 @@ class LevelScene extends Phaser.Scene {
       }
       if (this.player.body.touching.down || this.player.body.onFloor()) {
         this.player.setVelocityY(-1500); // Strong jump to clear tall towers
+        this.jumpCount = 1;
         SoundFX.play('jump');
+      } else if (this.jumpCount < 2 || this.isOverdrive) {
+        this.player.setVelocityY(-1500);
+        this.jumpCount = this.isOverdrive ? this.jumpCount : 2;
+        SoundFX.play('jump');
+        
+        const p = this.add.rectangle(this.player.x, this.player.y + 40, 20, 10, 0x22d3ee);
+        this.tweens.add({ targets: p, scaleX: 3, alpha: 0, duration: 300, onComplete: () => p.destroy() });
       }
     };
 
@@ -119,6 +134,9 @@ class LevelScene extends Phaser.Scene {
 
     // UI
     this.scoreText = this.add.text(width - 20, 20, '💎 0', { fontFamily: 'Arial Black', fontSize: '24px', color: '#06b6d4' }).setOrigin(1, 0).setDepth(100);
+    this.overdriveBarBg = this.add.rectangle(width - 20, 55, 100, 8, 0x000000).setOrigin(1, 0.5).setDepth(100);
+    const initialFill = Math.min(this.overdriveMeter / 10, 1);
+    this.overdriveBar = this.add.rectangle(width - 120, 55, 100 * initialFill, 8, 0xfbbf24).setOrigin(0, 0.5).setDepth(101);
     this.levelText = this.add.text(20, 20, `LEVEL ${this.levelNum}`, { fontFamily: 'Arial Black', fontSize: '24px', color: '#ffffff' }).setDepth(100);
     
     // Progress bar
@@ -204,6 +222,8 @@ class LevelScene extends Phaser.Scene {
     }
 
     if (this.scoreText) this.scoreText.setPosition(width - 20, 20);
+    if (this.overdriveBarBg) this.overdriveBarBg.setPosition(width - 20, 55);
+    if (this.overdriveBar) this.overdriveBar.setPosition(width - 120, 55);
     if (this.levelText) this.levelText.setPosition(20, 20);
     if (this.quitBtn) this.quitBtn.setPosition(width - 20, 60);
     if (this.progressBarBg) this.progressBarBg.setPosition(width/2, 30);
@@ -229,6 +249,24 @@ class LevelScene extends Phaser.Scene {
     setTimeout(() => hub.style.opacity = '1', 50);
     if(window.updateCharacterLocks) window.updateCharacterLocks();
     if(window.initHeroSelection) window.initHeroSelection();
+    
+    // Save meter on quit
+    let saveStr = localStorage.getItem('ChronoverseSave');
+    let saveToUpdate = saveStr ? JSON.parse(saveStr) : { maxLevelUnlocked: 1, totalStars: 0, totalShards: 0 };
+    saveToUpdate.overdriveMeter = this.overdriveMeter;
+    localStorage.setItem('ChronoverseSave', JSON.stringify(saveToUpdate));
+    
+    // Fix Hub Stats refresh
+    saveStr = localStorage.getItem('ChronoverseSave');
+    if (saveStr) {
+      let save = JSON.parse(saveStr);
+      const lvlStat = document.getElementById('hub-stat-level');
+      const starsStat = document.getElementById('hub-stat-stars');
+      const shardsStat = document.getElementById('hub-stat-shards');
+      if (lvlStat) lvlStat.innerText = save.maxLevelUnlocked || 1;
+      if (starsStat) starsStat.innerText = save.totalStars || 0;
+      if (shardsStat) shardsStat.innerText = save.totalShards || 0;
+    }
     
     // Destroy game instance to completely reset it for next time
     this.time.delayedCall(100, () => {
@@ -346,6 +384,38 @@ class LevelScene extends Phaser.Scene {
     this.shardsCollected++;
     this.scoreText.setText(`💎 ${this.shardsCollected}`);
     SoundFX.play('hit');
+    
+    if (!this.isOverdrive) {
+      this.overdriveMeter++;
+      const fill = Math.min(this.overdriveMeter / 10, 1);
+      this.overdriveBar.width = 100 * fill;
+      
+      if (this.overdriveMeter >= 10) {
+        this.enterOverdrive();
+      }
+    }
+  }
+
+  enterOverdrive() {
+    this.isOverdrive = true;
+    this.player.setTint(0xfbbf24);
+    SoundFX.play('levelup');
+    
+    if (this.overdriveAura) this.overdriveAura.destroy();
+    this.overdriveAura = this.add.rectangle(this.player.x, this.player.y, 100, 100, 0xfbbf24, 0.4).setDepth(9);
+    this.tweens.add({ targets: this.overdriveAura, scaleX: 1.5, scaleY: 1.5, alpha: 0, yoyo: true, repeat: -1, duration: 400 });
+    
+    this.overdriveText = this.add.text(this.cameras.main.width/2, 100, 'OVERDRIVE!', { fontFamily: 'Arial Black', fontSize: '48px', color: '#fbbf24', stroke: '#000', strokeThickness: 6 }).setOrigin(0.5).setDepth(100);
+    this.tweens.add({ targets: this.overdriveText, scale: 1.2, yoyo: true, repeat: -1, duration: 300 });
+
+    this.time.delayedCall(8000, () => {
+      this.isOverdrive = false;
+      this.overdriveMeter = 0;
+      this.overdriveBar.width = 0;
+      this.player.clearTint();
+      if (this.overdriveAura) this.overdriveAura.destroy();
+      if (this.overdriveText) this.overdriveText.destroy();
+    });
   }
 
   fireProjectile() {
@@ -405,6 +475,7 @@ class LevelScene extends Phaser.Scene {
 
   die() {
     if (!this.isAlive) return;
+    if (this.isOverdrive) return; // Invincible!
     this.isAlive = false;
     this.isRunning = false;
     SoundFX.play('die');
@@ -417,6 +488,12 @@ class LevelScene extends Phaser.Scene {
       this.tweens.add({ targets: p, alpha: 0, duration: 600, onComplete: () => p.destroy() });
     }
     
+    // Save overdrive meter state on death so it carries over
+    let saveStr = localStorage.getItem('ChronoverseSave');
+    let save = saveStr ? JSON.parse(saveStr) : { maxLevelUnlocked: 1, totalStars: 0, totalShards: 0 };
+    save.overdriveMeter = this.overdriveMeter;
+    localStorage.setItem('ChronoverseSave', JSON.stringify(save));
+
     this.cameras.main.shake(200, 0.02);
     this.time.delayedCall(800, () => this.scene.restart());
   }
@@ -439,6 +516,7 @@ class LevelScene extends Phaser.Scene {
     let save = saveStr ? JSON.parse(saveStr) : { maxLevelUnlocked: 1, totalStars: 0, totalShards: 0 };
     save.maxLevelUnlocked = Math.max(save.maxLevelUnlocked, this.levelNum + 1);
     save.totalShards = (save.totalShards || 0) + this.shardsCollected;
+    save.overdriveMeter = this.overdriveMeter; // persist overdrive meter
     localStorage.setItem('ChronoverseSave', JSON.stringify(save));
 
     this.time.delayedCall(1500, () => {
@@ -578,6 +656,15 @@ class LevelScene extends Phaser.Scene {
       if (hitFinish) this.completeLevel();
       
       if (this.player.x < 0) this.die();
+
+      if (this.overdriveAura) {
+        this.overdriveAura.setPosition(this.player.x, this.player.y);
+      }
+
+      // Reset jump count if landed (just in case they fall off an edge without jumping)
+      if (this.player.body.onFloor() || this.player.body.touching.down) {
+        this.jumpCount = 0;
+      }
 
       // Geometry Dash full 360° flip when airborne!
       if (!this.player.body.onFloor() && !this.player.body.touching.down) {
