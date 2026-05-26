@@ -55,13 +55,7 @@ class StoryScene extends Phaser.Scene {
       lineSpacing: 4,
     });
 
-    // Tap prompt
-    this.tapPrompt = this.add.text(width / 2, height - 30, 'Tap to continue ▶', {
-      fontFamily: 'Arial',
-      fontSize: '12px',
-      color: '#666666',
-    }).setOrigin(0.5);
-    this.tweens.add({ targets: this.tapPrompt, alpha: { from: 0.3, to: 1 }, yoyo: true, repeat: -1, duration: 800 });
+
 
     // Panel counter
     this.counterText = this.add.text(width - 20, 15, '', {
