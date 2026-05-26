@@ -50,6 +50,8 @@ class BootScene extends Phaser.Scene {
     this.load.image('telekinetic_girl', 'assets/characters/telekinetic_girl.png?v=cropped6');
     this.load.image('alien_brute', 'assets/characters/alien_brute.png');
     this.load.image('super_girl', 'assets/characters/supergirl.png?v=greeneyes');
+    this.load.image('superboy', 'assets/characters/superboy.png');
+    this.load.image('cyborg_girl', 'assets/characters/cyborg_girl.png');
 
     // ── BACKGROUNDS (all worlds) ──
     this.load.image('hub_bg', 'assets/backgrounds/hub_bg.png');

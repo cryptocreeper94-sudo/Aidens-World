@@ -101,6 +101,22 @@ const CHARACTERS = {
     abilityDesc: 'From the Upside Down!',
     unlockText: 'Seal the Rift!',
   },
+  superboy: {
+    name: 'Superboy',
+    sprite: 'superboy',
+    color: '#2563eb',
+    ability: 'Power Flight',
+    abilityDesc: 'Unstoppable strength!',
+    unlockText: 'Available from the start!',
+  },
+  cyborg_girl: {
+    name: 'Cyborg Girl',
+    sprite: 'cyborg_girl',
+    color: '#06b6d4',
+    ability: 'Sonic Cannon',
+    abilityDesc: 'Half human, all hero!',
+    unlockText: 'Available from the start!',
+  },
 };
 
 const WORLDS = [

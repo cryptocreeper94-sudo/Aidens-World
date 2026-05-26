@@ -703,6 +703,8 @@ class LevelScene extends Phaser.Scene {
     else if (this.activeHero === 'jedi_kid') { color = 0x22c55e; isLaser = true; } // Green saber
     else if (this.activeHero === 'iron_kid') { color = 0x06b6d4; isLaser = true; } // Cyan repulsor
     else if (this.activeHero === 'alien_brute') color = 0x000000; // Black symbiote glob
+    else if (this.activeHero === 'superboy') { color = 0x2563eb; isLaser = true; } // Blue heat vision
+    else if (this.activeHero === 'cyborg_girl') { color = 0x06b6d4; isLaser = true; } // Cyan sonic cannon
 
     const w = isLaser ? 50 : 20;
     const h = isLaser ? 8 : 20;
@@ -792,6 +794,29 @@ class LevelScene extends Phaser.Scene {
     save.totalShards = (save.totalShards || 0) + this.shardsCollected;
     save.totalEchoes = (save.totalEchoes || 0) + this.echoesCollected;
     save.overdriveMeter = this.overdriveMeter; // persist overdrive meter
+    
+    // ── Lume Earning ──
+    if (!save.lumes) save.lumes = 0;
+    if (!save.lumeHistory) save.lumeHistory = {};
+    let lumesEarned = 0;
+    // First time clearing this level
+    if (!save.lumeHistory['level_' + this.levelNum]) {
+      lumesEarned += 1; // 1 Lume per new level clear
+      save.lumeHistory['level_' + this.levelNum] = true;
+    }
+    // World completion bonus (every 3 levels = 1 world)
+    const worldNum = Math.ceil(this.levelNum / 3);
+    if (this.levelNum % 3 === 0 && !save.lumeHistory['world_' + worldNum]) {
+      lumesEarned += 5; // 5 Lumes for completing a world
+      save.lumeHistory['world_' + worldNum] = true;
+    }
+    // All shards collected bonus
+    if (this.shardsCollected >= 20 && !save.lumeHistory['allshards_' + this.levelNum]) {
+      lumesEarned += 1;
+      save.lumeHistory['allshards_' + this.levelNum] = true;
+    }
+    save.lumes += lumesEarned;
+    this._lumesEarned = lumesEarned;
     localStorage.setItem('ChronoverseSave', JSON.stringify(save));
     
     // Process echo unlocks
@@ -835,7 +860,12 @@ class LevelScene extends Phaser.Scene {
       { id: 'telekinetic_girl', quote: "Awesome! You totally crushed that level!" },
       { id: 'iron_kid', quote: "Armor systems nominal! Your reflexes are off the charts!" },
       { id: 'jedi_kid', quote: "The Force is strong with you! Ready for the next one?" },
-      { id: 'alien_brute', quote: "WE ARE VENOM... AND WE ARE FAST! GOOD JOB!" }
+      { id: 'alien_brute', quote: "WE ARE VENOM... AND WE ARE FAST! GOOD JOB!" },
+      { id: 'superboy', quote: "Up, up, and AWAY! Nothing can stop us!" },
+      { id: 'cyborg_girl', quote: "Systems optimal. Target eliminated. BOOYAH!" },
+      { id: 'super_girl', quote: "Girl power saves the day! Let's keep going!" },
+      { id: 'hero_black', quote: "The symbiote flows through us... INCREDIBLE!" },
+      { id: 'hero_red', quote: "Your friendly neighborhood hero strikes again!" }
     ];
     let heroData = chars.find(c => c.id === this.activeHero) || chars[0];
 
@@ -878,6 +908,13 @@ class LevelScene extends Phaser.Scene {
         fontFamily: 'Arial Black', fontSize: '20px', color: '#a855f7', stroke: '#000', strokeThickness: 3
       }).setOrigin(0.5).setDepth(1002).setAlpha(0);
       this.tweens.add({ targets: echoStats, alpha: 1, duration: 500, delay: 500 });
+    }
+    
+    if (this._lumesEarned > 0) {
+      const lumeStats = this.add.text(width/2 + 60, statsY + (this.echoesCollected > 0 ? 56 : 28), `✦ +${this._lumesEarned} Lume${this._lumesEarned > 1 ? 's' : ''}`, {
+        fontFamily: 'Arial Black', fontSize: '20px', color: '#fbbf24', stroke: '#000', strokeThickness: 3
+      }).setOrigin(0.5).setDepth(1002).setAlpha(0);
+      this.tweens.add({ targets: lumeStats, alpha: 1, duration: 500, delay: 600 });
     }
 
     // Buttons

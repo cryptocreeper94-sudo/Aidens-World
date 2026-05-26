@@ -793,8 +793,17 @@
       <p id="daily-message">"Aiden, hope this is something you enjoy! Can't wait to see you again next month. I love You! ❤️"</p>
     </div>
 
+    <!-- Lume Balance -->
+    <div style="display:flex; justify-content:center; margin-bottom:15px;">
+      <div style="background:rgba(168,85,247,0.1); border:1px solid rgba(168,85,247,0.3); border-radius:20px; padding:8px 20px; display:flex; align-items:center; gap:8px;">
+        <span style="font-size:20px;">✦</span>
+        <span id="portal-lume-balance" style="color:#a855f7; font-weight:900; font-size:18px;">0</span>
+        <span style="color:#94a3b8; font-size:13px; font-weight:bold;">LUMES</span>
+      </div>
+    </div>
+
     <!-- The Three Learning Modes -->
-    <div class="app-section-title">The Three Learning Modes</div>
+    <div class="app-section-title">Explore the Chronoverse</div>
     <div class="app-grid">
       
       <!-- App 1: Play Mode (Kid-First) -->
@@ -816,6 +825,13 @@
         <div class="app-thumb" style="display:flex; align-items:center; justify-content:center; font-size:40px; background:rgba(34,211,238,0.1); color:#22d3ee; border: 2px solid #22d3ee;">&lt;/&gt;</div>
         <div class="app-title" style="color:#22d3ee;">Create Mode</div>
         <div class="app-desc">Lume Voice Sandbox</div>
+      </div>
+
+      <!-- App 4: Rift Locker (Store) -->
+      <div class="app-card playable" onclick="showRiftLocker()" style="border-color:#a855f7; box-shadow:0 8px 30px rgba(168,85,247,0.4);">
+        <div class="app-thumb" style="display:flex; align-items:center; justify-content:center; font-size:40px; background:rgba(168,85,247,0.1); color:#a855f7; border: 2px solid #a855f7;">🔓</div>
+        <div class="app-title" style="color:#a855f7;">Rift Locker</div>
+        <div class="app-desc">Unlock Suits & Skins</div>
       </div>
 
     </div>
@@ -956,6 +972,31 @@
         </button>
 
       </div>
+    </div>
+  </div>
+
+  <!-- Rift Locker Modal -->
+  <div id="rift-locker-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:url('assets/ui/cockpit_bg.png') no-repeat center center fixed; background-size:cover; z-index:5600; overflow-y:auto;">
+    <div style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(10,10,30,0.92); z-index:-1;"></div>
+    
+    <button onclick="document.getElementById('rift-locker-modal').style.display='none'; document.getElementById('aiden-portal').style.display='block';" style="position:absolute; top:20px; left:20px; background:rgba(0,0,0,0.5); color:white; border:2px solid white; padding:10px 20px; border-radius:20px; font-size:16px; font-weight:bold; cursor:pointer; z-index:5605;">← Back</button>
+    
+    <div style="max-width:1200px; margin:0 auto; padding:80px 20px 40px 20px; display:flex; flex-direction:column; align-items:center;">
+      <h2 style="color:#a855f7; font-size:32px; font-weight:900; text-transform:uppercase; letter-spacing:2px; margin-bottom:5px; text-shadow:0 2px 10px rgba(168,85,247,0.5);">Rift Locker</h2>
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:30px;">
+        <span style="font-size:20px;">✦</span>
+        <span id="locker-lume-balance" style="color:#a855f7; font-weight:900; font-size:22px;">0</span>
+        <span style="color:#94a3b8; font-size:14px; font-weight:bold;">LUMES</span>
+      </div>
+      
+      <!-- Tabs -->
+      <div style="display:flex; gap:10px; margin-bottom:30px;">
+        <button id="locker-tab-suits" onclick="switchLockerTab('suits')" style="padding:10px 25px; border-radius:20px; border:2px solid #a855f7; background:rgba(168,85,247,0.2); color:#a855f7; font-weight:bold; cursor:pointer; font-size:15px;">Hero Suits</button>
+        <button id="locker-tab-villains" onclick="switchLockerTab('villains')" style="padding:10px 25px; border-radius:20px; border:2px solid #64748b; background:transparent; color:#64748b; font-weight:bold; cursor:pointer; font-size:15px;">Villain Skins</button>
+      </div>
+      
+      <!-- Suit Grid -->
+      <div id="locker-grid" style="display:flex; flex-wrap:wrap; gap:20px; justify-content:center; max-width:1000px;"></div>
     </div>
   </div>
 
@@ -1734,6 +1775,8 @@
       } catch(e) {}
     };
     refreshHubStats();
+    // Update Lume balance on portal load
+    setTimeout(() => { if (typeof updateLumeDisplays === 'function') updateLumeDisplays(); }, 100);
 
     // ── Hero Selector Modal Logic ──
     const HERO_DATA = {
@@ -1746,8 +1789,127 @@
       brute: { name: 'Symbiote Brute', title: 'Alien Glob', img: 'assets/ui/alien_brute_portrait.png', color: '#94a3b8', sprite: 'alien_brute', s1:['Speed', 90], s2:['Power', 100], s3:['Venom', 95] }
     };
 
+    // ── Suit Data (what you PLAY as) ──
+    const SUIT_DATA = {
+      // Free base suits
+      iron_kid:         { name: 'Ironboy',       img: 'assets/ui/hero_aiden_portrait.png',       color: '#fbbf24', cost: 0, category: 'suits' },
+      super_girl:       { name: 'Supergirl',     img: 'assets/ui/hero_maya_portrait.png',        color: '#10b981', cost: 0, category: 'suits' },
+      superboy:         { name: 'Superboy',      img: 'assets/ui/hero_superboy_portrait.png',    color: '#2563eb', cost: 0, category: 'suits' },
+      cyborg_girl:      { name: 'Cyborg Girl',   img: 'assets/ui/hero_cyborg_girl_portrait.png', color: '#06b6d4', cost: 0, category: 'suits' },
+      // Unlockable suits
+      hero_red:         { name: 'Spider Hero',   img: 'assets/ui/hero_leo_portrait.png',         color: '#e63946', cost: 10, category: 'suits' },
+      telekinetic_girl: { name: 'Telekinetic',   img: 'assets/ui/hero_zara_portrait.png',        color: '#a855f7', cost: 10, category: 'suits' },
+      jedi_kid:         { name: 'Jedi Kid',      img: 'assets/ui/hero_leo_portrait.png',         color: '#22c55e', cost: 15, category: 'suits' },
+      hero_black:       { name: 'Shadow Suit',   img: 'assets/ui/hero_aiden_portrait.png',       color: '#475569', cost: 20, category: 'suits' },
+      // Villain skins
+      enemy_thug:       { name: 'Syndicate Thug',    img: 'assets/ui/enemy_thug_portrait.png',    color: '#dc2626', cost: 30, category: 'villains' },
+      enemy_trooper:    { name: 'Imperial Trooper',  img: 'assets/ui/enemy_trooper_portrait.png', color: '#ffffff', cost: 35, category: 'villains' },
+      alien_brute:      { name: 'Symbiote Brute',    img: 'assets/ui/alien_brute_portrait.png',   color: '#94a3b8', cost: 50, category: 'villains' }
+    };
+
     let currentlyViewingHero = null;
     let foilAnimation = null;
+
+    // ── Lume Balance Helpers ──
+    function getLumes() {
+      try {
+        const raw = localStorage.getItem('ChronoverseSave');
+        if (raw) return JSON.parse(raw).lumes || 0;
+      } catch(e) {}
+      return 0;
+    }
+    function getUnlockedSuits() {
+      try {
+        const raw = localStorage.getItem('ChronoverseSave');
+        if (raw) return JSON.parse(raw).unlockedSuits || [];
+      } catch(e) {}
+      return [];
+    }
+    function isSuitUnlocked(suitKey) {
+      const data = SUIT_DATA[suitKey];
+      if (!data) return false;
+      if (data.cost === 0) return true; // free suits always unlocked
+      return getUnlockedSuits().includes(suitKey);
+    }
+    function updateLumeDisplays() {
+      const lumes = getLumes();
+      const portalEl = document.getElementById('portal-lume-balance');
+      const lockerEl = document.getElementById('locker-lume-balance');
+      if (portalEl) portalEl.innerText = lumes;
+      if (lockerEl) lockerEl.innerText = lumes;
+    }
+
+    // ── Rift Locker ──
+    let activeLockerTab = 'suits';
+    window.showRiftLocker = function() {
+      document.getElementById('aiden-portal').style.display = 'none';
+      document.getElementById('rift-locker-modal').style.display = 'block';
+      updateLumeDisplays();
+      renderLockerGrid();
+    };
+    window.switchLockerTab = function(tab) {
+      activeLockerTab = tab;
+      document.getElementById('locker-tab-suits').style.background = tab === 'suits' ? 'rgba(168,85,247,0.2)' : 'transparent';
+      document.getElementById('locker-tab-suits').style.borderColor = tab === 'suits' ? '#a855f7' : '#64748b';
+      document.getElementById('locker-tab-suits').style.color = tab === 'suits' ? '#a855f7' : '#64748b';
+      document.getElementById('locker-tab-villains').style.background = tab === 'villains' ? 'rgba(168,85,247,0.2)' : 'transparent';
+      document.getElementById('locker-tab-villains').style.borderColor = tab === 'villains' ? '#a855f7' : '#64748b';
+      document.getElementById('locker-tab-villains').style.color = tab === 'villains' ? '#a855f7' : '#64748b';
+      renderLockerGrid();
+    };
+    function renderLockerGrid() {
+      const grid = document.getElementById('locker-grid');
+      grid.innerHTML = '';
+      const lumes = getLumes();
+      const activeSuit = localStorage.getItem('ChronoverseActiveHero') || 'iron_kid';
+      
+      Object.entries(SUIT_DATA).forEach(([key, suit]) => {
+        if (suit.category !== activeLockerTab) return;
+        const unlocked = isSuitUnlocked(key);
+        const isActive = activeSuit === key;
+        const canAfford = lumes >= suit.cost;
+        
+        const card = document.createElement('div');
+        card.style.cssText = `width:200px; background:rgba(255,255,255,0.03); border:2px solid ${isActive ? suit.color : unlocked ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.05)'}; border-radius:20px; overflow:hidden; cursor:${unlocked ? 'pointer' : canAfford ? 'pointer' : 'not-allowed'}; transition:all 0.3s; opacity:${unlocked || canAfford ? '1' : '0.5'}; position:relative;`;
+        
+        let badge = '';
+        if (isActive) {
+          badge = `<div style="position:absolute; top:10px; right:10px; background:${suit.color}; color:#000; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:900; z-index:2;">EQUIPPED</div>`;
+        } else if (!unlocked) {
+          badge = `<div style="position:absolute; top:10px; right:10px; background:rgba(0,0,0,0.7); color:#fbbf24; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:900; z-index:2;">✦ ${suit.cost}</div>`;
+        }
+        
+        card.innerHTML = `
+          ${badge}
+          <img src="${suit.img}" alt="${suit.name}" style="width:100%; height:250px; object-fit:cover; mix-blend-mode:screen;" />
+          <div style="padding:12px; text-align:center;">
+            <div style="color:${suit.color}; font-size:18px; font-weight:900;">${suit.name}</div>
+            <div style="color:#64748b; font-size:12px; margin-top:4px;">${unlocked ? (isActive ? 'Currently Equipped' : 'Tap to Equip') : (canAfford ? 'Tap to Unlock' : `Need ${suit.cost - lumes} more ✦`)}</div>
+          </div>`;
+        
+        if (unlocked && !isActive) {
+          card.onclick = () => {
+            localStorage.setItem('ChronoverseActiveHero', key);
+            renderLockerGrid();
+          };
+        } else if (!unlocked && canAfford) {
+          card.onclick = () => {
+            if (confirm(`Unlock ${suit.name} for ✦ ${suit.cost} Lumes?`)) {
+              const raw = localStorage.getItem('ChronoverseSave');
+              const save = raw ? JSON.parse(raw) : {};
+              save.lumes = (save.lumes || 0) - suit.cost;
+              if (!save.unlockedSuits) save.unlockedSuits = [];
+              save.unlockedSuits.push(key);
+              localStorage.setItem('ChronoverseSave', JSON.stringify(save));
+              localStorage.setItem('ChronoverseActiveHero', key);
+              updateLumeDisplays();
+              renderLockerGrid();
+            }
+          };
+        }
+        grid.appendChild(card);
+      });
+    }
 
     window.openRefractorCard = function(heroKey) {
       currentlyViewingHero = heroKey;
@@ -1796,10 +1958,15 @@
       } else {
         localStorage.setItem('ChronoversePlayerName', data.name);
       }
-      localStorage.setItem('ChronoverseActiveHero', data.sprite);
+      // Use the currently equipped suit from Rift Locker (or the hero's default)
+      const equippedSuit = localStorage.getItem('ChronoverseActiveHero');
+      if (!equippedSuit) {
+        localStorage.setItem('ChronoverseActiveHero', data.sprite);
+      }
       
       // Update UI immediately if on the hub
       applyTenantPersonalization();
+      updateLumeDisplays();
       document.getElementById('refractor-modal').style.display = 'none';
       document.getElementById('hero-selector-hub').style.display = 'none';
       showGameHub();
