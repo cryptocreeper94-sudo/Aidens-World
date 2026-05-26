@@ -1,8 +1,4 @@
-# Old v1 files (pre-Phaser)
-hub.js
-particles.js
-progress.js
-webshooter.js
-wallcrawler.js
-cards.js
-styles.css
+node_modules/
+dist/
+dist_android/
+.npm/
