@@ -26,15 +26,15 @@ const LevelData = {
     const maxTowerBlocks = levelNum >= 10 ? 3 : (levelNum >= 4 ? 2 : 1);
 
     const worlds = [
-      { key: 'city_day', bg: 'nyc_skyline', color: '#1e1b4b', enemies: ['enemy_thug'], name: 'New York City' },
+      { key: 'city_day', bg: 'nyc_skyline', color: '#1e1b4b', enemies: ['enemy_thug', 'alien_brute'], name: 'New York City' },
       { key: 'upside_down_red', bg: 'rift', color: '#450a0a', enemies: ['alien_brute'], name: 'The Upside Down' },
-      { key: 'desert_day', bg: 'desert', color: '#1e3a8a', enemies: ['enemy_trooper'], name: 'Tatooine' },
-      { key: 'space_station', bg: 'space_station', color: '#0f172a', enemies: ['enemy_trooper'], name: 'Imperial Space Station' },
-      { key: 'city_night', bg: 'nyc_skyline_night', color: '#0f172a', enemies: ['enemy_thug'], name: 'NYC After Dark' },
+      { key: 'desert_day', bg: 'desert', color: '#1e3a8a', enemies: ['enemy_trooper', 'alien_brute'], name: 'Tatooine' },
+      { key: 'space_station', bg: 'space_station', color: '#0f172a', enemies: ['enemy_trooper', 'alien_brute'], name: 'Imperial Space Station' },
+      { key: 'city_night', bg: 'nyc_skyline_night', color: '#0f172a', enemies: ['enemy_thug', 'alien_brute'], name: 'NYC After Dark' },
       { key: 'upside_down_blue', bg: 'rift_blue', color: '#172554', enemies: ['alien_brute'], name: 'The Shadow Rift' },
-      { key: 'desert_night', bg: 'desert_night', color: '#020617', enemies: ['enemy_trooper'], name: 'Tatooine Nightfall' },
-      { key: 'city_sunset', bg: 'nyc_skyline_sunset', color: '#1e1b4b', enemies: ['enemy_thug'], name: 'NYC at Sunset' },
-      { key: 'desert_sunset', bg: 'desert_sunset', color: '#7c2d12', enemies: ['enemy_trooper'], name: 'Tatooine at Dusk' }
+      { key: 'desert_night', bg: 'desert_night', color: '#020617', enemies: ['enemy_trooper', 'alien_brute'], name: 'Tatooine Nightfall' },
+      { key: 'city_sunset', bg: 'nyc_skyline_sunset', color: '#1e1b4b', enemies: ['enemy_thug', 'alien_brute'], name: 'NYC at Sunset' },
+      { key: 'desert_sunset', bg: 'desert_sunset', color: '#7c2d12', enemies: ['enemy_trooper', 'alien_brute'], name: 'Tatooine at Dusk' }
     ];
 
     // Each level starts in a different world — rotate based on levelNum
@@ -114,10 +114,10 @@ const WORLDS = [
     storyIntro: 'intro_rift',
     storyComplete: 'world1_complete',
     levels: [
-      { id: '1-1', name: 'Rooftop Run', enemies: ['thug'], shards: 20, isTutorial: true },
-      { id: '1-2', name: 'Times Square Chaos', enemies: ['thug', 'trooper'], shards: 25 },
-      { id: '1-3', name: 'Central Park Portal', enemies: ['trooper', 'thug'], shards: 25 },
-      { id: '1-4', name: 'Oscorp Tower', enemies: ['trooper'], shards: 30 },
+      { id: '1-1', name: 'Rooftop Run', enemies: ['enemy_thug', 'alien_brute'], shards: 20, isTutorial: true },
+      { id: '1-2', name: 'Times Square Chaos', enemies: ['enemy_thug', 'enemy_trooper', 'alien_brute'], shards: 25 },
+      { id: '1-3', name: 'Central Park Portal', enemies: ['enemy_trooper', 'enemy_thug', 'alien_brute'], shards: 25 },
+      { id: '1-4', name: 'Oscorp Tower', enemies: ['enemy_trooper', 'alien_brute'], shards: 30 },
       { id: '1-B', name: 'VS Doc Ock!', isBoss: true, boss: 'doc_ock', shards: 40 },
     ],
   },
@@ -131,10 +131,10 @@ const WORLDS = [
     storyIntro: 'world2_intro',
     storyComplete: 'world2_complete',
     levels: [
-      { id: '2-1', name: 'Docking Bay', enemies: ['trooper'], shards: 25 },
-      { id: '2-2', name: 'Death Star Core', enemies: ['trooper', 'drone'], shards: 30 },
-      { id: '2-3', name: 'Symbiote Lab', enemies: ['symbiote', 'trooper'], shards: 30 },
-      { id: '2-4', name: 'Command Bridge', enemies: ['trooper', 'drone'], shards: 35 },
+      { id: '2-1', name: 'Docking Bay', enemies: ['enemy_trooper', 'alien_brute'], shards: 25 },
+      { id: '2-2', name: 'Death Star Core', enemies: ['enemy_trooper', 'drone', 'alien_brute'], shards: 30 },
+      { id: '2-3', name: 'Symbiote Lab', enemies: ['alien_brute', 'enemy_trooper'], shards: 30 },
+      { id: '2-4', name: 'Command Bridge', enemies: ['enemy_trooper', 'drone', 'alien_brute'], shards: 35 },
       { id: '2-B', name: 'VS Green Goblin!', isBoss: true, boss: 'goblin', shards: 50 },
     ],
   },
@@ -148,10 +148,10 @@ const WORLDS = [
     storyIntro: 'world3_intro',
     storyComplete: 'world3_complete',
     levels: [
-      { id: '3-1', name: 'Mos Eisley Cantina', enemies: ['thug', 'symbiote'], shards: 30 },
-      { id: '3-2', name: 'Jundland Wastes', enemies: ['symbiote', 'trooper'], shards: 35 },
-      { id: '3-3', name: 'Jedi Temple Ruins', enemies: ['trooper', 'symbiote'], shards: 35, hiddenItem: 'mandalorian' },
-      { id: '3-4', name: 'Sarlacc Pit', enemies: ['symbiote'], shards: 40 },
+      { id: '3-1', name: 'Mos Eisley Cantina', enemies: ['enemy_thug', 'alien_brute'], shards: 30 },
+      { id: '3-2', name: 'Jundland Wastes', enemies: ['alien_brute', 'enemy_trooper'], shards: 35 },
+      { id: '3-3', name: 'Jedi Temple Ruins', enemies: ['enemy_trooper', 'alien_brute'], shards: 35, hiddenItem: 'mandalorian' },
+      { id: '3-4', name: 'Sarlacc Pit', enemies: ['alien_brute'], shards: 40 },
       { id: '3-B', name: 'VS Darth Venom!', isBoss: true, boss: 'dark_warrior', shards: 60 },
     ],
   },
@@ -165,10 +165,10 @@ const WORLDS = [
     storyIntro: 'world4_intro',
     storyComplete: 'world4_complete',
     levels: [
-      { id: '4-1', name: 'Floating NYC', enemies: ['trooper', 'symbiote', 'thug'], shards: 40 },
-      { id: '4-2', name: 'Star Destroyer', enemies: ['drone', 'trooper'], shards: 40 },
-      { id: '4-3', name: 'The Convergence', enemies: ['symbiote', 'trooper', 'thug'], shards: 45 },
-      { id: '4-4', name: 'Final Gauntlet', enemies: ['trooper', 'symbiote', 'drone', 'thug'], shards: 50 },
+      { id: '4-1', name: 'Floating NYC', enemies: ['enemy_trooper', 'alien_brute', 'enemy_thug'], shards: 40 },
+      { id: '4-2', name: 'Star Destroyer', enemies: ['drone', 'enemy_trooper', 'alien_brute'], shards: 40 },
+      { id: '4-3', name: 'The Convergence', enemies: ['alien_brute', 'enemy_trooper', 'enemy_thug'], shards: 45 },
+      { id: '4-4', name: 'Final Gauntlet', enemies: ['enemy_trooper', 'alien_brute', 'drone', 'enemy_thug'], shards: 50 },
       { id: '4-B', name: 'VS The Rift King!', isBoss: true, boss: 'rift_king', shards: 80 },
     ],
   },

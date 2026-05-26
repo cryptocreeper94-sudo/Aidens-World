@@ -65,6 +65,11 @@ class LevelScene extends Phaser.Scene {
     }
     
     this.player = this.physics.add.sprite(250, this.gameH / 2, this.activeHero);
+    
+    // If the player is using an enemy character that natively faces left, flip them to face right.
+    if (['enemy_thug', 'enemy_trooper'].includes(this.activeHero)) {
+      this.player.setFlipX(true);
+    }
     this.player.setDisplaySize(80, 80);
     this.player.setBounce(0);
     this.player.setDepth(10);
@@ -377,7 +382,13 @@ class LevelScene extends Phaser.Scene {
     const enemyKey = this.activeWorld.enemies[Math.floor(this.seededRandom(this.activeWorld.enemies.length))];
     const enemy = this.spikes.create(x, y - 40, enemyKey); // -40 so feet sit exactly on floor
     enemy.setDisplaySize(80, 80);
-    enemy.setFlipX(false); // Enemies face left by default (toward approaching player)
+    
+    // Alien brute image naturally faces right, so we flip it to face left (towards player)
+    if (enemyKey === 'alien_brute') {
+      enemy.setFlipX(true);
+    } else {
+      enemy.setFlipX(false); 
+    }
   }
 
   spawnShard(x, y) {
@@ -576,6 +587,11 @@ class LevelScene extends Phaser.Scene {
             const newEnemyKey = this.activeWorld.enemies[Math.floor(Math.random() * this.activeWorld.enemies.length)];
             enemy.setTexture(newEnemyKey);
             enemy.setDisplaySize(80, 80);
+            if (newEnemyKey === 'alien_brute') {
+              enemy.setFlipX(true);
+            } else {
+              enemy.setFlipX(false);
+            }
           }
         });
       }
