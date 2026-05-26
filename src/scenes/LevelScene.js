@@ -73,25 +73,24 @@ class LevelScene extends Phaser.Scene {
     this.physics.add.overlap(this.player, this.shards, this.collectShard, null, this);
     this.physics.add.overlap(this.projectiles, this.spikes, this.hitEnemyWithProjectile, null, this);
 
-    // On-Screen Controls (Unified Dual-Action Pill)
-    const uiY = height - 40;
+    // On-Screen Controls (Moved to Bottom Corners for Landscape Thumbs)
+    const uiY = height - 50; // slightly higher so thumbs don't hit edge of screen
     
-    // Left Half (Attack - Red)
+    // Left Corner (Attack - Red)
     const attackGraphics = this.add.graphics({ fillStyle: { color: 0xe63946, alpha: 0.8 } }).setDepth(100);
-    attackGraphics.fillRoundedRect(width/2 - 140, uiY - 25, 140, 50, { tl: 25, bl: 25, tr: 0, br: 0 });
-    const attackZone = this.add.zone(width/2 - 70, uiY, 140, 50).setInteractive().setDepth(101);
-    const attackText = this.add.text(width/2 - 70, uiY, 'ATTACK', { fontFamily: 'Arial Black', fontSize: '18px', color: '#fff' }).setOrigin(0.5).setDepth(102);
+    attackGraphics.fillRoundedRect(20, uiY - 40, 140, 80, 20); // Massive thumb zone
+    const attackZone = this.add.zone(90, uiY, 140, 80).setInteractive().setDepth(101);
+    const attackText = this.add.text(90, uiY, 'ATTACK', { fontFamily: 'Arial Black', fontSize: '20px', color: '#fff' }).setOrigin(0.5).setDepth(102);
+    const attackOutline = this.add.graphics({ lineStyle: { width: 4, color: 0xffffff } }).setDepth(103);
+    attackOutline.strokeRoundedRect(20, uiY - 40, 140, 80, 20);
 
-    // Right Half (Jump - Green)
+    // Right Corner (Jump - Green)
     const jumpGraphics = this.add.graphics({ fillStyle: { color: 0x10b981, alpha: 0.8 } }).setDepth(100);
-    jumpGraphics.fillRoundedRect(width/2, uiY - 25, 140, 50, { tl: 0, bl: 0, tr: 25, br: 25 });
-    const jumpZone = this.add.zone(width/2 + 70, uiY, 140, 50).setInteractive().setDepth(101);
-    const jumpText = this.add.text(width/2 + 70, uiY, 'JUMP', { fontFamily: 'Arial Black', fontSize: '18px', color: '#fff' }).setOrigin(0.5).setDepth(102);
-
-    // Outline for the entire pill
-    const pillOutline = this.add.graphics({ lineStyle: { width: 4, color: 0xffffff } }).setDepth(103);
-    pillOutline.strokeRoundedRect(width/2 - 140, uiY - 25, 280, 50, 25);
-    pillOutline.lineBetween(width/2, uiY - 25, width/2, uiY + 25); // Center divider
+    jumpGraphics.fillRoundedRect(width - 160, uiY - 40, 140, 80, 20);
+    const jumpZone = this.add.zone(width - 90, uiY, 140, 80).setInteractive().setDepth(101);
+    const jumpText = this.add.text(width - 90, uiY, 'JUMP', { fontFamily: 'Arial Black', fontSize: '20px', color: '#fff' }).setOrigin(0.5).setDepth(102);
+    const jumpOutline = this.add.graphics({ lineStyle: { width: 4, color: 0xffffff } }).setDepth(103);
+    jumpOutline.strokeRoundedRect(width - 160, uiY - 40, 140, 80, 20);
 
     const doJump = () => {
       if (!this.isRunning && this.isAlive) { 
