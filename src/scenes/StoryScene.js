@@ -86,6 +86,14 @@ class StoryScene extends Phaser.Scene {
         this.showPanel(this.currentPanel);
       }
     });
+
+    this.scale.on('resize', this.resize, this);
+  }
+
+  resize() {
+    if (this.scene.isActive()) {
+      this.scene.restart();
+    }
   }
 
   showPanel(idx) {

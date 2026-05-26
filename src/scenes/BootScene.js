@@ -83,7 +83,7 @@ class BootScene extends Phaser.Scene {
   create() {
     this.cameras.main.fadeOut(300, 0, 0, 0);
     this.time.delayedCall(400, () => {
-      this.scene.start('LevelScene');
+      this.scene.start('HubScene');
     });
   }
 

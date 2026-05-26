@@ -41,6 +41,7 @@ class LevelScene extends Phaser.Scene {
 
     // Player
     this.player = this.physics.add.sprite(250, height / 2, this.activeHero);
+    this.player.setDisplaySize(80, 80);
     this.player.setGravityY(this.config.gravity);
     this.player.setBounce(0);
     this.player.setDepth(10);
@@ -502,6 +503,14 @@ class LevelScene extends Phaser.Scene {
       this.cameras.main.fadeOut(300, 0, 0, 0);
       this.time.delayedCall(300, () => this.scene.restart());
     });
+
+    this.scale.on('resize', this.resize, this);
+  }
+
+  resize() {
+    if (this.scene.isActive()) {
+      this.scene.restart();
+    }
   }
 
   update() {
