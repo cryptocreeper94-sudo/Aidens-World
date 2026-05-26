@@ -87,11 +87,11 @@ const CHARACTERS = {
     unlockText: 'Complete Tatooine',
   },
   venom: {
-    name: 'Venom',
+    name: 'Demogorgon',
     sprite: 'alien_brute',
     color: '#111111',
-    ability: 'Tendril Whip',
-    abilityDesc: 'We are Venom!',
+    ability: 'Shadow Strike',
+    abilityDesc: 'From the Upside Down!',
     unlockText: 'Seal the Rift!',
   },
 };
@@ -228,7 +228,7 @@ const STORY_PANELS = {
       { image: 'victory_panel', text: '"You too! Call me anytime!"', speaker: 'Spider-Man' },
       { image: 'victory_panel', text: `"I saved TWO universes! Best. Day. EVER!"`, speaker: HERO_NAME },
       { image: 'victory_panel', text: `CONGRATULATIONS ${HERO_NAME.toUpperCase()}! ULTIMATE HERO!`, speaker: 'System' },
-      { image: 'victory_panel', text: 'VENOM UNLOCKED! "We... are... VENOM!"', speaker: 'System' },
+      { image: 'victory_panel', text: 'DEMOGORGON UNLOCKED! The Upside Down bows to you!', speaker: 'System' },
     ],
   },
 };
