@@ -54,7 +54,7 @@ window.launchRiftRunner = function() {
 
   // Show the game container
   const gameContainer = document.getElementById('game-container');
-  if (gameContainer) gameContainer.style.display = 'flex';
+  if (gameContainer) gameContainer.style.display = 'block';
 
   game = new Phaser.Game(gameConfig);
 

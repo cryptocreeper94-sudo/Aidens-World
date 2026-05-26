@@ -229,14 +229,11 @@
       }
     }
 
-    /* ── Layer 4: Game Container ── */
     #game-container {
       position: fixed;
       top: 0; left: 0; width: 100vw; height: 100vh;
       background: #000; /* Black letterboxing */
       z-index: 5000;
-      align-items: center;
-      justify-content: center;
     }
     #game-container canvas {
       display: block;
@@ -760,7 +757,7 @@
   </div>
 
   <!-- Layer 6: Vault Defender Mini-Game -->
-  <div id="vault-defender" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:#000; z-index:7000; align-items:center; justify-content:center;">
+  <div id="vault-defender" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:#000; z-index:7000;">
     <button onclick="document.getElementById('vault-defender').style.display='none'; document.getElementById('aiden-portal').style.display='block'; window.vaultGame && window.vaultGame.destroy(true); window.vaultGame=null;" style="position:absolute; top:20px; left:20px; background:rgba(0,0,0,0.5); color:white; border:2px solid white; padding:10px 20px; border-radius:20px; font-size:16px; font-weight:bold; cursor:pointer; z-index:7005;">← Back</button>
   </div>
 
@@ -843,17 +840,17 @@
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 
   <!-- Game Modules -->
-  <script src="src/systems/SaveSystem.js?v=2.4"></script>
-  <script src="src/systems/SoundFX.js?v=2.4"></script>
-  <script src="src/systems/LevelData.js?v=2.4"></script>
-  <script src="src/systems/ThreeEngine.js?v=2.4"></script>
-  <script src="src/scenes/BootScene.js?v=2.4"></script>
-  <script src="src/scenes/HubScene.js?v=2.4"></script>
-  <script src="src/scenes/StoryScene.js?v=2.4"></script>
-  <script src="src/scenes/LevelScene.js?v=2.4"></script>
-  <script src="src/scenes/VaultDefender.js?v=2.4"></script>
-  <script src="src/systems/LumeCompiler.js?v=2.4"></script>
-  <script src="src/config.js?v=2.4"></script>
+  <script src="src/systems/SaveSystem.js?v=2.5"></script>
+  <script src="src/systems/SoundFX.js?v=2.5"></script>
+  <script src="src/systems/LevelData.js?v=2.5"></script>
+  <script src="src/systems/ThreeEngine.js?v=2.5"></script>
+  <script src="src/scenes/BootScene.js?v=2.5"></script>
+  <script src="src/scenes/HubScene.js?v=2.5"></script>
+  <script src="src/scenes/StoryScene.js?v=2.5"></script>
+  <script src="src/scenes/LevelScene.js?v=2.5"></script>
+  <script src="src/scenes/VaultDefender.js?v=2.5"></script>
+  <script src="src/systems/LumeCompiler.js?v=2.5"></script>
+  <script src="src/config.js?v=2.5"></script>
 
   <!-- Firebase App, Firestore, & Auth -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -1162,7 +1159,7 @@
 
     window.showVaultDefender = function() {
       document.getElementById('aiden-portal').style.display = 'none';
-      document.getElementById('vault-defender').style.display = 'flex';
+      document.getElementById('vault-defender').style.display = 'block';
       
       // Initialize VaultDefender Phaser game if not already running
       if (!window.vaultGame) {
