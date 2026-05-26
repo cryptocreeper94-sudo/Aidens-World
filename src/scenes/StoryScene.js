@@ -77,6 +77,7 @@ class StoryScene extends Phaser.Scene {
     this.input.on('pointerdown', () => {
       this.currentPanel++;
       if (this.currentPanel >= this.panels.length) {
+        if (this.currentVoice) this.currentVoice.stop();
         SaveSystem.markStoryViewed(this.storyId);
         this.cameras.main.fadeOut(400, 0, 0, 0);
         this.time.delayedCall(500, () => {
@@ -111,6 +112,16 @@ class StoryScene extends Phaser.Scene {
         this.dialogText.setText(fullText.substring(0, charIdx));
       },
     });
+
+    // Play audio
+    if (this.currentVoice) {
+      this.currentVoice.stop();
+    }
+    const audioKey = `voice_${this.storyId}_${idx}`;
+    if (this.cache.audio.exists(audioKey)) {
+      this.currentVoice = this.sound.add(audioKey);
+      this.currentVoice.play();
+    }
 
     // Counter
     this.counterText.setText(`${idx + 1} / ${this.panels.length}`);

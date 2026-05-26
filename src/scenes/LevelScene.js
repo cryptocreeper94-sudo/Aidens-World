@@ -81,14 +81,14 @@ class LevelScene extends Phaser.Scene {
     
     // Left Corner (Jump - Green)
     this.jumpGraphics = this.add.graphics().setDepth(100);
-    this.jumpZone = this.add.zone(0, 0, 140, 80).setInteractive().setDepth(101);
-    this.jumpText = this.add.text(0, 0, 'JUMP', { fontFamily: 'Arial Black', fontSize: '20px', color: '#fff' }).setOrigin(0.5).setDepth(102);
+    this.jumpZone = this.add.zone(0, 0, 100, 60).setInteractive().setDepth(101);
+    this.jumpText = this.add.text(0, 0, 'JUMP', { fontFamily: 'Arial Black', fontSize: '14px', color: '#fff' }).setOrigin(0.5).setDepth(102);
     this.jumpOutline = this.add.graphics().setDepth(103);
 
     // Right Corner (Attack - Red)
     this.attackGraphics = this.add.graphics().setDepth(100);
-    this.attackZone = this.add.zone(0, 0, 140, 80).setInteractive().setDepth(101);
-    this.attackText = this.add.text(0, 0, 'ATTACK', { fontFamily: 'Arial Black', fontSize: '20px', color: '#fff' }).setOrigin(0.5).setDepth(102);
+    this.attackZone = this.add.zone(0, 0, 100, 60).setInteractive().setDepth(101);
+    this.attackText = this.add.text(0, 0, 'ATTACK', { fontFamily: 'Arial Black', fontSize: '14px', color: '#fff' }).setOrigin(0.5).setDepth(102);
     this.attackOutline = this.add.graphics().setDepth(103);
 
     const doJump = () => {

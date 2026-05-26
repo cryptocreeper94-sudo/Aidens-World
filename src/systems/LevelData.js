@@ -52,7 +52,7 @@ const LevelData = {
 const CHARACTERS = {
   hero_red: {
     name: 'Spider-Man',
-    sprite: 'hero_red',
+    sprite: 'spider_hero',
     color: '#e63946',
     ability: 'Web Shoot',
     abilityDesc: 'Shoots webs at bad guys!',
@@ -76,23 +76,23 @@ const CHARACTERS = {
   },
   mandalorian: {
     name: 'The Mandalorian',
-    sprite: 'mandalorian',
+    sprite: 'bounty_hunter',
     color: '#6b7280',
     ability: 'Jetpack + Blaster',
     abilityDesc: 'This is the way.',
     unlockText: 'Find his helmet in Tatooine!',
   },
-  spider_jedi: {
-    name: `Spider-Jedi ${HERO_NAME}`,
-    sprite: 'spider_jedi',
-    color: '#7c3aed',
-    ability: 'Web + Lightsaber',
-    abilityDesc: 'The ultimate combo!',
+  iron_kid: {
+    name: `Iron ${HERO_NAME}`,
+    sprite: 'iron_kid',
+    color: '#fbbf24',
+    ability: 'Repulsor Blast',
+    abilityDesc: 'High-tech armor!',
     unlockText: 'Complete Tatooine',
   },
   venom: {
     name: 'Venom',
-    sprite: 'venom',
+    sprite: 'alien_brute',
     color: '#111111',
     ability: 'Tendril Whip',
     abilityDesc: 'We are Venom!',
@@ -141,7 +141,7 @@ const WORLDS = [
     icon: '🏜️',
     color: '#f59e0b',
     bg: 'desert',
-    unlockChar: 'spider_jedi',
+    unlockChar: 'iron_kid',
     storyIntro: 'world3_intro',
     storyComplete: 'world3_complete',
     levels: [

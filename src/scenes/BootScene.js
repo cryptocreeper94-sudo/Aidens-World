@@ -78,6 +78,15 @@ class BootScene extends Phaser.Scene {
     this.load.image('world3_intro_panel', 'assets/story/world3_intro.png');
     this.load.image('world4_intro_panel', 'assets/story/world4_intro.png');
     this.load.image('victory_panel', 'assets/story/victory.png');
+
+    // ── STORY AUDIO ──
+    if (typeof STORY_PANELS !== 'undefined') {
+      for (const [storyId, story] of Object.entries(STORY_PANELS)) {
+        for (let i = 0; i < story.panels.length; i++) {
+          this.load.audio(`voice_${storyId}_${i}`, `assets/audio/story_${storyId}_${i}.mp3`);
+        }
+      }
+    }
   }
 
   create() {
