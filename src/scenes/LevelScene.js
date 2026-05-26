@@ -83,7 +83,6 @@ class LevelScene extends Phaser.Scene {
     this.deathWall = this.add.rectangle(-10, height/2, 20, height, 0xff0000, 0);
     this.physics.add.existing(this.deathWall, true);
     this.physics.add.overlap(this.player, this.deathWall, this.die, null, this);
-
     // Colliders
     this.physics.add.collider(this.player, this.floor);
     this.physics.add.collider(this.player, this.blocks);
@@ -92,9 +91,9 @@ class LevelScene extends Phaser.Scene {
     this.physics.add.overlap(this.player, this.shards, this.collectShard, null, this);
     this.physics.add.overlap(this.projectiles, this.spikes, this.hitEnemyWithProjectile, null, this);
 
-    // On-Screen Controls (Moved to Bottom Corners for Landscape Thumbs)
-    const uiY = height - 50; // slightly higher so thumbs don't hit edge of screen
-    
+    // On-Screen Controls Footer
+    this.footerBg = this.add.rectangle(0, 0, width, 60, 0x0a0a1a).setDepth(99);
+
     // Left Corner (Jump - Green)
     this.jumpGraphics = this.add.graphics().setDepth(100);
     this.jumpZone = this.add.zone(0, 0, 100, 60).setInteractive().setDepth(101);
@@ -156,52 +155,60 @@ class LevelScene extends Phaser.Scene {
     const width = gameSize.width;
     const height = gameSize.height;
 
+    const footerH = 60;
+    const gameH = height - footerH;
+
     if (this.bg) {
       const frame = this.textures.getFrame(this.activeWorld.bg);
       if (frame) {
-        const scale = Math.max(width / frame.width, height / frame.height);
+        const scale = Math.max(width / frame.width, gameH / frame.height);
         this.bg.setSize(width, frame.height * scale);
-        this.bg.setPosition(width/2, height - (frame.height * scale)/2);
+        this.bg.setPosition(width/2, gameH - (frame.height * scale)/2);
         this.bg.tileScaleX = scale;
         this.bg.tileScaleY = scale;
         this.bg.tilePositionY = 0;
       } else {
-        this.bg.setPosition(width/2, height/2);
-        this.bg.setSize(width, height);
+        this.bg.setPosition(width/2, gameH/2);
+        this.bg.setSize(width, gameH);
       }
     }
     
     if (this.floor) {
-      this.floor.setPosition(width/2, height);
+      this.floor.setPosition(width/2, gameH + 20); // Center of 40px floor is gameH + 20, so top edge is perfectly gameH
       this.floor.width = width * 100;
     }
 
-    const uiY = height - 40;
+    if (this.footerBg) {
+      this.footerBg.setPosition(width/2, height - footerH/2);
+      this.footerBg.setSize(width, footerH);
+    }
+
+    const uiY = height - footerH/2;
     
     if (this.jumpGraphics) {
        this.jumpGraphics.clear();
        this.jumpGraphics.fillStyle(0x10b981, 0.8);
-       this.jumpGraphics.fillRoundedRect(10, uiY - 30, 100, 60, 15);
-       this.jumpZone.setPosition(60, uiY);
-       this.jumpZone.setSize(100, 60);
-       this.jumpText.setPosition(60, uiY);
+       this.jumpGraphics.fillRoundedRect(10, uiY - 20, width/2 - 20, 40, 10);
+       this.jumpZone.setPosition(width/4, uiY);
+       this.jumpZone.setSize(width/2 - 20, 40);
+       this.jumpText.setPosition(width/4, uiY);
        this.jumpText.setFontSize('14px');
        this.jumpOutline.clear();
-       this.jumpOutline.lineStyle(4, 0xffffff);
-       this.jumpOutline.strokeRoundedRect(10, uiY - 30, 100, 60, 15);
+       this.jumpOutline.lineStyle(2, 0xffffff);
+       this.jumpOutline.strokeRoundedRect(10, uiY - 20, width/2 - 20, 40, 10);
     }
     
     if (this.attackGraphics) {
        this.attackGraphics.clear();
        this.attackGraphics.fillStyle(0xe63946, 0.8);
-       this.attackGraphics.fillRoundedRect(width - 110, uiY - 30, 100, 60, 15);
-       this.attackZone.setPosition(width - 60, uiY);
-       this.attackZone.setSize(100, 60);
-       this.attackText.setPosition(width - 60, uiY);
+       this.attackGraphics.fillRoundedRect(width/2 + 10, uiY - 20, width/2 - 20, 40, 10);
+       this.attackZone.setPosition(3*width/4, uiY);
+       this.attackZone.setSize(width/2 - 20, 40);
+       this.attackText.setPosition(3*width/4, uiY);
        this.attackText.setFontSize('14px');
        this.attackOutline.clear();
-       this.attackOutline.lineStyle(4, 0xffffff);
-       this.attackOutline.strokeRoundedRect(width - 110, uiY - 30, 100, 60, 15);
+       this.attackOutline.lineStyle(2, 0xffffff);
+       this.attackOutline.strokeRoundedRect(width/2 + 10, uiY - 20, width/2 - 20, 40, 10);
     }
 
     if (this.scoreText) this.scoreText.setPosition(width - 20, 20);
