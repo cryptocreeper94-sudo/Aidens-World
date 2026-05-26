@@ -174,11 +174,11 @@ const WORLDS = [
 const STORY_PANELS = {
   intro_rift: {
     panels: [
-      { image: 'intro_panel', text: 'Spider-Man swings through New York City on a normal day...', speaker: 'Narrator' },
-      { image: 'intro_panel', text: 'BOOM! A giant portal rips open! The Rift King has merged Doc Ock tech with Sith Holocrons!', speaker: 'Narrator' },
-      { image: 'intro_panel', text: 'Stormtroopers march into Times Square! TIE Fighters zoom overhead!', speaker: 'Narrator' },
-      { image: 'intro_panel', text: '"My Spidey Sense is CRAZY! Anakin! Mando! I need backup!"', speaker: 'Spider-Man' },
-      { image: 'intro_panel', text: `"Tag me in, Spidey! Let's GO!" ⚔️`, speaker: 'Anakin Skywalker' },
+      { image: 'intro_1', text: 'Spider-Man swings through New York City on a normal day...', speaker: 'Narrator' },
+      { image: 'intro_2', text: 'BOOM! A giant portal rips open! The Rift King has merged Doc Ock tech with Sith Holocrons!', speaker: 'Narrator' },
+      { image: 'intro_3', text: 'Stormtroopers march into Times Square! TIE Fighters zoom overhead!', speaker: 'Narrator' },
+      { image: 'intro_4', text: '"My Spidey Sense is CRAZY! Anakin! Mando! I need backup!"', speaker: 'Spider-Man' },
+      { image: 'intro_5', text: `"Tag me in, Spidey! Let's GO!" ⚔️`, speaker: 'Anakin Skywalker' },
     ],
   },
   world1_complete: {
