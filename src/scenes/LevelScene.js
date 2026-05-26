@@ -33,9 +33,10 @@ class LevelScene extends Phaser.Scene {
     this.echoesCollected = 0; // Echoes collected THIS level
     this.riftPowerUsed = false; // Has the rift power been used this level?
     
-    // Load persistent data from save
     let initialSaveStr = localStorage.getItem('ChronoverseSave');
     let initialSave = initialSaveStr ? JSON.parse(initialSaveStr) : {};
+    this.baseShards = initialSave.totalShards || 0;
+    this.baseEchoes = initialSave.totalEchoes || 0;
     this.overdriveMeter = initialSave.overdriveMeter || 0;
     this.isOverdrive = false;
     this.selectedRiftPower = initialSave.selectedRiftPower || null;
@@ -151,8 +152,8 @@ class LevelScene extends Phaser.Scene {
     this.attackZone.on('pointerup', () => { if (attackHoldTimer) clearTimeout(attackHoldTimer); });
 
     // UI
-    this.scoreText = this.add.text(width - 20, 20, '💎 0', { fontFamily: 'Arial Black', fontSize: '24px', color: '#06b6d4' }).setOrigin(1, 0).setDepth(100);
-    this.echoText = this.add.text(width - 20, 42, '🔮 0', { fontFamily: 'Arial Black', fontSize: '16px', color: '#a855f7' }).setOrigin(1, 0).setDepth(100);
+    this.scoreText = this.add.text(width - 20, 20, `💎 ${this.baseShards}`, { fontFamily: 'Arial Black', fontSize: '24px', color: '#06b6d4' }).setOrigin(1, 0).setDepth(100);
+    this.echoText = this.add.text(width - 20, 42, `🔮 ${this.baseEchoes}`, { fontFamily: 'Arial Black', fontSize: '16px', color: '#a855f7' }).setOrigin(1, 0).setDepth(100);
     this.overdriveBarBg = this.add.rectangle(width - 20, 65, 100, 8, 0x000000).setOrigin(1, 0.5).setDepth(100);
     const initialFill = Math.min(this.overdriveMeter / 10, 1);
     this.overdriveBar = this.add.rectangle(width - 120, 65, 100 * initialFill, 8, 0xfbbf24).setOrigin(0, 0.5).setDepth(101);
@@ -332,7 +333,7 @@ class LevelScene extends Phaser.Scene {
       }
 
       if (this.seededRandom(1) < towerFreq && !lastWasTower) {
-        const heightMultiplier = Math.ceil(this.seededRandom(maxTowerBlocks || 1, 1)); // Random 1 to max
+        const heightMultiplier = Math.floor(this.seededRandom((maxTowerBlocks || 1) + 1, 1)); // Random 1 to max
         const towerHeight = heightMultiplier * blockSize;
         const tower = this.blocks.create(currentX, groundY - (towerHeight/2), 'sci_fi_tower');
         tower.setDisplaySize(blockSize, towerHeight);
@@ -374,7 +375,7 @@ class LevelScene extends Phaser.Scene {
 
   spawnEnemy(x, y) {
     const enemyKey = this.activeWorld.enemies[Math.floor(this.seededRandom(this.activeWorld.enemies.length))];
-    const enemy = this.spikes.create(x, y - 50, enemyKey); // -50 so feet sit exactly on floor
+    const enemy = this.spikes.create(x, y - 40, enemyKey); // -40 so feet sit exactly on floor
     enemy.setDisplaySize(80, 80);
     enemy.setFlipX(false); // Enemies face left by default (toward approaching player)
   }
@@ -415,7 +416,7 @@ class LevelScene extends Phaser.Scene {
   collectEcho(player, echo) {
     echo.destroy();
     this.echoesCollected++;
-    this.echoText.setText(`🔮 ${this.echoesCollected}`);
+    this.echoText.setText(`🔮 ${this.baseEchoes + this.echoesCollected}`);
     SoundFX.play('levelup');
     this.cameras.main.flash(200, 168, 85, 247); // Purple flash
     
@@ -602,7 +603,7 @@ class LevelScene extends Phaser.Scene {
     shard.destroy();
     this.shardsCollected++;
     this.riftShardCounter++;
-    this.scoreText.setText(`💎 ${this.shardsCollected}`);
+    this.scoreText.setText(`💎 ${this.baseShards + this.shardsCollected}`);
     SoundFX.play('hit');
     
     if (!this.isOverdrive) {
@@ -718,7 +719,7 @@ class LevelScene extends Phaser.Scene {
 
     // Bonus shards for defeating an enemy!
     this.shardsCollected += 2;
-    this.scoreText.setText(`💎 ${this.shardsCollected}`);
+    this.scoreText.setText(`💎 ${this.baseShards + this.shardsCollected}`);
     
     const floatText = this.add.text(enemy.x, enemy.y - 40, '+2 💎', { fontFamily: 'Arial Black', fontSize: '20px', color: '#fbbf24', stroke: '#000', strokeThickness: 4 }).setOrigin(0.5);
     this.tweens.add({ targets: floatText, y: enemy.y - 100, alpha: 0, duration: 1000, onComplete: () => floatText.destroy() });

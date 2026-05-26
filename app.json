@@ -1,0 +1,16 @@
+{
+  "expo": {
+    "name": "Chronoverse",
+    "slug": "chronoverse",
+    "version": "1.0.0",
+    "owner": "cryptocreeper",
+    "android": {
+      "package": "io.tlid.chronoverse"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "3b5b3d04-8e95-4452-867d-5f143e239b1c"
+      }
+    }
+  }
+}
