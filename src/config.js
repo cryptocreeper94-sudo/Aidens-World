@@ -60,7 +60,7 @@ window.launchRiftRunner = function() {
   const gameContainer = document.getElementById('game-container');
   if (gameContainer) gameContainer.style.display = 'block';
 
-  // Inject exact physical dimensions to bypass CSS reflow delays
+  // Inject exact physical dimensions
   gameConfig.scale.width = window.innerWidth;
   gameConfig.scale.height = window.innerHeight;
   
@@ -70,7 +70,7 @@ window.launchRiftRunner = function() {
   window.addEventListener('resize', () => {
     setTimeout(() => {
       if (game && game.scale) {
-        // Force exact pixel dimensions, completely ignoring CSS parent bounds
+        // Force exact pixel dimensions, immune to CSS parent container bugs
         game.scale.resize(window.innerWidth, window.innerHeight);
       }
     }, 500);
