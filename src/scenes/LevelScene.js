@@ -30,12 +30,15 @@ class LevelScene extends Phaser.Scene {
     this.riftShardCounter = 0; // Tracks shards toward next portal (resets on portal hit)
     this.portalShardsNeeded = 20; // Shards needed to summon a rift portal
     this.hasActiveRiftPortal = false; // Is there a rift portal on screen right now?
+    this.echoesCollected = 0; // Echoes collected THIS level
+    this.riftPowerUsed = false; // Has the rift power been used this level?
     
-    // Load persistent overdrive meter from save
+    // Load persistent data from save
     let initialSaveStr = localStorage.getItem('ChronoverseSave');
     let initialSave = initialSaveStr ? JSON.parse(initialSaveStr) : {};
     this.overdriveMeter = initialSave.overdriveMeter || 0;
     this.isOverdrive = false;
+    this.selectedRiftPower = initialSave.selectedRiftPower || null;
     // Strong seed mixing — every level gets a truly unique pattern
     this.seed = ((this.levelNum * 2654435761) ^ (this.levelNum * 40503)) >>> 0;
     // Warm up the RNG so close seeds diverge fully
@@ -70,6 +73,7 @@ class LevelScene extends Phaser.Scene {
     this.spikes = this.physics.add.group({ immovable: true, allowGravity: false });
     this.portals = this.physics.add.group({ immovable: true, allowGravity: false });
     this.shards = this.physics.add.group({ immovable: true, allowGravity: false });
+    this.echoes = this.physics.add.group({ immovable: true, allowGravity: false });
 
     this.projectiles = this.physics.add.group({ allowGravity: false });
 
@@ -90,6 +94,7 @@ class LevelScene extends Phaser.Scene {
     this.physics.add.overlap(this.player, this.spikes, this.die, null, this);
     this.physics.add.overlap(this.player, this.portals, this.hitPortal, null, this);
     this.physics.add.overlap(this.player, this.shards, this.collectShard, null, this);
+    this.physics.add.overlap(this.player, this.echoes, this.collectEcho, null, this);
     this.physics.add.overlap(this.projectiles, this.spikes, this.hitEnemyWithProjectile, null, this);
 
     // On-Screen Controls Footer
@@ -136,13 +141,31 @@ class LevelScene extends Phaser.Scene {
     this.attackZone.on('pointerdown', doAttack);
     this.input.keyboard.on('keydown-SPACE', doJump);
     this.input.keyboard.on('keydown-F', doAttack);
+    this.input.keyboard.on('keydown-R', () => this.activateRiftPower());
+    
+    // Long-press attack button = activate rift power (mobile)
+    let attackHoldTimer = null;
+    this.attackZone.on('pointerdown', () => {
+      attackHoldTimer = setTimeout(() => this.activateRiftPower(), 800);
+    });
+    this.attackZone.on('pointerup', () => { if (attackHoldTimer) clearTimeout(attackHoldTimer); });
 
     // UI
     this.scoreText = this.add.text(width - 20, 20, '💎 0', { fontFamily: 'Arial Black', fontSize: '24px', color: '#06b6d4' }).setOrigin(1, 0).setDepth(100);
-    this.overdriveBarBg = this.add.rectangle(width - 20, 55, 100, 8, 0x000000).setOrigin(1, 0.5).setDepth(100);
+    this.echoText = this.add.text(width - 20, 42, '🔮 0', { fontFamily: 'Arial Black', fontSize: '16px', color: '#a855f7' }).setOrigin(1, 0).setDepth(100);
+    this.overdriveBarBg = this.add.rectangle(width - 20, 65, 100, 8, 0x000000).setOrigin(1, 0.5).setDepth(100);
     const initialFill = Math.min(this.overdriveMeter / 10, 1);
-    this.overdriveBar = this.add.rectangle(width - 120, 55, 100 * initialFill, 8, 0xfbbf24).setOrigin(0, 0.5).setDepth(101);
+    this.overdriveBar = this.add.rectangle(width - 120, 65, 100 * initialFill, 8, 0xfbbf24).setOrigin(0, 0.5).setDepth(101);
     this.levelText = this.add.text(20, 20, `LEVEL ${this.levelNum}`, { fontFamily: 'Arial Black', fontSize: '24px', color: '#ffffff' }).setDepth(100);
+    
+    // Rift Power indicator
+    if (this.selectedRiftPower && !this.riftPowerUsed) {
+      const powerLabels = { shield: '🛡️ SHIELD', timeFracture: '⏳ SLOW-MO', dimensionalBlast: '⚡ BLAST' };
+      this.riftPowerLabel = this.add.text(20, 48, powerLabels[this.selectedRiftPower] || '', {
+        fontFamily: 'Arial Black', fontSize: '14px', color: '#a855f7', stroke: '#000', strokeThickness: 3
+      }).setDepth(100);
+      this.tweens.add({ targets: this.riftPowerLabel, alpha: 0.5, yoyo: true, repeat: -1, duration: 800 });
+    }
     
     // Progress bar
     this.progressBarBg = this.add.rectangle(width/2, 30, 300, 10, 0x000000).setDepth(100);
@@ -227,8 +250,9 @@ class LevelScene extends Phaser.Scene {
     }
 
     if (this.scoreText) this.scoreText.setPosition(width - 20, 20);
-    if (this.overdriveBarBg) this.overdriveBarBg.setPosition(width - 20, 55);
-    if (this.overdriveBar) this.overdriveBar.setPosition(width - 120, 55);
+    if (this.overdriveBarBg) this.overdriveBarBg.setPosition(width - 20, 65);
+    if (this.overdriveBar) this.overdriveBar.setPosition(width - 120, 65);
+    if (this.echoText) this.echoText.setPosition(width - 20, 42);
     if (this.levelText) this.levelText.setPosition(20, 20);
     if (this.quitBtn) this.quitBtn.setPosition(width - 20, 60);
     if (this.progressBarBg) this.progressBarBg.setPosition(width/2, 30);
@@ -268,9 +292,11 @@ class LevelScene extends Phaser.Scene {
       const lvlStat = document.getElementById('hub-stat-level');
       const starsStat = document.getElementById('hub-stat-stars');
       const shardsStat = document.getElementById('hub-stat-shards');
+      const echoStat = document.getElementById('hub-stat-echoes');
       if (lvlStat) lvlStat.innerText = save.maxLevelUnlocked || 1;
       if (starsStat) starsStat.innerText = save.totalStars || 0;
       if (shardsStat) shardsStat.innerText = save.totalShards || 0;
+      if (echoStat) echoStat.innerText = save.totalEchoes || 0;
     }
     
     // Destroy game instance to completely reset it for next time
@@ -334,6 +360,16 @@ class LevelScene extends Phaser.Scene {
     finishLine.setTint(0x10b981); // Emerald green finish line
     finishLine.isFinishLine = true;
     this.tweens.add({ targets: finishLine, angle: 360, repeat: -1, duration: 2000 });
+
+    // Spawn Echoes — 1-2 per level in tricky elevated spots
+    const echoCount = this.levelNum >= 5 ? 2 : 1;
+    const echoSpacing = finishDistance / (echoCount + 1);
+    for (let i = 0; i < echoCount; i++) {
+      const echoX = startX + echoSpacing * (i + 1) + this.seededRandom(400, -200);
+      // Place echoes high — on top of towers or floating in dangerous airspace
+      const echoY = groundY - this.seededRandom(280, 180);
+      this.spawnEcho(echoX, echoY);
+    }
   }
 
   spawnEnemy(x, y) {
@@ -347,6 +383,102 @@ class LevelScene extends Phaser.Scene {
     const shard = this.add.text(x, y, '💎', { fontSize: '32px' }).setOrigin(0.5);
     this.tweens.add({ targets: shard, y: y - 10, yoyo: true, repeat: -1, duration: 500 });
     this.shards.add(shard);
+  }
+
+  spawnEcho(x, y) {
+    const echo = this.add.text(x, y, '🔮', { fontSize: '36px' }).setOrigin(0.5).setDepth(8);
+    // Phasing effect — flicker visible/invisible
+    this.tweens.add({
+      targets: echo,
+      alpha: { from: 1, to: 0.1 },
+      duration: 1200,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut'
+    });
+    // Gentle float
+    this.tweens.add({ targets: echo, y: y - 15, yoyo: true, repeat: -1, duration: 800 });
+    // Purple glow particles around the echo
+    this.time.addEvent({
+      delay: 400,
+      loop: true,
+      callback: () => {
+        if (!echo.active) return;
+        const spark = this.add.rectangle(echo.x + (Math.random()-0.5)*30, echo.y + (Math.random()-0.5)*30, 4, 4, 0xa855f7);
+        spark.setDepth(7);
+        this.tweens.add({ targets: spark, alpha: 0, scaleX: 0, scaleY: 0, duration: 600, onComplete: () => spark.destroy() });
+      }
+    });
+    this.echoes.add(echo);
+  }
+
+  collectEcho(player, echo) {
+    echo.destroy();
+    this.echoesCollected++;
+    this.echoText.setText(`🔮 ${this.echoesCollected}`);
+    SoundFX.play('levelup');
+    this.cameras.main.flash(200, 168, 85, 247); // Purple flash
+    
+    // Big cinematic collection burst
+    for (let i = 0; i < 20; i++) {
+      const p = this.add.rectangle(player.x + (Math.random()-0.5)*60, player.y + (Math.random()-0.5)*60, 6, 6, 0xa855f7);
+      this.physics.add.existing(p);
+      p.body.setVelocity((Math.random()-0.5)*600, (Math.random()-0.5)*600);
+      this.tweens.add({ targets: p, alpha: 0, duration: 800, onComplete: () => p.destroy() });
+    }
+    
+    const floatText = this.add.text(player.x, player.y - 50, '+1 ECHO 🔮', {
+      fontFamily: 'Arial Black', fontSize: '22px', color: '#a855f7', stroke: '#000', strokeThickness: 4
+    }).setOrigin(0.5).setDepth(200);
+    this.tweens.add({ targets: floatText, y: player.y - 120, alpha: 0, duration: 1200, onComplete: () => floatText.destroy() });
+  }
+
+  activateRiftPower() {
+    if (!this.selectedRiftPower || this.riftPowerUsed || !this.isRunning || !this.isAlive) return;
+    this.riftPowerUsed = true;
+    if (this.riftPowerLabel) this.riftPowerLabel.destroy();
+    
+    // Consume the power from save
+    let saveData = SaveSystem.load();
+    saveData.selectedRiftPower = null;
+    SaveSystem.save(saveData);
+    
+    SoundFX.play('levelup');
+    this.cameras.main.flash(300, 168, 85, 247);
+    
+    const powerAlert = this.add.text(this.cameras.main.width/2, 100, '', {
+      fontFamily: 'Arial Black', fontSize: '32px', color: '#a855f7', stroke: '#000', strokeThickness: 5
+    }).setOrigin(0.5).setDepth(200).setScrollFactor(0);
+    
+    if (this.selectedRiftPower === 'shield') {
+      powerAlert.setText('🛡️ RIFT SHIELD!');
+      // 5 seconds invincibility
+      this.isOverdrive = true;
+      this.player.setTint(0xa855f7);
+      this.time.delayedCall(5000, () => {
+        this.isOverdrive = false;
+        this.player.clearTint();
+      });
+    } else if (this.selectedRiftPower === 'timeFracture') {
+      powerAlert.setText('⏳ TIME FRACTURE!');
+      // Half speed for 6 seconds
+      const origSpeed = this.gameSpeed;
+      this.gameSpeed = origSpeed * 0.5;
+      this.time.delayedCall(6000, () => {
+        this.gameSpeed = origSpeed;
+      });
+    } else if (this.selectedRiftPower === 'dimensionalBlast') {
+      powerAlert.setText('⚡ DIMENSIONAL BLAST!');
+      // Destroy all enemies on screen
+      this.spikes.getChildren().forEach(enemy => {
+        if (enemy.x > 0 && enemy.x < this.cameras.main.width + this.player.x) {
+          this.hitEnemyWithProjectile(null, enemy);
+        }
+      });
+      this.cameras.main.shake(300, 0.03);
+    }
+    
+    this.tweens.add({ targets: powerAlert, y: 60, alpha: 0, duration: 2000, onComplete: () => powerAlert.destroy() });
   }
 
   hitPortal(player, portal) {
@@ -616,6 +748,7 @@ class LevelScene extends Phaser.Scene {
     let saveStr = localStorage.getItem('ChronoverseSave');
     let save = saveStr ? JSON.parse(saveStr) : { maxLevelUnlocked: 1, totalStars: 0, totalShards: 0 };
     save.overdriveMeter = this.overdriveMeter;
+    save.totalEchoes = (save.totalEchoes || 0) + this.echoesCollected;
     localStorage.setItem('ChronoverseSave', JSON.stringify(save));
 
     this.cameras.main.shake(200, 0.02);
@@ -640,8 +773,14 @@ class LevelScene extends Phaser.Scene {
     let save = saveStr ? JSON.parse(saveStr) : { maxLevelUnlocked: 1, totalStars: 0, totalShards: 0 };
     save.maxLevelUnlocked = Math.max(save.maxLevelUnlocked, this.levelNum + 1);
     save.totalShards = (save.totalShards || 0) + this.shardsCollected;
+    save.totalEchoes = (save.totalEchoes || 0) + this.echoesCollected;
     save.overdriveMeter = this.overdriveMeter; // persist overdrive meter
     localStorage.setItem('ChronoverseSave', JSON.stringify(save));
+    
+    // Process echo unlocks
+    if (this.echoesCollected > 0) {
+      SaveSystem.addEchoes(0); // Re-run unlock checks with current total
+    }
 
     this.time.delayedCall(500, () => {
         this.showVictoryModal();
@@ -711,10 +850,18 @@ class LevelScene extends Phaser.Scene {
     this.tweens.add({ targets: title, alpha: 1, y: height/2 - 120, duration: 500, delay: 200, ease: 'Bounce.easeOut' });
 
     // Stats
-    const statsText = this.add.text(width/2 + 60, height/2 + 20, `💎 +${this.shardsCollected} Shards`, {
-      fontFamily: 'Arial Black', fontSize: '24px', color: '#06b6d4', stroke: '#000', strokeThickness: 3
+    const statsY = height/2 + 10;
+    const statsText = this.add.text(width/2 + 60, statsY, `💎 +${this.shardsCollected} Shards`, {
+      fontFamily: 'Arial Black', fontSize: '20px', color: '#06b6d4', stroke: '#000', strokeThickness: 3
     }).setOrigin(0.5).setDepth(1002).setAlpha(0);
     this.tweens.add({ targets: statsText, alpha: 1, duration: 500, delay: 400 });
+    
+    if (this.echoesCollected > 0) {
+      const echoStats = this.add.text(width/2 + 60, statsY + 28, `🔮 +${this.echoesCollected} Echo${this.echoesCollected > 1 ? 'es' : ''}`, {
+        fontFamily: 'Arial Black', fontSize: '20px', color: '#a855f7', stroke: '#000', strokeThickness: 3
+      }).setOrigin(0.5).setDepth(1002).setAlpha(0);
+      this.tweens.add({ targets: echoStats, alpha: 1, duration: 500, delay: 500 });
+    }
 
     // Buttons
     const btnY = height/2 + 100;
@@ -764,7 +911,7 @@ class LevelScene extends Phaser.Scene {
 
       // Scroll objects left via physics velocity
       let hitFinish = false;
-      [this.blocks, this.spikes, this.portals, this.shards].forEach(group => {
+      [this.blocks, this.spikes, this.portals, this.shards, this.echoes].forEach(group => {
         group.getChildren().forEach(obj => {
           if (obj.body) obj.body.setVelocityX(-this.gameSpeed);
           if (obj.isFinishLine && obj.x <= this.player.x) hitFinish = true;

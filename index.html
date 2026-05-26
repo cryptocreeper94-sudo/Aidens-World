@@ -996,11 +996,39 @@
             <div class="stat-label">Shards</div>
             <div class="stat-value" id="hub-stat-shards">0</div>
           </div>
+          <div class="stat-item">
+            <div class="stat-label">Echoes</div>
+            <div class="stat-value" id="hub-stat-echoes" style="color: #a855f7;">0</div>
+          </div>
         </div>
+      </div>
+
+      <!-- Rift Powers & Lore Row -->
+      <div style="display: flex; justify-content: center; gap: 10px; margin-top: 8px; flex-wrap: wrap;">
+        <button id="rift-power-btn" onclick="showRiftPowerSelector()" style="background: linear-gradient(135deg, #7c3aed, #a855f7); border: 2px solid #c084fc; border-radius: 12px; color: #fff; font-family: 'Arial Black'; font-size: 12px; padding: 6px 14px; cursor: pointer; text-shadow: 0 1px 3px rgba(0,0,0,0.5);">🔮 RIFT POWERS</button>
+        <button id="lore-codex-btn" onclick="showLoreCodex()" style="background: linear-gradient(135deg, #1e1b4b, #312e81); border: 2px solid #6366f1; border-radius: 12px; color: #fff; font-family: 'Arial Black'; font-size: 12px; padding: 6px 14px; cursor: pointer; text-shadow: 0 1px 3px rgba(0,0,0,0.5);">📖 RIFT MEMORIES</button>
       </div>
     </div>
 
     <button id="start-game-btn" class="action-btn" onclick="startGame()" ontouchstart="startGame()">START GAME</button>
+
+    <!-- Rift Powers Modal -->
+    <div id="rift-power-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.9); z-index:8000; justify-content:center; align-items:center;">
+      <div style="background: #0a0a1a; border: 3px solid #7c3aed; border-radius: 20px; padding: 24px; max-width: 360px; width: 90%; text-align: center;">
+        <div style="font-family: 'Arial Black'; font-size: 22px; color: #a855f7; margin-bottom: 16px;">🔮 RIFT POWERS</div>
+        <div id="rift-power-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
+        <button onclick="document.getElementById('rift-power-modal').style.display='none'" style="margin-top: 16px; background: #e63946; border: none; border-radius: 10px; color: #fff; font-family: 'Arial Black'; font-size: 14px; padding: 8px 20px; cursor: pointer;">CLOSE</button>
+      </div>
+    </div>
+
+    <!-- Lore Codex Modal -->
+    <div id="lore-codex-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.9); z-index:8000; justify-content:center; align-items:center;">
+      <div style="background: #0a0a1a; border: 3px solid #6366f1; border-radius: 20px; padding: 24px; max-width: 400px; width: 90%; max-height: 80vh; overflow-y: auto; text-align: center;">
+        <div style="font-family: 'Arial Black'; font-size: 22px; color: #6366f1; margin-bottom: 16px;">📖 RIFT MEMORIES</div>
+        <div id="lore-entries" style="display: flex; flex-direction: column; gap: 12px; text-align: left;"></div>
+        <button onclick="document.getElementById('lore-codex-modal').style.display='none'" style="margin-top: 16px; background: #e63946; border: none; border-radius: 10px; color: #fff; font-family: 'Arial Black'; font-size: 14px; padding: 8px 20px; cursor: pointer;">CLOSE</button>
+      </div>
+    </div>
   </div>
 
   <!-- Layer 4: Game Container -->
@@ -1506,6 +1534,106 @@
         document.body.classList.add('playing-game');
         if (window.launchRiftRunner) window.launchRiftRunner();
       }, 500);
+    };
+
+    // ── Hub Stats Initialization ──
+    window.refreshHubStats = function() {
+      try {
+        const raw = localStorage.getItem('ChronoverseSave');
+        if (raw) {
+          const save = JSON.parse(raw);
+          const lvl = document.getElementById('hub-stat-level');
+          const stars = document.getElementById('hub-stat-stars');
+          const shards = document.getElementById('hub-stat-shards');
+          const echoes = document.getElementById('hub-stat-echoes');
+          if (lvl) lvl.innerText = save.maxLevelUnlocked || 1;
+          if (stars) stars.innerText = save.totalStars || 0;
+          if (shards) shards.innerText = save.totalShards || 0;
+          if (echoes) echoes.innerText = save.totalEchoes || 0;
+        }
+      } catch(e) {}
+    };
+    refreshHubStats();
+
+    // ── Rift Power Selector Modal ──
+    window.showRiftPowerSelector = function() {
+      const modal = document.getElementById('rift-power-modal');
+      const list = document.getElementById('rift-power-list');
+      modal.style.display = 'flex';
+      list.innerHTML = '';
+      
+      const raw = localStorage.getItem('ChronoverseSave');
+      const save = raw ? JSON.parse(raw) : {};
+      const powers = save.riftPowers || [];
+      const selected = save.selectedRiftPower || null;
+      
+      const powerInfo = {
+        shield: { icon: '🛡️', name: 'Rift Shield', desc: '5 seconds of invincibility', cost: 10 },
+        timeFracture: { icon: '⏳', name: 'Time Fracture', desc: '6 seconds of slow motion', cost: 20 },
+        dimensionalBlast: { icon: '⚡', name: 'Dimensional Blast', desc: 'Destroy all enemies on screen', cost: 30 }
+      };
+      
+      const allPowers = ['shield', 'timeFracture', 'dimensionalBlast'];
+      allPowers.forEach(key => {
+        const info = powerInfo[key];
+        const unlocked = powers.includes(key);
+        const isSelected = selected === key;
+        const div = document.createElement('div');
+        div.style.cssText = `background: ${isSelected ? '#7c3aed' : unlocked ? '#1e1b4b' : '#111'}; border: 2px solid ${isSelected ? '#c084fc' : unlocked ? '#6366f1' : '#333'}; border-radius: 12px; padding: 10px; cursor: ${unlocked ? 'pointer' : 'default'}; opacity: ${unlocked ? '1' : '0.4'};`;
+        div.innerHTML = `<div style="font-size:20px; display:inline;">${info.icon}</div> <span style="font-family:'Arial Black'; font-size:14px; color:#fff;">${info.name}</span><br><span style="font-size:11px; color:#aaa;">${unlocked ? info.desc : `Collect ${info.cost} Echoes to unlock`}</span>${isSelected ? '<span style="float:right; color:#fbbf24; font-size:12px; font-weight:900;">EQUIPPED ✓</span>' : ''}`;
+        if (unlocked && !isSelected) {
+          div.onclick = () => {
+            save.selectedRiftPower = key;
+            localStorage.setItem('ChronoverseSave', JSON.stringify(save));
+            showRiftPowerSelector(); // refresh
+          };
+        } else if (isSelected) {
+          div.onclick = () => {
+            save.selectedRiftPower = null;
+            localStorage.setItem('ChronoverseSave', JSON.stringify(save));
+            showRiftPowerSelector(); // refresh
+          };
+        }
+        list.appendChild(div);
+      });
+      
+      if (powers.length === 0) {
+        list.innerHTML = '<div style="color:#666; font-size:13px; padding:10px;">Collect Echoes 🔮 during levels to unlock Rift Powers! First power unlocks at 10 Echoes.</div>';
+      }
+    };
+
+    // ── Lore Codex Modal ──
+    window.showLoreCodex = function() {
+      const modal = document.getElementById('lore-codex-modal');
+      const entries = document.getElementById('lore-entries');
+      modal.style.display = 'flex';
+      entries.innerHTML = '';
+      
+      const raw = localStorage.getItem('ChronoverseSave');
+      const save = raw ? JSON.parse(raw) : {};
+      const unlocked = save.unlockedLore || [];
+      const totalEchoes = save.totalEchoes || 0;
+      
+      if (typeof RIFT_LORE !== 'undefined') {
+        RIFT_LORE.forEach(lore => {
+          const isUnlocked = unlocked.includes(lore.id);
+          const div = document.createElement('div');
+          div.style.cssText = `background: ${isUnlocked ? '#1e1b4b' : '#0d0d18'}; border: 2px solid ${isUnlocked ? '#6366f1' : '#222'}; border-radius: 12px; padding: 12px;`;
+          if (isUnlocked) {
+            div.innerHTML = `<div style="font-family:'Arial Black'; font-size:14px; color:#6366f1; margin-bottom:6px;">📖 ${lore.title}</div><div style="font-size:13px; color:#ccc; line-height:1.5;">${lore.text}</div>`;
+          } else {
+            div.innerHTML = `<div style="font-family:'Arial Black'; font-size:14px; color:#444;">🔒 ???</div><div style="font-size:11px; color:#555;">Collect ${lore.echoes} Echoes to unlock (${totalEchoes}/${lore.echoes})</div>`;
+          }
+          entries.appendChild(div);
+        });
+      }
+      
+      if (unlocked.length === 0) {
+        const hint = document.createElement('div');
+        hint.style.cssText = 'color:#666; font-size:13px; padding:10px; text-align:center;';
+        hint.innerText = 'Collect Echoes 🔮 during levels to unlock Rift Memories! They phase in and out — time your jumps carefully!';
+        entries.prepend(hint);
+      }
     };
 
     // ── Character Lore & Unlock Logic ──
