@@ -39,7 +39,7 @@ class LevelScene extends Phaser.Scene {
     this.bg = this.add.image(0, 0, this.activeWorld.bg);
     this.bg.setOrigin(0, 0);
     this.bg.setDisplaySize(width, height); // Fill ENTIRE canvas including footer area
-    this.bg.setDepth(0);
+    this.bg.setDepth(-1);
     this.bg.setScrollFactor(0);
 
     // Player (Add fallback if localStorage has stale invalid key)
@@ -337,7 +337,7 @@ class LevelScene extends Phaser.Scene {
     this.bg = this.add.image(0, 0, newWorld.bg);
     this.bg.setOrigin(0, 0);
     this.bg.setDisplaySize(width, height);
-    this.bg.setDepth(0);
+    this.bg.setDepth(-1);
     this.bg.setScrollFactor(0);
   }
 
@@ -559,8 +559,7 @@ class LevelScene extends Phaser.Scene {
       const progress = Math.min(this.distanceTraveled / this.config.finishDistance, 1);
       this.progressBar.width = 300 * progress;
 
-      // Scroll background slowly
-      this.bg.tilePositionX += (this.gameSpeed * 0.1) * (this.game.loop.delta / 1000);
+      // Background is a static image - no scrolling needed
 
       // Scroll objects left via physics velocity
       let hitFinish = false;
