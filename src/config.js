@@ -79,4 +79,3 @@ window.launchRiftRunner = function() {
 
   // Prevent right-click context menu
   document.addEventListener('contextmenu', (e) => e.preventDefault());
-};
