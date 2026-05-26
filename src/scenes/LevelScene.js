@@ -37,16 +37,16 @@ class LevelScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor(this.activeWorld.color);
     
     // Scrolling visual background instead of blank grid
-    this.bg = this.add.tileSprite(width/2, height/2, width, height, this.activeWorld.bg);
+    this.bg = this.add.tileSprite(width/2, this.gameH/2, width, this.gameH, this.activeWorld.bg);
     this.bg.setAlpha(0.6);
     this.bg.setDepth(0);
     
-    // Scale background texture to perfectly fit screen and align to bottom
+    // Scale background texture to cover the game area (no tiling/repeat)
     const frame = this.textures.getFrame(this.activeWorld.bg);
     if (frame) {
-      const scale = Math.max(width / frame.width, height / frame.height);
-      this.bg.setSize(width, frame.height * scale);
-      this.bg.setPosition(width/2, height - (frame.height * scale)/2);
+      const scaleX = width / frame.width;
+      const scaleY = this.gameH / frame.height;
+      const scale = Math.max(scaleX, scaleY);
       this.bg.tileScaleX = scale;
       this.bg.tileScaleY = scale;
       this.bg.tilePositionY = 0;
@@ -76,12 +76,12 @@ class LevelScene extends Phaser.Scene {
     // Generate procedural level
     this.buildLevel();
 
-    // Floor
-    this.floor = this.add.rectangle(width/2, height, width*100, 40, 0x22d3ee).setDepth(10);
+    // Floor — positioned at bottom of game area, above the footer
+    this.floor = this.add.rectangle(width/2, this.gameH, width*100, 40, 0x22d3ee).setDepth(10);
     this.physics.add.existing(this.floor, true);
 
     // Absolute Death Wall to prevent clipping through towers when crushed
-    this.deathWall = this.add.rectangle(-10, height/2, 20, height, 0xff0000, 0);
+    this.deathWall = this.add.rectangle(-10, this.gameH/2, 20, this.gameH, 0xff0000, 0);
     this.physics.add.existing(this.deathWall, true);
     this.physics.add.overlap(this.player, this.deathWall, this.die, null, this);
     // Colliders
@@ -159,26 +159,22 @@ class LevelScene extends Phaser.Scene {
     const footerH = 60;
     const gameH = height - footerH;
 
+    this.gameH = gameH;
+
     if (this.bg) {
+      this.bg.setPosition(width/2, gameH/2);
+      this.bg.setSize(width, gameH);
       const frame = this.textures.getFrame(this.activeWorld.bg);
       if (frame) {
-        // Force the scale so the top half of the image (real buildings) covers gameH exactly
-        const scale = Math.max(width / frame.width, (gameH * 2) / frame.height);
-        this.bg.setSize(width, frame.height * scale);
-        // Align the horizontal center of the image (the water line) exactly to the floor (gameH)
-        this.bg.setPosition(width/2, gameH);
+        const scale = Math.max(width / frame.width, gameH / frame.height);
         this.bg.tileScaleX = scale;
         this.bg.tileScaleY = scale;
         this.bg.tilePositionY = 0;
-      } else {
-        this.bg.setPosition(width/2, gameH/2);
-        this.bg.setSize(width, gameH);
       }
     }
     
     if (this.floor) {
-      this.floor.setPosition(width/2, gameH + 1000); // Massive 2000px thick floor to prevent clipping
-      this.floor.height = 2000;
+      this.floor.setPosition(width/2, gameH);
       this.floor.width = width * 100;
       if (this.floor.body) {
         this.floor.body.updateFromGameObject();
@@ -260,7 +256,7 @@ class LevelScene extends Phaser.Scene {
   buildLevel() {
     const { finishDistance, towerFreq, enemyFreq, portalFreq, shardFreq } = this.config;
     const startX = 800;
-    const groundY = this.cameras.main.height - 20;
+    const groundY = this.gameH - 20;
     const blockSize = 80;
 
     let currentX = startX;
