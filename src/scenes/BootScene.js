@@ -40,18 +40,6 @@ class BootScene extends Phaser.Scene {
     this.barBg = barBg;
     this.bar = bar;
     this.loadingText = loadingText;
-  }
-
-  resize(gameSize) {
-    const { width, height } = gameSize;
-    if (this.bgRect) {
-      this.bgRect.setPosition(width/2, height/2);
-      this.bgRect.setSize(width, height);
-    }
-    if (this.barBg) this.barBg.setPosition(width/2, height/2);
-    if (this.bar) this.bar.setPosition(width/2 - 150, height/2);
-    if (this.loadingText) this.loadingText.setPosition(width/2, height/2 - 30);
-  }
 
     // ── CHARACTERS ──
     this.load.image('spider_hero', 'assets/spider_hero.png?v=' + Date.now());
@@ -97,5 +85,16 @@ class BootScene extends Phaser.Scene {
     this.time.delayedCall(400, () => {
       this.scene.start('LevelScene');
     });
+  }
+
+  resize(gameSize) {
+    const { width, height } = gameSize;
+    if (this.bgRect) {
+      this.bgRect.setPosition(width/2, height/2);
+      this.bgRect.setSize(width, height);
+    }
+    if (this.barBg) this.barBg.setPosition(width/2, height/2);
+    if (this.bar) this.bar.setPosition(width/2 - 150, height/2);
+    if (this.loadingText) this.loadingText.setPosition(width/2, height/2 - 30);
   }
 }
