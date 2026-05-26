@@ -46,7 +46,11 @@ const gameConfig = {
 let game = null;
 
 window.launchRiftRunner = function() {
-  if (game) return; // Already running
+  if (game) {
+    // If already running, force a resize refresh
+    game.scale.resize(window.innerWidth, window.innerHeight);
+    return;
+  }
   
   // Hide the portal DOM elements
   const portal = document.getElementById('aiden-portal');
@@ -56,7 +60,19 @@ window.launchRiftRunner = function() {
   const gameContainer = document.getElementById('game-container');
   if (gameContainer) gameContainer.style.display = 'block';
 
+  // Inject exact physical dimensions to bypass CSS reflow delays
+  gameConfig.scale.width = window.innerWidth;
+  gameConfig.scale.height = window.innerHeight;
+  
   game = new Phaser.Game(gameConfig);
+  
+  // Add a global resize listener to keep the engine in sync with the viewport
+  window.addEventListener('resize', () => {
+    if (game && game.scale) {
+      game.scale.resize(window.innerWidth, window.innerHeight);
+    }
+  });
+};
 
   // Handle orientation changes
   window.addEventListener('resize', () => {
