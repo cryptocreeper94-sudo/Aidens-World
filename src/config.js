@@ -60,21 +60,11 @@ window.launchRiftRunner = function() {
   const gameContainer = document.getElementById('game-container');
   if (gameContainer) gameContainer.style.display = 'block';
 
-  // Inject exact physical dimensions
-  gameConfig.scale.width = window.innerWidth;
-  gameConfig.scale.height = window.innerHeight;
+  // Native Phaser scaling to dynamically fill fixed DOM container
+  gameConfig.scale.width = '100%';
+  gameConfig.scale.height = '100%';
   
   game = new Phaser.Game(gameConfig);
-
-  // Debounced explicit resize to fix Android 0-dimension rotation bugs
-  window.addEventListener('resize', () => {
-    setTimeout(() => {
-      if (game && game.scale) {
-        // Force exact pixel dimensions, immune to CSS parent container bugs
-        game.scale.resize(window.innerWidth, window.innerHeight);
-      }
-    }, 500);
-  });
 };
 
   // Prevent right-click context menu
