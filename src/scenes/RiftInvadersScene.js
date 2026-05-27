@@ -335,7 +335,7 @@ class RiftInvadersScene extends Phaser.Scene {
         if (enemy.hpLabel) enemy.hpLabel.destroy();
 
         // Lume reward for boss
-        const save = JSON.parse(localStorage.getItem('ChronoverseSave') || '{}');
+        const save = SaveSystem.load();
         save.lumes = (save.lumes || 0) + 3;
         SaveSystem.save(save);
       }
@@ -349,7 +349,7 @@ class RiftInvadersScene extends Phaser.Scene {
 
         // Lume per 5 waves
         if (this.wave % 5 === 1 && this.wave > 1) {
-          const save = JSON.parse(localStorage.getItem('ChronoverseSave') || '{}');
+          const save = SaveSystem.load();
           save.lumes = (save.lumes || 0) + 1;
           SaveSystem.save(save);
         }
@@ -420,8 +420,8 @@ class RiftInvadersScene extends Phaser.Scene {
     const { width, height } = this.cameras.main;
 
     // Save progress
-    const save = JSON.parse(localStorage.getItem('ChronoverseSave') || '{}');
-    save.totalShards = (save.totalShards || 0) + this.shardsCollected;
+    const save = SaveSystem.load();
+    save.shards = (save.shards || 0) + this.shardsCollected;
     SaveSystem.save(save);
 
     // Overlay

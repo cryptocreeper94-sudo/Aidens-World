@@ -293,16 +293,13 @@ class LevelScene extends Phaser.Scene {
     if(window.updateCharacterLocks) window.updateCharacterLocks();
     if(window.initHeroSelection) window.initHeroSelection();
     
-    // Save meter on quit
-    let saveStr = localStorage.getItem('ChronoverseSave');
-    let saveToUpdate = saveStr ? JSON.parse(saveStr) : { maxLevelUnlocked: 1, totalStars: 0, totalShards: 0 };
+    let saveToUpdate = SaveSystem.load();
     saveToUpdate.overdriveMeter = this.overdriveMeter;
     SaveSystem.save(saveToUpdate);
     
     // Fix Hub Stats refresh
-    saveStr = localStorage.getItem('ChronoverseSave');
-    if (saveStr) {
-      let save = JSON.parse(saveStr);
+    let save = SaveSystem.load();
+    if (save) {
       const lvlStat = document.getElementById('hub-stat-level');
       const starsStat = document.getElementById('hub-stat-stars');
       const shardsStat = document.getElementById('hub-stat-shards');
@@ -772,8 +769,7 @@ class LevelScene extends Phaser.Scene {
     }
     
     // Save overdrive meter state on death so it carries over
-    let saveStr = localStorage.getItem('ChronoverseSave');
-    let save = saveStr ? JSON.parse(saveStr) : { maxLevelUnlocked: 1, totalStars: 0, totalShards: 0 };
+    let save = SaveSystem.load();
     save.overdriveMeter = this.overdriveMeter;
     save.totalEchoes = (save.totalEchoes || 0) + this.echoesCollected;
     SaveSystem.save(save);
@@ -796,12 +792,28 @@ class LevelScene extends Phaser.Scene {
     this.cameras.main.flash(500, 255, 255, 255);
     
     // Save progression
-    let saveStr = localStorage.getItem('ChronoverseSave');
-    let save = saveStr ? JSON.parse(saveStr) : { maxLevelUnlocked: 1, totalStars: 0, totalShards: 0 };
-    save.maxLevelUnlocked = Math.max(save.maxLevelUnlocked, this.levelNum + 1);
-    save.totalShards = (save.totalShards || 0) + this.shardsCollected;
+    let save = SaveSystem.load();
+    save.maxLevelUnlocked = Math.max(save.maxLevelUnlocked || 1, this.levelNum + 1);
+    save.shards = (save.shards || 0) + this.shardsCollected;
     save.totalEchoes = (save.totalEchoes || 0) + this.echoesCollected;
     save.overdriveMeter = this.overdriveMeter; // persist overdrive meter
+    
+    // Set stars for the completed level to unlock the next one on the Hub map
+    let foundLevelId = null;
+    let counter = 1;
+    for (let w = 0; w < WORLDS.length; w++) {
+      for (let l = 0; l < WORLDS[w].levels.length; l++) {
+        if (counter === this.levelNum) {
+          foundLevelId = WORLDS[w].levels[l].id;
+        }
+        counter++;
+      }
+    }
+    
+    if (!save.stars) save.stars = {};
+    if (foundLevelId) {
+      save.stars[foundLevelId] = Math.max(save.stars[foundLevelId] || 0, 3);
+    }
     
     // ── Lume Earning ──
     if (!save.lumes) save.lumes = 0;

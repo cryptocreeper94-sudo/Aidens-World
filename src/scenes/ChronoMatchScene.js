@@ -306,8 +306,8 @@ class ChronoMatchScene extends Phaser.Scene {
     const lumesEarned = lumeReward[this.difficulty];
 
     // Save
-    const save = JSON.parse(localStorage.getItem('ChronoverseSave') || '{}');
-    save.totalShards = (save.totalShards || 0) + this.shardsCollected;
+    const save = SaveSystem.load();
+    save.shards = (save.shards || 0) + this.shardsCollected;
     save.lumes = (save.lumes || 0) + lumesEarned;
     if (!save.matchBest) save.matchBest = {};
     const prevBest = save.matchBest[this.difficulty] || 9999;
