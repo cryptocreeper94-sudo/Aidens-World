@@ -156,34 +156,39 @@ class LevelScene extends Phaser.Scene {
     });
     this.attackZone.on('pointerup', () => { if (attackHoldTimer) clearTimeout(attackHoldTimer); });
 
-    // UI
-    this.scoreText = this.add.text(width - 20, 20, `💎 ${this.baseShards}`, { fontFamily: 'Arial Black', fontSize: '24px', color: '#06b6d4' }).setOrigin(1, 0).setDepth(100);
-    this.echoText = this.add.text(width - 20, 42, `🔮 ${this.baseEchoes}`, { fontFamily: 'Arial Black', fontSize: '16px', color: '#a855f7' }).setOrigin(1, 0).setDepth(100);
-    this.overdriveBarBg = this.add.rectangle(width - 20, 65, 100, 8, 0x000000).setOrigin(1, 0.5).setDepth(100);
-    const initialFill = Math.min(this.overdriveMeter / 10, 1);
-    this.overdriveBar = this.add.rectangle(width - 120, 65, 100 * initialFill, 8, 0xfbbf24).setOrigin(0, 0.5).setDepth(101);
-    this.levelText = this.add.text(20, 20, `LEVEL ${this.levelNum}`, { fontFamily: 'Arial Black', fontSize: '24px', color: '#ffffff' }).setDepth(100);
+    // UI — Top-left: Level + rift power | Top-center: Progress | Top-right: Shards, Echoes, Overdrive, Quit
+    this.levelText = this.add.text(12, 8, `LEVEL ${this.levelNum}`, { fontFamily: 'Arial Black', fontSize: '18px', color: '#ffffff', stroke: '#000', strokeThickness: 3 }).setDepth(100);
     
-    // Rift Power indicator
+    // Rift Power indicator (below level)
     if (this.selectedRiftPower && !this.riftPowerUsed) {
       const powerLabels = { shield: '🛡️ SHIELD', timeFracture: '⏳ SLOW-MO', dimensionalBlast: '⚡ BLAST' };
-      this.riftPowerLabel = this.add.text(20, 48, powerLabels[this.selectedRiftPower] || '', {
-        fontFamily: 'Arial Black', fontSize: '14px', color: '#a855f7', stroke: '#000', strokeThickness: 3
+      this.riftPowerLabel = this.add.text(12, 30, powerLabels[this.selectedRiftPower] || '', {
+        fontFamily: 'Arial Black', fontSize: '11px', color: '#a855f7', stroke: '#000', strokeThickness: 3
       }).setDepth(100);
       this.tweens.add({ targets: this.riftPowerLabel, alpha: 0.5, yoyo: true, repeat: -1, duration: 800 });
     }
+
+    // Progress bar (top center)
+    this.progressBarBg = this.add.rectangle(width/2, 14, Math.min(width * 0.4, 200), 6, 0x1e293b).setDepth(100).setStrokeStyle(1, 0x475569);
+    this.progressBar = this.add.rectangle(width/2 - Math.min(width * 0.2, 100), 14, 0, 6, 0x22d3ee).setOrigin(0, 0.5).setDepth(101);
+
+    // Right column — stacked vertically with clear spacing
+    this.scoreText = this.add.text(width - 12, 8, `💎 ${this.baseShards}`, { fontFamily: 'Arial Black', fontSize: '16px', color: '#06b6d4', stroke: '#000', strokeThickness: 3 }).setOrigin(1, 0).setDepth(100);
+    this.echoText = this.add.text(width - 12, 28, `🔮 ${this.baseEchoes}`, { fontFamily: 'Arial Black', fontSize: '13px', color: '#a855f7', stroke: '#000', strokeThickness: 2 }).setOrigin(1, 0).setDepth(100);
     
-    // Progress bar
-    this.progressBarBg = this.add.rectangle(width/2, 30, 300, 10, 0x000000).setDepth(100);
-    this.progressBar = this.add.rectangle(width/2 - 150, 30, 0, 10, 0x22d3ee).setOrigin(0, 0.5).setDepth(101);
+    // Overdrive meter
+    this.overdriveBarBg = this.add.rectangle(width - 12, 50, 80, 6, 0x1e293b).setOrigin(1, 0.5).setDepth(100).setStrokeStyle(1, 0x475569);
+    const initialFill = Math.min(this.overdriveMeter / 10, 1);
+    this.overdriveBar = this.add.rectangle(width - 92, 50, 80 * initialFill, 6, 0xfbbf24).setOrigin(0, 0.5).setDepth(101);
+    this.overdriveLabel = this.add.text(width - 96, 50, '⚡', { fontSize: '10px' }).setOrigin(1, 0.5).setDepth(100);
+
+    // Quit button — below overdrive
+    this.quitBtn = this.add.text(width - 12, 60, '✕', { fontFamily: 'Arial Black', fontSize: '16px', color: '#ef4444', stroke: '#000', strokeThickness: 3 }).setOrigin(1, 0).setDepth(100);
+    this.quitBtn.setInteractive({ useHandCursor: true });
+    this.quitBtn.on('pointerdown', () => this.exitToHub());
 
     this.startText = this.add.text(width/2, height/2, 'TAP JUMP TO START!', { fontFamily: 'Arial Black', fontSize: '32px', color: '#e63946', stroke: '#fff', strokeThickness: 4 }).setOrigin(0.5);
     this.tweens.add({ targets: this.startText, alpha: 0.5, yoyo: true, repeat: -1, duration: 500 });
-
-    // Quit Button
-    this.quitBtn = this.add.text(width - 20, 60, '❌ QUIT', { fontFamily: 'Arial Black', fontSize: '18px', color: '#ff4444' }).setOrigin(1, 0).setDepth(100);
-    this.quitBtn.setInteractive({ useHandCursor: true });
-    this.quitBtn.on('pointerdown', () => this.exitToHub());
 
     // Add resize listener
     this.scale.on('resize', this.resize, this);
@@ -255,14 +260,17 @@ class LevelScene extends Phaser.Scene {
        this.attackOutline.strokeRoundedRect(width/2 + 10, uiY - 20, width/2 - 20, 40, 10);
     }
 
-    if (this.scoreText) this.scoreText.setPosition(width - 20, 20);
-    if (this.overdriveBarBg) this.overdriveBarBg.setPosition(width - 20, 65);
-    if (this.overdriveBar) this.overdriveBar.setPosition(width - 120, 65);
-    if (this.echoText) this.echoText.setPosition(width - 20, 42);
-    if (this.levelText) this.levelText.setPosition(20, 20);
-    if (this.quitBtn) this.quitBtn.setPosition(width - 20, 60);
-    if (this.progressBarBg) this.progressBarBg.setPosition(width/2, 30);
-    if (this.progressBar) this.progressBar.setPosition(width/2 - 150, 30);
+    if (this.levelText) this.levelText.setPosition(12, 8);
+    if (this.riftPowerLabel) this.riftPowerLabel.setPosition(12, 30);
+    const progW = Math.min(width * 0.4, 200);
+    if (this.progressBarBg) { this.progressBarBg.setPosition(width/2, 14); this.progressBarBg.setSize(progW, 6); }
+    if (this.progressBar) this.progressBar.setPosition(width/2 - progW/2, 14);
+    if (this.scoreText) this.scoreText.setPosition(width - 12, 8);
+    if (this.echoText) this.echoText.setPosition(width - 12, 28);
+    if (this.overdriveBarBg) this.overdriveBarBg.setPosition(width - 12, 50);
+    if (this.overdriveBar) this.overdriveBar.setPosition(width - 92, 50);
+    if (this.overdriveLabel) this.overdriveLabel.setPosition(width - 96, 50);
+    if (this.quitBtn) this.quitBtn.setPosition(width - 12, 60);
     if (this.startText) this.startText.setPosition(width/2, height/2);
   }
 
