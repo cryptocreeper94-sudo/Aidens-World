@@ -1271,6 +1271,9 @@
     </div>
   </div>
 
+  <!-- Music Toggle (body-level, persists across all screens) -->
+  <button id="music-toggle-btn" onclick="MusicSystem.toggle()" title="Music: ON" style="display:none; position:fixed; top:20px; right:20px; z-index:9998; width:48px; height:48px; border-radius:50%; border:3px solid rgba(34,211,238,0.5); background:rgba(10,10,30,0.85); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); color:#22d3ee; font-size:22px; cursor:pointer; align-items:center; justify-content:center; box-shadow:0 4px 15px rgba(0,0,0,0.5), 0 0 15px rgba(34,211,238,0.15); transition:all 0.3s;">🎵</button>
+
   <!-- Layer 4: Game Container -->
   <div id="game-container" style="display:none; width:100vw; height:100vh; position:fixed; top:0; left:0; z-index:5000;"></div>
 
@@ -1307,6 +1310,7 @@
   <!-- Game Modules -->
   <script src="src/systems/SaveSystem.js?v=6.1"></script>
   <script src="src/systems/SoundFX.js?v=6.1"></script>
+  <script src="src/systems/MusicSystem.js?v=6.1"></script>
   <script src="src/systems/LevelData.js?v=6.1"></script>
   <script src="src/systems/ThreeEngine.js?v=6.1"></script>
   <script src="src/scenes/BootScene.js?v=6.1"></script>
@@ -1600,6 +1604,10 @@
       if (!welcome) return;
       welcome.style.opacity = '0';
       welcome.style.transform = 'scale(1.1)';
+      // Start menu music on first user interaction
+      MusicSystem.init();
+      MusicSystem.play('menu');
+      MusicSystem._updateToggleUI();
       setTimeout(() => {
         welcome.style.display = 'none';
         document.getElementById('aiden-portal').style.display = 'block';
@@ -1629,6 +1637,8 @@
         
         const hub = document.getElementById('game-hub');
         hub.style.display = 'block';
+        // Switch to hub music
+        MusicSystem.play('hub');
         setTimeout(() => {
           hub.style.opacity = '1';
           // Randomize the starting carousel image
@@ -1771,6 +1781,9 @@
         }
       } catch(e) {}
       
+      // Return to menu music
+      MusicSystem.play('menu');
+      
       document.getElementById('game-hub').style.display = 'none';
       document.getElementById('game-hub').style.opacity = '0';
       
@@ -1800,6 +1813,8 @@
       setTimeout(() => {
         hub.style.display = 'none';
         document.body.classList.add('playing-game');
+        // Switch to gameplay music
+        MusicSystem.play('gameplay');
         if (window.launchRiftRunner) window.launchRiftRunner();
       }, 500);
     };

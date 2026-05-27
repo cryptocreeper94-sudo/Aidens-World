@@ -74,6 +74,8 @@ window.launchRiftInvaders = function() {
     window.riftInvadersGame.destroy(true);
     window.riftInvadersGame = null;
   }
+  // Switch to gameplay music
+  if (typeof MusicSystem !== 'undefined') MusicSystem.play('gameplay');
 
   const portal = document.getElementById('aiden-portal');
   if (portal) portal.style.display = 'none';
@@ -117,6 +119,8 @@ window.launchChronoMatch = function(difficulty) {
     window.chronoMatchGame.destroy(true);
     window.chronoMatchGame = null;
   }
+  // Switch to gameplay music
+  if (typeof MusicSystem !== 'undefined') MusicSystem.play('gameplay');
 
   const portal = document.getElementById('aiden-portal');
   if (portal) portal.style.display = 'none';
