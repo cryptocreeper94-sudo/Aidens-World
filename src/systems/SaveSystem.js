@@ -3,9 +3,30 @@
    ======================================== */
 
 const HERO_NAME = 'Aiden';
-const SAVE_KEY = 'ChronoverseSave';
+let currentProfile = localStorage.getItem('ChronoverseActiveProfile') || 'Default';
 
 const SaveSystem = {
+  getProfile() { return currentProfile; },
+  setProfile(name) { 
+    currentProfile = name; 
+    localStorage.setItem('ChronoverseActiveProfile', name);
+    this.addProfile(name);
+  },
+  getProfiles() {
+    try {
+      return JSON.parse(localStorage.getItem('ChronoverseProfiles')) || ['Default'];
+    } catch(e) { return ['Default']; }
+  },
+  addProfile(name) {
+    let p = this.getProfiles();
+    if(!p.includes(name)) { 
+      p.push(name); 
+      localStorage.setItem('ChronoverseProfiles', JSON.stringify(p)); 
+    }
+  },
+  getKey() { 
+    return currentProfile === 'Default' ? 'ChronoverseSave' : 'ChronoverseSave_' + currentProfile; 
+  },
   getDefault() {
     return {
       shards: 0,
@@ -30,7 +51,7 @@ const SaveSystem = {
 
   load() {
     try {
-      const raw = localStorage.getItem(SAVE_KEY);
+      const raw = localStorage.getItem(this.getKey());
       if (raw) {
         const data = JSON.parse(raw);
         // Merge with defaults to handle new fields
@@ -43,10 +64,14 @@ const SaveSystem = {
   save(data) {
     try {
       data.lastUpdated = Date.now();
-      localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+      localStorage.setItem(this.getKey(), JSON.stringify(data));
       // Background sync to Firebase
       if (window.db && window.CHRONOVERSE_TENANT) {
-        window.db.collection('chronoverse_saves').doc(window.CHRONOVERSE_TENANT.toLowerCase()).set(data).catch(e => console.log('Firebase write error', e));
+        let docId = window.CHRONOVERSE_TENANT.toLowerCase();
+        if (currentProfile !== 'Default') {
+          docId += '_' + currentProfile.toLowerCase().replace(/[^a-z0-9]/g, '');
+        }
+        window.db.collection('chronoverse_saves').doc(docId).set(data).catch(e => console.log('Firebase write error', e));
       }
     } catch (e) {}
   },
