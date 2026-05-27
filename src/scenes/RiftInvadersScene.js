@@ -23,19 +23,41 @@ class RiftInvadersScene extends Phaser.Scene {
   create() {
     const { width, height } = this.cameras.main;
 
-    // ── Background ──
-    this.bgTiles = [];
-    for (let i = 0; i < 80; i++) {
-      const star = this.add.circle(
-        Phaser.Math.Between(0, width),
-        Phaser.Math.Between(0, height),
-        Phaser.Math.Between(1, 3),
-        0xffffff,
-        Phaser.Math.FloatBetween(0.2, 0.8)
-      ).setDepth(0);
-      star.speed = Phaser.Math.FloatBetween(0.3, 1.5);
-      this.bgTiles.push(star);
+    // ── Rich Space Background ──
+    // Nebula gradient base
+    const gfx = this.add.graphics().setDepth(0);
+    gfx.fillGradientStyle(0x050520, 0x050520, 0x0a1628, 0x120824, 1);
+    gfx.fillRect(0, 0, width, height);
+
+    // Nebula clouds
+    for (let i = 0; i < 4; i++) {
+      const nx = Phaser.Math.Between(0, width);
+      const ny = Phaser.Math.Between(0, height);
+      const nr = Phaser.Math.Between(100, 250);
+      const colors = [0x1a0a3e, 0x0a2040, 0x2a0a28, 0x0a1a30];
+      const nebula = this.add.circle(nx, ny, nr, colors[i], 0.15).setDepth(0);
+      this.tweens.add({ targets: nebula, alpha: { from: 0.08, to: 0.2 }, duration: Phaser.Math.Between(3000, 6000), yoyo: true, repeat: -1 });
     }
+
+    // Multi-layer parallax starfield
+    this.bgTiles = [];
+    const starLayers = [
+      { count: 40, sizeMin: 1, sizeMax: 1, speedMin: 0.2, speedMax: 0.5, alphaMin: 0.2, alphaMax: 0.4 },
+      { count: 30, sizeMin: 1, sizeMax: 2, speedMin: 0.5, speedMax: 1.0, alphaMin: 0.4, alphaMax: 0.7 },
+      { count: 15, sizeMin: 2, sizeMax: 3, speedMin: 1.0, speedMax: 2.0, alphaMin: 0.6, alphaMax: 1.0 },
+    ];
+    starLayers.forEach(layer => {
+      for (let i = 0; i < layer.count; i++) {
+        const starColor = Phaser.Math.Between(0, 10) < 2 ? 0x88ccff : (Phaser.Math.Between(0, 10) < 1 ? 0xffcc88 : 0xffffff);
+        const star = this.add.circle(
+          Phaser.Math.Between(0, width), Phaser.Math.Between(0, height),
+          Phaser.Math.Between(layer.sizeMin, layer.sizeMax),
+          starColor, Phaser.Math.FloatBetween(layer.alphaMin, layer.alphaMax)
+        ).setDepth(1);
+        star.speed = Phaser.Math.FloatBetween(layer.speedMin, layer.speedMax);
+        this.bgTiles.push(star);
+      }
+    });
 
     // ── Player Ship ──
     this.player = this.physics.add.sprite(width / 2, height - 80, this.activeHero);

@@ -95,7 +95,7 @@ window.launchRiftInvaders = function() {
       width: '100%',
       height: '100%',
     },
-    scene: [RiftInvadersScene],
+    scene: [BootScene, RiftInvadersScene],
     physics: {
       default: 'arcade',
       arcade: { gravity: { y: 0 }, debug: false },
@@ -103,6 +103,11 @@ window.launchRiftInvaders = function() {
     input: { activePointers: 2, touch: { capture: true } },
     render: { pixelArt: false, antialias: true, roundPixels: true },
     banner: false,
+    callbacks: {
+      postBoot: function(game) {
+        game.scene.start('RiftInvadersScene');
+      }
+    }
   });
 };
 

@@ -1345,7 +1345,19 @@
         const doc = await db.collection('chronoverse_saves').doc(tenant.toLowerCase()).get();
         if (doc.exists) {
           const cloudData = doc.data();
-          localStorage.setItem('ChronoverseSave', JSON.stringify(cloudData));
+          const localRaw = localStorage.getItem('ChronoverseSave');
+          const localData = localRaw ? JSON.parse(localRaw) : null;
+          
+          // Only overwrite local if cloud is genuinely newer
+          const cloudTime = cloudData.lastUpdated || 0;
+          const localTime = localData ? (localData.lastUpdated || 0) : 0;
+          
+          if (cloudTime > localTime) {
+            localStorage.setItem('ChronoverseSave', JSON.stringify(cloudData));
+            console.log('[Firebase] Cloud save restored (newer)');
+          } else {
+            console.log('[Firebase] Local save is newer, keeping local');
+          }
         }
       } catch (e) {
         console.log('[Firebase] Sync error:', e);
