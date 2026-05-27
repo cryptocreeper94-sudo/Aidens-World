@@ -312,7 +312,7 @@ class ChronoMatchScene extends Phaser.Scene {
     if (!save.matchBest) save.matchBest = {};
     const prevBest = save.matchBest[this.difficulty] || 9999;
     if (this.elapsedTime < prevBest) save.matchBest[this.difficulty] = this.elapsedTime;
-    localStorage.setItem('ChronoverseSave', JSON.stringify(save));
+    SaveSystem.save(save);
 
     // Overlay
     this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.8).setDepth(200);

@@ -297,7 +297,7 @@ class LevelScene extends Phaser.Scene {
     let saveStr = localStorage.getItem('ChronoverseSave');
     let saveToUpdate = saveStr ? JSON.parse(saveStr) : { maxLevelUnlocked: 1, totalStars: 0, totalShards: 0 };
     saveToUpdate.overdriveMeter = this.overdriveMeter;
-    localStorage.setItem('ChronoverseSave', JSON.stringify(saveToUpdate));
+    SaveSystem.save(saveToUpdate);
     
     // Fix Hub Stats refresh
     saveStr = localStorage.getItem('ChronoverseSave');
@@ -776,7 +776,7 @@ class LevelScene extends Phaser.Scene {
     let save = saveStr ? JSON.parse(saveStr) : { maxLevelUnlocked: 1, totalStars: 0, totalShards: 0 };
     save.overdriveMeter = this.overdriveMeter;
     save.totalEchoes = (save.totalEchoes || 0) + this.echoesCollected;
-    localStorage.setItem('ChronoverseSave', JSON.stringify(save));
+    SaveSystem.save(save);
 
     this.cameras.main.shake(200, 0.02);
     this.time.delayedCall(800, () => this.scene.restart());
@@ -825,7 +825,7 @@ class LevelScene extends Phaser.Scene {
     }
     save.lumes += lumesEarned;
     this._lumesEarned = lumesEarned;
-    localStorage.setItem('ChronoverseSave', JSON.stringify(save));
+    SaveSystem.save(save);
     
     // Process echo unlocks
     if (this.echoesCollected > 0) {
