@@ -3,25 +3,26 @@
    ======================================== */
 
 const HERO_NAME = 'Aiden';
-let currentProfile = localStorage.getItem('ChronoverseActiveProfile') || 'Default';
+let currentProfile = 'Default';
+try { currentProfile = window.localStore.getItem('ChronoverseActiveProfile') || 'Default'; } catch(e) { console.warn('[SaveSystem] Failed to read active profile:', e); }
 
 const SaveSystem = {
   getProfile() { return currentProfile; },
   setProfile(name) { 
     currentProfile = name; 
-    localStorage.setItem('ChronoverseActiveProfile', name);
+    try { window.localStore.setItem('ChronoverseActiveProfile', name); } catch(e) { console.warn('[SaveSystem] Failed to save active profile:', e); }
     this.addProfile(name);
   },
   getProfiles() {
     try {
-      return JSON.parse(localStorage.getItem('ChronoverseProfiles')) || ['Default'];
-    } catch(e) { return ['Default']; }
+      return JSON.parse(window.localStore.getItem('ChronoverseProfiles')) || ['Default'];
+    } catch(e) { console.warn('[SaveSystem] Failed to read profiles list:', e); return ['Default']; }
   },
   addProfile(name) {
     let p = this.getProfiles();
     if(!p.includes(name)) { 
       p.push(name); 
-      localStorage.setItem('ChronoverseProfiles', JSON.stringify(p)); 
+      try { window.localStore.setItem('ChronoverseProfiles', JSON.stringify(p)); } catch(e) { console.warn('[SaveSystem] Failed to save profiles list:', e); }
     }
   },
   getKey() { 
@@ -50,30 +51,93 @@ const SaveSystem = {
   },
 
   load() {
-    try {
-      const raw = localStorage.getItem(this.getKey());
-      if (raw) {
+    let raw = null;
+    try { raw = window.localStore.getItem(this.getKey()); } catch(e) { console.warn('[SaveSystem] Failed to read from localStorage:', e); }
+    
+    if (raw) {
+      try {
         const data = JSON.parse(raw);
-        // Merge with defaults to handle new fields
-        return { ...this.getDefault(), ...data };
+        const merged = { ...this.getDefault(), ...data };
+        // Bug C fix: keep MEMORY_SAVE in sync with localStorage on successful read
+        window.MEMORY_SAVE = merged;
+        return merged;
+      } catch(e) {
+        console.warn('[SaveSystem] Failed to parse save data from localStorage:', e);
       }
-    } catch (e) {}
+    }
+    
+    if (window.MEMORY_SAVE) {
+      return { ...this.getDefault(), ...window.MEMORY_SAVE };
+    }
     return this.getDefault();
   },
 
   save(data) {
+    data.lastUpdated = Date.now();
+    
+    // Bug C fix: update MEMORY_SAVE FIRST so even if localStorage fails, in-memory copy is current
+    window.MEMORY_SAVE = data;
+    
+    let success = false;
+    let method = 'none';
+    
+    // Attempt localStorage write
     try {
-      data.lastUpdated = Date.now();
-      localStorage.setItem(this.getKey(), JSON.stringify(data));
-      // Background sync to Firebase
+      const serialized = JSON.stringify(data);
+      window.localStore.setItem(this.getKey(), serialized);
+      
+      // Bug D fix: verify write by reading back
+      const verification = window.localStore.getItem(this.getKey());
+      if (verification !== serialized) {
+        console.warn('[SaveSystem] Write verification failed, retrying once...');
+        // Retry once
+        window.localStore.setItem(this.getKey(), serialized);
+        const retryVerification = window.localStore.getItem(this.getKey());
+        if (retryVerification === serialized) {
+          success = true;
+          method = 'localStorage';
+        } else {
+          console.warn('[SaveSystem] Write verification failed after retry. Data is in MEMORY_SAVE only.');
+          method = 'memory';
+        }
+      } else {
+        success = true;
+        method = 'localStorage';
+      }
+    } catch (e) {
+      console.warn('[SaveSystem] localStorage write failed:', e);
+      method = 'memory';
+    }
+    
+    // If localStorage failed entirely, MEMORY_SAVE still has the data
+    if (!success) {
+      // MEMORY_SAVE was already set above, so the data is safe in memory
+      success = true; // memory save always succeeds
+    }
+    
+    // Background sync to Firebase
+    try {
       if (window.db && window.CHRONOVERSE_TENANT) {
         let docId = window.CHRONOVERSE_TENANT.toLowerCase();
         if (currentProfile !== 'Default') {
           docId += '_' + currentProfile.toLowerCase().replace(/[^a-z0-9]/g, '');
         }
-        window.db.collection('chronoverse_saves').doc(docId).set(data).catch(e => console.log('Firebase write error', e));
+        // Bug B fix: validate doc ID is a non-empty string before writing
+        if (typeof docId === 'string' && docId.length > 0) {
+          window.db.collection('chronoverse_saves').doc(docId).set(data).catch(e => console.warn('[SaveSystem] Firebase write error:', e));
+        } else {
+          console.warn('[SaveSystem] Invalid Firebase doc ID, skipping cloud sync. CHRONOVERSE_TENANT:', window.CHRONOVERSE_TENANT);
+        }
       }
-    } catch (e) {}
+    } catch (e) { console.warn('[SaveSystem] Firebase sync error:', e); }
+    
+    // Dispatch save status event for UI toast
+    const result = { success: success, method: method };
+    try {
+      window.dispatchEvent(new CustomEvent('chronoverse-save-status', { detail: result }));
+    } catch (e) { console.warn('[SaveSystem] Failed to dispatch save status event:', e); }
+    
+    return result;
   },
 
   addShards(amount) {
