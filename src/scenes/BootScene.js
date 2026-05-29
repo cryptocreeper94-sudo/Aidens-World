@@ -66,6 +66,33 @@ class BootScene extends Phaser.Scene {
     this.load.image('rift_blue', 'assets/backgrounds/rift_blue.png');
     this.load.image('portal_bg_split_3way', 'assets/ui/portal_bg_split_3way.png');
 
+    // ── NEW BACKGROUNDS (NYC) ──
+    this.load.image('nyc_times_square', 'assets/backgrounds/nyc_times_square.png');
+    this.load.image('nyc_central_park', 'assets/backgrounds/nyc_central_park.png');
+    this.load.image('nyc_brooklyn_bridge', 'assets/backgrounds/nyc_brooklyn_bridge.png');
+    this.load.image('nyc_subway', 'assets/backgrounds/nyc_subway.png');
+    this.load.image('nyc_flatiron', 'assets/backgrounds/nyc_flatiron.png');
+    this.load.image('nyc_chinatown', 'assets/backgrounds/nyc_chinatown.png');
+    this.load.image('nyc_oscorp', 'assets/backgrounds/nyc_oscorp.png');
+    // ── NEW BACKGROUNDS (Space Station) ──
+    this.load.image('space_docking_bay', 'assets/backgrounds/space_docking_bay.png');
+    this.load.image('space_reactor', 'assets/backgrounds/space_reactor.png');
+    this.load.image('space_shield_gen', 'assets/backgrounds/space_shield_gen.png');
+    this.load.image('space_hangar', 'assets/backgrounds/space_hangar.png');
+    this.load.image('space_compactor', 'assets/backgrounds/space_compactor.png');
+    this.load.image('space_turbolaser', 'assets/backgrounds/space_turbolaser.png');
+    this.load.image('space_symbiote_lab', 'assets/backgrounds/space_symbiote_lab.png');
+    this.load.image('space_bridge', 'assets/backgrounds/space_bridge.png');
+    this.load.image('space_throne', 'assets/backgrounds/space_throne.png');
+    // ── NEW BACKGROUNDS (Tatooine) ──
+    this.load.image('tatooine_wastes', 'assets/backgrounds/tatooine_wastes.png');
+    this.load.image('tatooine_farm', 'assets/backgrounds/tatooine_farm.png');
+    this.load.image('tatooine_canyon', 'assets/backgrounds/tatooine_canyon.png');
+    this.load.image('tatooine_jabba', 'assets/backgrounds/tatooine_jabba.png');
+    this.load.image('tatooine_podrace', 'assets/backgrounds/tatooine_podrace.png');
+    this.load.image('tatooine_temple', 'assets/backgrounds/tatooine_temple.png');
+    this.load.image('tatooine_arena', 'assets/backgrounds/tatooine_arena.png');
+
     // ── ENEMIES ──
     this.load.image('enemy_thug', 'assets/enemies/thug.png?v=' + Date.now());
     this.load.image('enemy_trooper', 'assets/enemies/trooper.png?v=' + Date.now());
@@ -108,32 +135,29 @@ class BootScene extends Phaser.Scene {
          const lvl = window.PhaserStartLevel;
          const save = SaveSystem.load();
          
-         // Helper function to check if a world's intro story should play
-         const shouldPlayStory = (levelNum, storyId) => {
-           return !save.storySeen[storyId];
-         };
-         
+         // Check if a world intro story should play based on level number
+         const levelInfo = typeof getLevelInfo === 'function' ? getLevelInfo(lvl) : null;
          let targetScene = 'LevelScene';
          let sceneData = { levelNum: lvl };
          
-         if (lvl === 1 && shouldPlayStory(1, 'world1_intro')) {
-           targetScene = 'StoryScene';
-           sceneData.storyId = 'world1_intro';
-         } else if (lvl === 4 && shouldPlayStory(4, 'world2_intro')) {
-           targetScene = 'StoryScene';
-           sceneData.storyId = 'world2_intro';
-         } else if (lvl === 7 && shouldPlayStory(7, 'world3_intro')) {
-           targetScene = 'StoryScene';
-           sceneData.storyId = 'world3_intro';
-         } else if (lvl === 10 && shouldPlayStory(10, 'world4_intro')) {
-           targetScene = 'StoryScene';
-           sceneData.storyId = 'world4_intro';
+         if (levelInfo && levelInfo.indexInWorld === 0 && levelInfo.world.storyIntro) {
+           const storyId = levelInfo.world.storyIntro;
+           if (!save.storySeen[storyId] && typeof STORY_PANELS !== 'undefined' && STORY_PANELS[storyId]) {
+             targetScene = 'StoryScene';
+             sceneData.storyId = storyId;
+           }
          }
          
          this.scene.start(targetScene, sceneData);
-      } else {
+      } else if (window.PhaserMiniGame) {
+         // Mini-game mode (Rift Invaders, Chrono Match, etc.)
+         const miniScene = window.PhaserMiniGame;
+         window.PhaserMiniGame = null; // Clear the flag
+         this.scene.start(miniScene);
+      } else if (this.scene.manager.keys.HubScene) {
          this.scene.start('HubScene');
       }
+      // If neither exists, game stays on BootScene (shouldn't happen)
     });
   }
 

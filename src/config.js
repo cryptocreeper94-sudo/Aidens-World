@@ -86,6 +86,8 @@ window.launchRiftInvaders = function() {
     container.innerHTML = ''; // Clear any previous game
   }
 
+  window.PhaserMiniGame = 'RiftInvadersScene'; // Tell BootScene which scene to start after loading
+
   window.riftInvadersGame = new Phaser.Game({
     type: Phaser.AUTO,
     parent: 'game-container-invaders',
@@ -105,11 +107,6 @@ window.launchRiftInvaders = function() {
     input: { activePointers: 2, touch: { capture: true } },
     render: { pixelArt: false, antialias: true, roundPixels: true },
     banner: false,
-    callbacks: {
-      postBoot: function(game) {
-        game.scene.start('RiftInvadersScene');
-      }
-    }
   });
 };
 
@@ -131,6 +128,8 @@ window.launchChronoMatch = function(difficulty) {
     container.innerHTML = '';
   }
 
+  window.PhaserMiniGame = 'ChronoMatchScene'; // Tell BootScene which scene to start after loading
+
   window.chronoMatchGame = new Phaser.Game({
     type: Phaser.AUTO,
     parent: 'game-container-match',
@@ -150,12 +149,6 @@ window.launchChronoMatch = function(difficulty) {
     input: { activePointers: 2, touch: { capture: true } },
     render: { pixelArt: false, antialias: true, roundPixels: true },
     banner: false,
-    callbacks: {
-      postBoot: function(game) {
-        // After BootScene loads assets, start ChronoMatch
-        game.scene.start('ChronoMatchScene', { difficulty: difficulty || 'easy' });
-      }
-    }
   });
 };
 

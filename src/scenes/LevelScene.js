@@ -45,13 +45,16 @@ class LevelScene extends Phaser.Scene {
     // Warm up the RNG so close seeds diverge fully
     for (let i = 0; i < 20; i++) this.seededRandom(1);
 
-    // Worlds Collide Background
+    // Worlds Collide Background — use per-level bg from WORLDS data
     this.activeWorld = this.config.worlds[this.config.startWorldIndex];
+    const levelInfo = typeof getLevelInfo === 'function' ? getLevelInfo(this.levelNum) : null;
+    const levelBg = (levelInfo && levelInfo.level && levelInfo.level.bg) ? levelInfo.level.bg : this.activeWorld.bg;
     this.cameras.main.setBackgroundColor('#000000');
     this.cameras.main.fadeIn(300);
     
     // Background — force exact screen dimensions, no scale math
-    this.bg = this.add.image(0, 0, this.activeWorld.bg);
+    const bgKey = this.textures.exists(levelBg) ? levelBg : this.activeWorld.bg;
+    this.bg = this.add.image(0, 0, bgKey);
     this.bg.setOrigin(0, 0);
     this.bg.setDisplaySize(width, height); // Fill ENTIRE canvas including footer area
     this.bg.setDepth(-1);
@@ -824,9 +827,9 @@ class LevelScene extends Phaser.Scene {
       lumesEarned += 1; // 1 Lume per new level clear
       save.lumeHistory['level_' + this.levelNum] = true;
     }
-    // World completion bonus (every 3 levels = 1 world)
-    const worldNum = Math.ceil(this.levelNum / 3);
-    if (this.levelNum % 3 === 0 && !save.lumeHistory['world_' + worldNum]) {
+    // World completion bonus (every 10 levels = 1 world)
+    const worldNum = Math.ceil(this.levelNum / 10);
+    if (this.levelNum % 10 === 0 && !save.lumeHistory['world_' + worldNum]) {
       lumesEarned += 5; // 5 Lumes for completing a world
       save.lumeHistory['world_' + worldNum] = true;
     }
@@ -961,8 +964,30 @@ class LevelScene extends Phaser.Scene {
     nextBtn.on('pointerout', () => nextBtn.setStrokeStyle(3, 0xffffff));
 
     // Clicks
-    homeBtn.on('pointerdown', () => this.exitToHub());
+    homeBtn.on('pointerdown', () => {
+      // Check for story milestone before going home
+      const milestoneId = 'milestone_' + this.levelNum;
+      if (typeof STORY_PANELS !== 'undefined' && STORY_PANELS[milestoneId] && !SaveSystem.isStoryViewed(milestoneId)) {
+        this.scene.start('StoryScene', {
+          storyId: milestoneId,
+          nextScene: 'HubScene',
+          nextData: {},
+        });
+        return;
+      }
+      this.exitToHub();
+    });
     nextBtn.on('pointerdown', () => {
+      // Check for story milestone before continuing
+      const milestoneId = 'milestone_' + this.levelNum;
+      if (typeof STORY_PANELS !== 'undefined' && STORY_PANELS[milestoneId] && !SaveSystem.isStoryViewed(milestoneId)) {
+        this.scene.start('StoryScene', {
+          storyId: milestoneId,
+          nextScene: 'LevelScene',
+          nextData: { levelNum: this.levelNum + 1 },
+        });
+        return;
+      }
       this.scene.restart({ levelNum: this.levelNum + 1 });
     });
   }

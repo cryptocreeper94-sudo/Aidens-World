@@ -54,12 +54,44 @@ class HubScene extends Phaser.Scene {
       letterSpacing: 4,
     }).setOrigin(0.5);
 
-    const cardWidth = Math.min(150, (width - 80) / 4);
+    // World pagination
+    if (!this.worldPage) this.worldPage = 0;
+    const WORLDS_PER_PAGE = 4;
+    const totalWorldPages = Math.ceil(WORLDS.length / WORLDS_PER_PAGE);
+    const wpStart = this.worldPage * WORLDS_PER_PAGE;
+    const wpEnd = Math.min(wpStart + WORLDS_PER_PAGE, WORLDS.length);
+    const visibleWorlds = WORLDS.slice(wpStart, wpEnd);
+
+    const cardWidth = Math.min(150, (width - 100) / visibleWorlds.length);
     const cardGap = 12;
-    const totalCardsWidth = cardWidth * 4 + cardGap * 3;
+    const totalCardsWidth = cardWidth * visibleWorlds.length + cardGap * (visibleWorlds.length - 1);
     const startX = (width - totalCardsWidth) / 2 + cardWidth / 2;
 
-    WORLDS.forEach((world, i) => {
+    // World page left arrow
+    if (this.worldPage > 0) {
+      const wLeftArrow = this.add.text(15, 215, '◀', {
+        fontFamily: 'Arial', fontSize: '24px', color: '#22d3ee',
+      }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+      wLeftArrow.on('pointerdown', () => {
+        SoundFX.play('click');
+        this.worldPage--;
+        this.scene.restart();
+      });
+    }
+
+    // World page right arrow
+    if (this.worldPage < totalWorldPages - 1) {
+      const wRightArrow = this.add.text(width - 15, 215, '▶', {
+        fontFamily: 'Arial', fontSize: '24px', color: '#22d3ee',
+      }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+      wRightArrow.on('pointerdown', () => {
+        SoundFX.play('click');
+        this.worldPage++;
+        this.scene.restart();
+      });
+    }
+
+    visibleWorlds.forEach((world, i) => {
       const cx = startX + i * (cardWidth + cardGap);
       const cy = 215;
       const unlocked = save.unlockedWorlds.includes(world.id);
@@ -90,7 +122,7 @@ class HubScene extends Phaser.Scene {
       // Stars for this world
       const worldStars = world.levels.reduce((acc, lvl) => acc + (save.stars[lvl.id] || 0), 0);
       const maxStars = world.levels.length * 3;
-      this.add.text(cx, cy + 36, `⭐ ${worldStars}/${maxStars}`, {
+      this.add.text(cx, cy + 36, maxStars > 0 ? `⭐ ${worldStars}/${maxStars}` : 'LOCKED', {
         fontFamily: 'Arial',
         fontSize: '10px',
         color: unlocked ? '#fbbf24' : '#444444',
@@ -229,27 +261,95 @@ class HubScene extends Phaser.Scene {
     this.levelGroup.clear(true, true);
     this.selectedWorld = world;
 
-    const lvlY = 318;
-    const lvlSpacing = Math.min(85, (width - 40) / world.levels.length);
-    const lvlStartX = width / 2 - ((world.levels.length - 1) * lvlSpacing) / 2;
+    // Handle empty worlds (locked stubs)
+    if (!world.levels || world.levels.length === 0) {
+      const lvlY = 318;
+      const barBg = this.add.rectangle(width / 2, lvlY + 10, width - 40, 90, 0x0e0f1e, 1);
+      barBg.setStrokeStyle(2, Phaser.Display.Color.HexStringToColor(world.color).color, 0.5);
+      this.levelGroup.add(barBg);
+      const titleText = this.add.text(width / 2, lvlY - 25, `${world.icon} ${world.name}`, {
+        fontFamily: 'Arial Black', fontSize: '15px', color: world.color,
+        stroke: '#000000', strokeThickness: 2,
+      }).setOrigin(0.5);
+      this.levelGroup.add(titleText);
+      const comingSoon = this.add.text(width / 2, lvlY + 12, '🔒 COMING SOON', {
+        fontFamily: 'Arial Black', fontSize: '18px', color: '#555555',
+      }).setOrigin(0.5);
+      this.levelGroup.add(comingSoon);
+      return;
+    }
 
-    // Background bar for level select — fully opaque
+    // Pagination state
+    if (!this.levelPage) this.levelPage = 0;
+    if (this._lastWorldId !== world.id) {
+      this.levelPage = 0;
+      this._lastWorldId = world.id;
+    }
+
+    const LEVELS_PER_PAGE = 5;
+    const totalPages = Math.ceil(world.levels.length / LEVELS_PER_PAGE);
+    const page = Math.min(this.levelPage, totalPages - 1);
+    const startIdx = page * LEVELS_PER_PAGE;
+    const endIdx = Math.min(startIdx + LEVELS_PER_PAGE, world.levels.length);
+    const visibleLevels = world.levels.slice(startIdx, endIdx);
+
+    const lvlY = 318;
+    const lvlSpacing = Math.min(85, (width - 120) / visibleLevels.length);
+    const lvlStartX = width / 2 - ((visibleLevels.length - 1) * lvlSpacing) / 2;
+
+    // Background bar for level select
     const barBg = this.add.rectangle(width / 2, lvlY + 10, width - 40, 90, 0x0e0f1e, 1);
     barBg.setStrokeStyle(2, Phaser.Display.Color.HexStringToColor(world.color).color, 0.5);
     this.levelGroup.add(barBg);
 
     // World title
     const titleText = this.add.text(width / 2, lvlY - 25, `${world.icon} ${world.name}`, {
-      fontFamily: 'Arial Black',
-      fontSize: '15px',
-      color: world.color,
-      stroke: '#000000',
-      strokeThickness: 2,
+      fontFamily: 'Arial Black', fontSize: '15px', color: world.color,
+      stroke: '#000000', strokeThickness: 2,
     }).setOrigin(0.5);
     this.levelGroup.add(titleText);
 
-    world.levels.forEach((level, i) => {
-      const cx = lvlStartX + i * lvlSpacing;
+    // Page indicator
+    if (totalPages > 1) {
+      const pageText = this.add.text(width / 2, lvlY + 60, `Page ${page + 1} / ${totalPages}`, {
+        fontFamily: 'Arial', fontSize: '10px', color: '#666666',
+      }).setOrigin(0.5);
+      this.levelGroup.add(pageText);
+    }
+
+    // Left arrow
+    if (page > 0) {
+      const leftArrow = this.add.text(30, lvlY + 12, '◀', {
+        fontFamily: 'Arial', fontSize: '28px', color: world.color,
+      }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+      leftArrow.on('pointerdown', () => {
+        SoundFX.play('click');
+        this.levelPage = page - 1;
+        this.selectWorld(world);
+      });
+      leftArrow.on('pointerover', () => leftArrow.setScale(1.3));
+      leftArrow.on('pointerout', () => leftArrow.setScale(1));
+      this.levelGroup.add(leftArrow);
+    }
+
+    // Right arrow
+    if (page < totalPages - 1) {
+      const rightArrow = this.add.text(width - 30, lvlY + 12, '▶', {
+        fontFamily: 'Arial', fontSize: '28px', color: world.color,
+      }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+      rightArrow.on('pointerdown', () => {
+        SoundFX.play('click');
+        this.levelPage = page + 1;
+        this.selectWorld(world);
+      });
+      rightArrow.on('pointerover', () => rightArrow.setScale(1.3));
+      rightArrow.on('pointerout', () => rightArrow.setScale(1));
+      this.levelGroup.add(rightArrow);
+    }
+
+    visibleLevels.forEach((level, vi) => {
+      const i = startIdx + vi; // Actual index in world.levels
+      const cx = lvlStartX + vi * lvlSpacing;
       const cy = lvlY + 12;
 
       const prevLevelId = i > 0 ? world.levels[i - 1].id : null;
@@ -258,7 +358,7 @@ class HubScene extends Phaser.Scene {
 
       const color = Phaser.Display.Color.HexStringToColor(world.color).color;
 
-      // SOLID level circle — fully opaque
+      // SOLID level circle
       const lvlCircle = this.add.circle(cx, cy, 26, playable ? 0x15162a : 0x0d0d18, 1);
       lvlCircle.setStrokeStyle(playable ? 3 : 2, color, playable ? 1 : 0.3);
       this.levelGroup.add(lvlCircle);
@@ -277,15 +377,13 @@ class HubScene extends Phaser.Scene {
       // Stars below
       const stars = save.stars[level.id] || 0;
       const starText = this.add.text(cx, cy + 32, '⭐'.repeat(stars) + '☆'.repeat(3 - stars), {
-        fontSize: '10px',
-        color: '#fbbf24',
+        fontSize: '10px', color: '#fbbf24',
       }).setOrigin(0.5);
       this.levelGroup.add(starText);
 
       // Level name
       const nameText = this.add.text(cx, cy + 46, level.name, {
-        fontFamily: 'Arial',
-        fontSize: '9px',
+        fontFamily: 'Arial', fontSize: '9px',
         color: playable ? '#cccccc' : '#444444',
       }).setOrigin(0.5);
       this.levelGroup.add(nameText);
@@ -294,9 +392,16 @@ class HubScene extends Phaser.Scene {
         lvlCircle.setInteractive({ useHandCursor: true });
         lvlCircle.on('pointerdown', () => {
           // Calculate sequential level number across all worlds
-          const worldIdx = WORLDS.indexOf(world);
-          const levelNum = worldIdx * world.levels.length + i + 1;
-          
+          let levelNum = 0;
+          for (let w = 0; w < WORLDS.length; w++) {
+            if (WORLDS[w].id === world.id) {
+              levelNum += i + 1;
+              break;
+            }
+            levelNum += WORLDS[w].levels.length;
+          }
+
+          // Check for story intro on first level of world
           if (i === 0 && !SaveSystem.isStoryViewed(world.storyIntro) && STORY_PANELS[world.storyIntro]) {
             this.scene.start('StoryScene', {
               storyId: world.storyIntro,
