@@ -1220,6 +1220,34 @@
       </div>
     </div>
 
+    <!-- ── Trophy Room ── -->
+    <div class="app-section-title" style="margin-top:10px;">🏆 Trophy Room</div>
+    <div id="trophy-room" style="margin:0 auto 20px; max-width:500px; padding:0 10px;">
+      <div style="background:rgba(18,18,35,0.9); border:1px solid rgba(251,191,36,0.15); border-radius:20px; padding:16px; backdrop-filter:blur(10px);">
+        <div id="trophy-grid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px;">
+          <!-- Populated by JS -->
+        </div>
+        <button onclick="viewAllTrophies()" style="margin-top:12px; width:100%; padding:10px; background:rgba(251,191,36,0.08); border:1px solid rgba(251,191,36,0.2); border-radius:10px; color:#fbbf24; font-size:12px; font-weight:800; cursor:pointer;">View All & Print Certificate</button>
+      </div>
+    </div>
+
+    <!-- ── Creative Tools ── -->
+    <div class="app-section-title" style="margin-top:10px;">🎨 Creative Tools</div>
+    <div style="margin:0 auto 20px; max-width:500px; padding:0 10px; display:flex; gap:10px;">
+      <!-- Level Editor -->
+      <div onclick="openLevelEditor()" style="flex:1; background:rgba(34,211,238,0.06); border:1px solid rgba(34,211,238,0.2); border-radius:16px; padding:16px; text-align:center; cursor:pointer; transition:all 0.2s;">
+        <div style="font-size:32px; margin-bottom:6px;">🏗️</div>
+        <div style="color:#22d3ee; font-size:13px; font-weight:800;">Level Editor</div>
+        <div style="color:#64748b; font-size:10px; font-weight:600; margin-top:4px;">Drag & drop blocks, spikes, portals</div>
+      </div>
+      <!-- Lume Code Lab -->
+      <div onclick="openCodeLab()" style="flex:1; background:rgba(168,85,247,0.06); border:1px solid rgba(168,85,247,0.2); border-radius:16px; padding:16px; text-align:center; cursor:pointer; transition:all 0.2s;">
+        <div style="font-size:32px; margin-bottom:6px;">💻</div>
+        <div style="color:#a855f7; font-size:13px; font-weight:800;">Code Lab</div>
+        <div style="color:#64748b; font-size:10px; font-weight:600; margin-top:4px;">Learn coding with Lume puzzles</div>
+      </div>
+    </div>
+
     <!-- ── Leaderboard ── -->
     <div class="app-section-title" style="margin-top:10px;">🏆 Leaderboard</div>
     <div id="leaderboard-section" style="margin:0 auto 20px; max-width:500px; padding:0 10px;">
@@ -1529,6 +1557,102 @@
         <button onclick="closeRaceResults()" style="flex:1; padding:14px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.04); color:#94a3b8; border-radius:12px; font-size:14px; font-weight:800; cursor:pointer;">Done</button>
         <button onclick="rematch()" style="flex:1; padding:14px; border:none; background:linear-gradient(135deg,#22d3ee,#6366f1); color:white; border-radius:12px; font-size:14px; font-weight:800; cursor:pointer;">🔄 Rematch</button>
       </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════ -->
+  <!--   LEVEL EDITOR                     -->
+  <!-- ═══════════════════════════════════ -->
+  <div id="level-editor-modal" style="display:none; position:fixed; inset:0; z-index:9200; background:rgba(5,5,20,0.98); overflow-y:auto;">
+    <div style="max-width:700px; margin:0 auto; padding:20px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h2 style="color:#22d3ee; font-size:22px; font-weight:900;">🏗️ Level Editor</h2>
+        <button onclick="closeLevelEditor()" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:8px 16px; color:white; font-size:13px; font-weight:800; cursor:pointer;">✕ Close</button>
+      </div>
+
+      <!-- Tool Palette -->
+      <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px;">
+        <button class="editor-tool active" data-tool="block" onclick="selectEditorTool('block',this)" style="padding:8px 14px; border-radius:8px; border:2px solid #10b981; background:rgba(16,185,129,0.15); color:#10b981; font-size:12px; font-weight:800; cursor:pointer;">🟩 Block</button>
+        <button class="editor-tool" data-tool="spike" onclick="selectEditorTool('spike',this)" style="padding:8px 14px; border-radius:8px; border:1px solid rgba(239,68,68,0.3); background:rgba(239,68,68,0.08); color:#ef4444; font-size:12px; font-weight:800; cursor:pointer;">🔺 Spike</button>
+        <button class="editor-tool" data-tool="portal" onclick="selectEditorTool('portal',this)" style="padding:8px 14px; border-radius:8px; border:1px solid rgba(168,85,247,0.3); background:rgba(168,85,247,0.08); color:#a855f7; font-size:12px; font-weight:800; cursor:pointer;">🌀 Portal</button>
+        <button class="editor-tool" data-tool="shard" onclick="selectEditorTool('shard',this)" style="padding:8px 14px; border-radius:8px; border:1px solid rgba(251,191,36,0.3); background:rgba(251,191,36,0.08); color:#fbbf24; font-size:12px; font-weight:800; cursor:pointer;">💎 Shard</button>
+        <button class="editor-tool" data-tool="eraser" onclick="selectEditorTool('eraser',this)" style="padding:8px 14px; border-radius:8px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.04); color:#94a3b8; font-size:12px; font-weight:800; cursor:pointer;">🧹 Eraser</button>
+      </div>
+
+      <!-- Grid Canvas -->
+      <div id="editor-grid" style="display:grid; grid-template-columns:repeat(20,1fr); gap:1px; background:rgba(255,255,255,0.03); border:2px solid rgba(34,211,238,0.2); border-radius:12px; overflow:hidden; aspect-ratio:2/1; touch-action:none;">
+        <!-- 200 cells generated by JS -->
+      </div>
+
+      <!-- Level Name -->
+      <div style="margin-top:16px; display:flex; gap:10px;">
+        <input type="text" id="editor-level-name" placeholder="Level name..." maxlength="30" style="flex:1; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:10px; color:white; padding:10px 14px; font-size:13px; font-family:'Nunito',sans-serif; outline:none;" />
+      </div>
+
+      <!-- Actions -->
+      <div style="margin-top:12px; display:flex; gap:8px;">
+        <button onclick="clearEditor()" style="flex:1; padding:12px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.04); color:#94a3b8; border-radius:10px; font-size:13px; font-weight:800; cursor:pointer;">🗑️ Clear</button>
+        <button onclick="testLevel()" style="flex:1; padding:12px; border:none; background:linear-gradient(135deg,#10b981,#22d3ee); color:white; border-radius:10px; font-size:13px; font-weight:800; cursor:pointer;">▶️ Test</button>
+        <button onclick="saveLevel()" style="flex:1; padding:12px; border:none; background:linear-gradient(135deg,#22d3ee,#6366f1); color:white; border-radius:10px; font-size:13px; font-weight:800; cursor:pointer;">💾 Save</button>
+        <button onclick="shareLevel()" style="flex:1; padding:12px; border:none; background:linear-gradient(135deg,#a855f7,#ec4899); color:white; border-radius:10px; font-size:13px; font-weight:800; cursor:pointer;">📤 Share</button>
+      </div>
+
+      <!-- Saved Levels -->
+      <div style="margin-top:20px;">
+        <div style="color:#64748b; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">Your Levels</div>
+        <div id="saved-levels-list" style="display:flex; flex-direction:column; gap:6px;">
+          <div style="color:#475569; font-size:12px;">No saved levels yet</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════ -->
+  <!--   LUME CODE LAB                    -->
+  <!-- ═══════════════════════════════════ -->
+  <div id="code-lab-modal" style="display:none; position:fixed; inset:0; z-index:9200; background:rgba(5,5,20,0.98); overflow-y:auto;">
+    <div style="max-width:600px; margin:0 auto; padding:20px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h2 style="color:#a855f7; font-size:22px; font-weight:900;">💻 Lume Code Lab</h2>
+        <button onclick="closeCodeLab()" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:8px 16px; color:white; font-size:13px; font-weight:800; cursor:pointer;">✕ Close</button>
+      </div>
+
+      <p style="color:#94a3b8; font-size:13px; margin-bottom:20px; font-weight:600; line-height:1.6;">Learn to code by solving puzzles! Write commands to move your hero through each challenge.</p>
+
+      <!-- Puzzle Selector -->
+      <div id="code-puzzles" style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px;">
+        <!-- Populated by JS -->
+      </div>
+
+      <!-- Code Editor -->
+      <div id="code-editor-area" style="display:none;">
+        <div id="puzzle-description" style="background:rgba(168,85,247,0.08); border:1px solid rgba(168,85,247,0.2); border-radius:12px; padding:14px; margin-bottom:12px;">
+          <div id="puzzle-title" style="color:#a855f7; font-size:14px; font-weight:900; margin-bottom:4px;"></div>
+          <div id="puzzle-hint" style="color:#94a3b8; font-size:12px; font-weight:600;"></div>
+        </div>
+        <textarea id="code-input" spellcheck="false" style="width:100%; height:140px; background:rgba(0,0,0,0.4); border:2px solid rgba(168,85,247,0.2); border-radius:12px; color:#10b981; padding:14px; font-family:'JetBrains Mono',monospace; font-size:13px; resize:none; outline:none; box-sizing:border-box;" placeholder="// Write your code here..."></textarea>
+        <div style="display:flex; gap:8px; margin-top:10px;">
+          <button onclick="resetPuzzle()" style="flex:1; padding:12px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.04); color:#94a3b8; border-radius:10px; font-size:13px; font-weight:800; cursor:pointer;">↩️ Reset</button>
+          <button onclick="runCode()" style="flex:2; padding:12px; border:none; background:linear-gradient(135deg,#a855f7,#6366f1); color:white; border-radius:10px; font-size:13px; font-weight:800; cursor:pointer;">▶️ Run Code</button>
+        </div>
+        <div id="code-output" style="margin-top:10px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.05); border-radius:10px; padding:12px; font-family:'JetBrains Mono',monospace; font-size:12px; color:#94a3b8; min-height:40px; white-space:pre-wrap;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════ -->
+  <!--   TROPHY ROOM FULLSCREEN           -->
+  <!-- ═══════════════════════════════════ -->
+  <div id="trophy-fullscreen" style="display:none; position:fixed; inset:0; z-index:9200; background:rgba(5,5,20,0.98); overflow-y:auto;">
+    <div style="max-width:600px; margin:0 auto; padding:20px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h2 style="color:#fbbf24; font-size:22px; font-weight:900;">🏆 All Trophies</h2>
+        <button onclick="document.getElementById('trophy-fullscreen').style.display='none'" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:8px 16px; color:white; font-size:13px; font-weight:800; cursor:pointer;">✕ Close</button>
+      </div>
+      <div id="trophy-full-grid" style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px;">
+        <!-- Populated by JS -->
+      </div>
+      <button onclick="printTrophyCertificate()" style="margin-top:20px; width:100%; padding:14px; border:none; background:linear-gradient(135deg,#fbbf24,#f59e0b); color:#000; border-radius:12px; font-size:14px; font-weight:900; cursor:pointer;">🖨️ Print Achievement Certificate</button>
     </div>
   </div>
 
@@ -3370,6 +3494,245 @@
       if (win) { win.document.write(certHtml); win.document.close(); }
     }
 
+    // ── LEVEL EDITOR ──
+    var _editorTool = 'block';
+    var _editorGrid = [];
+    var _isEditorPainting = false;
+
+    var TOOL_COLORS = { block: '#10b981', spike: '#ef4444', portal: '#a855f7', shard: '#fbbf24', eraser: 'transparent' };
+    var TOOL_ICONS = { block: '🟩', spike: '🔺', portal: '🌀', shard: '💎', eraser: '' };
+
+    function openLevelEditor() {
+      document.getElementById('level-editor-modal').style.display = 'block';
+      initEditorGrid();
+      renderSavedLevels();
+    }
+    function closeLevelEditor() { document.getElementById('level-editor-modal').style.display = 'none'; }
+
+    function selectEditorTool(tool, btn) {
+      _editorTool = tool;
+      document.querySelectorAll('.editor-tool').forEach(function(b) {
+        b.style.borderWidth = '1px';
+        b.style.opacity = '0.6';
+      });
+      btn.style.borderWidth = '2px';
+      btn.style.opacity = '1';
+    }
+
+    function initEditorGrid() {
+      var grid = document.getElementById('editor-grid');
+      _editorGrid = new Array(200).fill('empty');
+      // Set bottom row as blocks (floor)
+      for (var i = 180; i < 200; i++) _editorGrid[i] = 'block';
+      renderEditorGrid(grid);
+    }
+
+    function renderEditorGrid(grid) {
+      var html = '';
+      for (var i = 0; i < 200; i++) {
+        var cell = _editorGrid[i];
+        var bg = cell !== 'empty' ? TOOL_COLORS[cell] : 'rgba(255,255,255,0.02)';
+        var icon = cell !== 'empty' ? TOOL_ICONS[cell] : '';
+        html += '<div data-idx="' + i + '" style="aspect-ratio:1; background:' + bg + '; display:flex; align-items:center; justify-content:center; font-size:10px; cursor:crosshair; user-select:none; transition:background 0.1s;" onmousedown="editorPaint(' + i + '); _isEditorPainting=true;" onmouseenter="if(_isEditorPainting)editorPaint(' + i + ')" ontouchstart="editorPaint(' + i + '); _isEditorPainting=true;">' + icon + '</div>';
+      }
+      grid.innerHTML = html;
+    }
+
+    document.addEventListener('mouseup', function() { _isEditorPainting = false; });
+    document.addEventListener('touchend', function() { _isEditorPainting = false; });
+
+    function editorPaint(idx) {
+      _editorGrid[idx] = _editorTool === 'eraser' ? 'empty' : _editorTool;
+      var cell = document.querySelector('[data-idx="' + idx + '"]');
+      if (cell) {
+        var t = _editorGrid[idx];
+        cell.style.background = t !== 'empty' ? TOOL_COLORS[t] : 'rgba(255,255,255,0.02)';
+        cell.textContent = t !== 'empty' ? TOOL_ICONS[t] : '';
+      }
+    }
+
+    function clearEditor() { initEditorGrid(); }
+
+    function saveLevel() {
+      var name = document.getElementById('editor-level-name').value.trim() || 'Untitled Level';
+      var levels = JSON.parse(window.localStore.getItem('chronoverse_user_levels') || '[]');
+      levels.push({ name: name, grid: _editorGrid.slice(), date: new Date().toISOString() });
+      window.localStore.setItem('chronoverse_user_levels', JSON.stringify(levels));
+      renderSavedLevels();
+    }
+
+    function shareLevel() {
+      var name = document.getElementById('editor-level-name').value.trim() || 'Untitled';
+      var data = btoa(JSON.stringify({ name: name, grid: _editorGrid }));
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(data).then(function() { alert('Level code copied! Share it with friends.'); });
+      } else { prompt('Copy this level code:', data); }
+    }
+
+    function testLevel() {
+      alert('Test mode coming soon! Your level has ' + _editorGrid.filter(function(c) { return c !== 'empty'; }).length + ' objects.');
+    }
+
+    function renderSavedLevels() {
+      var list = document.getElementById('saved-levels-list');
+      var levels = JSON.parse(window.localStore.getItem('chronoverse_user_levels') || '[]');
+      if (levels.length === 0) { list.innerHTML = '<div style="color:#475569; font-size:12px;">No saved levels yet</div>'; return; }
+      list.innerHTML = levels.map(function(l, i) {
+        return '<div style="display:flex; align-items:center; gap:10px; padding:8px; background:rgba(255,255,255,0.03); border-radius:8px;">' +
+          '<span style="color:#22d3ee; font-size:13px; font-weight:700; flex:1;">' + l.name + '</span>' +
+          '<button onclick="loadSavedLevel(' + i + ')" style="background:rgba(34,211,238,0.1); border:1px solid rgba(34,211,238,0.2); border-radius:6px; padding:4px 10px; color:#22d3ee; font-size:10px; font-weight:800; cursor:pointer;">Load</button>' +
+          '<button onclick="deleteSavedLevel(' + i + ')" style="background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.2); border-radius:6px; padding:4px 10px; color:#ef4444; font-size:10px; font-weight:800; cursor:pointer;">✕</button></div>';
+      }).join('');
+    }
+
+    function loadSavedLevel(idx) {
+      var levels = JSON.parse(window.localStore.getItem('chronoverse_user_levels') || '[]');
+      if (levels[idx]) { _editorGrid = levels[idx].grid; document.getElementById('editor-level-name').value = levels[idx].name; renderEditorGrid(document.getElementById('editor-grid')); }
+    }
+
+    function deleteSavedLevel(idx) {
+      var levels = JSON.parse(window.localStore.getItem('chronoverse_user_levels') || '[]');
+      levels.splice(idx, 1);
+      window.localStore.setItem('chronoverse_user_levels', JSON.stringify(levels));
+      renderSavedLevels();
+    }
+
+    // ── LUME CODE LAB ──
+    var CODE_PUZZLES = [
+      { id: 1, title: 'Hello Chronoverse', hint: 'Use print("Hello!") to say hello', solution: 'print', completed: false },
+      { id: 2, title: 'Move Right', hint: 'Use move(5) to move the hero 5 steps right', solution: 'move', completed: false },
+      { id: 3, title: 'Jump!', hint: 'Use jump() to make the hero jump', solution: 'jump', completed: false },
+      { id: 4, title: 'Loop It', hint: 'Use repeat(3, "jump") to jump 3 times', solution: 'repeat', completed: false },
+      { id: 5, title: 'Variables', hint: 'Set speed = 10, then use move(speed)', solution: 'speed', completed: false },
+      { id: 6, title: 'If Statement', hint: 'Use if(blocked) { jump() }', solution: 'if', completed: false },
+      { id: 7, title: 'Collect Shards', hint: 'Use collect() when on a shard', solution: 'collect', completed: false },
+      { id: 8, title: 'Functions', hint: 'Define: function dash() { move(3); jump() }', solution: 'function', completed: false },
+      { id: 9, title: 'While Loop', hint: 'Use while(!finished) { move(1) }', solution: 'while', completed: false },
+      { id: 10, title: 'Array Power', hint: 'Create moves = ["jump","move","jump"] and run them', solution: 'moves', completed: false },
+    ];
+
+    var _currentPuzzle = null;
+
+    function openCodeLab() {
+      document.getElementById('code-lab-modal').style.display = 'block';
+      loadPuzzleStates();
+      renderPuzzles();
+    }
+    function closeCodeLab() { document.getElementById('code-lab-modal').style.display = 'none'; }
+
+    function loadPuzzleStates() {
+      var completed = JSON.parse(window.localStore.getItem('codelab_completed') || '[]');
+      CODE_PUZZLES.forEach(function(p) { p.completed = completed.includes(p.id); });
+    }
+
+    function renderPuzzles() {
+      var container = document.getElementById('code-puzzles');
+      container.innerHTML = CODE_PUZZLES.map(function(p) {
+        var color = p.completed ? '#10b981' : '#a855f7';
+        var icon = p.completed ? '✅' : '🔮';
+        return '<div onclick="openPuzzle(' + p.id + ')" style="display:flex; align-items:center; gap:12px; padding:12px; background:rgba(168,85,247,0.05); border:1px solid ' + (p.completed ? 'rgba(16,185,129,0.2)' : 'rgba(168,85,247,0.15)') + '; border-radius:12px; cursor:pointer;">' +
+          '<span style="font-size:20px;">' + icon + '</span>' +
+          '<div style="flex:1;"><div style="color:' + color + '; font-size:13px; font-weight:800;">Puzzle ' + p.id + ': ' + p.title + '</div><div style="color:#64748b; font-size:11px; font-weight:600;">' + p.hint + '</div></div>' +
+          '<span style="color:' + color + '; font-size:18px;">→</span></div>';
+      }).join('');
+    }
+
+    function openPuzzle(id) {
+      _currentPuzzle = CODE_PUZZLES.find(function(p) { return p.id === id; });
+      if (!_currentPuzzle) return;
+      document.getElementById('code-editor-area').style.display = 'block';
+      document.getElementById('puzzle-title').textContent = 'Puzzle ' + _currentPuzzle.id + ': ' + _currentPuzzle.title;
+      document.getElementById('puzzle-hint').textContent = _currentPuzzle.hint;
+      document.getElementById('code-input').value = '';
+      document.getElementById('code-output').textContent = '// Output will appear here';
+    }
+
+    function resetPuzzle() {
+      document.getElementById('code-input').value = '';
+      document.getElementById('code-output').textContent = '// Output will appear here';
+    }
+
+    function runCode() {
+      var code = document.getElementById('code-input').value;
+      var output = document.getElementById('code-output');
+      if (!_currentPuzzle) return;
+
+      var logs = [];
+      var heroX = 0, heroY = 0;
+      var sandbox = {
+        print: function(msg) { logs.push('> ' + msg); },
+        move: function(n) { heroX += (n || 1); logs.push('Hero moved to x=' + heroX); },
+        jump: function() { heroY += 1; logs.push('Hero jumped! y=' + heroY); setTimeout(function() { heroY--; }, 300); },
+        collect: function() { logs.push('Shard collected! +10 shards'); },
+        repeat: function(n, cmd) { for (var i = 0; i < n; i++) { if (sandbox[cmd]) sandbox[cmd](); } },
+      };
+
+      try {
+        var fn = new Function('print','move','jump','collect','repeat', code);
+        fn(sandbox.print, sandbox.move, sandbox.jump, sandbox.collect, sandbox.repeat);
+        if (code.toLowerCase().indexOf(_currentPuzzle.solution) !== -1) {
+          logs.push('\n✅ PUZZLE SOLVED! +50 XP');
+          var completed = JSON.parse(window.localStore.getItem('codelab_completed') || '[]');
+          if (!completed.includes(_currentPuzzle.id)) { completed.push(_currentPuzzle.id); window.localStore.setItem('codelab_completed', JSON.stringify(completed)); }
+          _currentPuzzle.completed = true;
+          renderPuzzles();
+        }
+      } catch(e) { logs.push('❌ Error: ' + e.message); }
+
+      output.textContent = logs.join('\n') || '(no output)';
+    }
+
+    // ── TROPHY ROOM ──
+    var TROPHIES = [
+      { id: 'first_level', icon: '⭐', name: 'First Steps', desc: 'Complete Level 1', check: function(s) { return (s.maxLevelUnlocked || 1) > 1; } },
+      { id: 'five_levels', icon: '🏅', name: 'Explorer', desc: 'Complete 5 levels', check: function(s) { return (s.maxLevelUnlocked || 1) > 5; } },
+      { id: 'ten_levels', icon: '🎖️', name: 'Adventurer', desc: 'Complete 10 levels', check: function(s) { return (s.maxLevelUnlocked || 1) > 10; } },
+      { id: 'twenty_levels', icon: '👑', name: 'Champion', desc: 'Complete 20 levels', check: function(s) { return (s.maxLevelUnlocked || 1) > 20; } },
+      { id: 'all_levels', icon: '💎', name: 'Chronoverse Master', desc: 'Complete all 40 levels', check: function(s) { return (s.maxLevelUnlocked || 1) > 40; } },
+      { id: 'shard_100', icon: '💰', name: 'Shard Collector', desc: 'Collect 100 shards', check: function(s) { return (s.totalShards || 0) >= 100; } },
+      { id: 'shard_500', icon: '🏦', name: 'Shard Hoarder', desc: 'Collect 500 shards', check: function(s) { return (s.totalShards || 0) >= 500; } },
+      { id: 'stars_10', icon: '🌟', name: 'Star Gazer', desc: 'Earn 10 stars', check: function(s) { return (s.totalStars || 0) >= 10; } },
+      { id: 'stars_50', icon: '✨', name: 'Star Commander', desc: 'Earn 50 stars', check: function(s) { return (s.totalStars || 0) >= 50; } },
+      { id: 'daily_first', icon: '📅', name: 'Daily Challenger', desc: 'Complete a daily challenge', check: function(s) { return Object.keys(s).some(function(k) { return k.startsWith('daily_'); }); } },
+      { id: 'codelab_first', icon: '💻', name: 'Code Novice', desc: 'Complete a Code Lab puzzle', check: function() { return (JSON.parse(window.localStore.getItem('codelab_completed') || '[]')).length > 0; } },
+      { id: 'editor_first', icon: '🏗️', name: 'Architect', desc: 'Create a level in the editor', check: function() { return (JSON.parse(window.localStore.getItem('chronoverse_user_levels') || '[]')).length > 0; } },
+    ];
+
+    function renderTrophyRoom() {
+      var grid = document.getElementById('trophy-grid');
+      if (!grid) return;
+      var save = SaveSystem.load();
+      grid.innerHTML = TROPHIES.map(function(t) {
+        var earned = t.check(save);
+        return '<div style="text-align:center; padding:8px; border-radius:10px; background:' + (earned ? 'rgba(251,191,36,0.1)' : 'rgba(255,255,255,0.02)') + '; border:1px solid ' + (earned ? 'rgba(251,191,36,0.2)' : 'rgba(255,255,255,0.04)') + '; opacity:' + (earned ? '1' : '0.35') + ';">' +
+          '<div style="font-size:24px;">' + t.icon + '</div>' +
+          '<div style="color:' + (earned ? '#fbbf24' : '#475569') + '; font-size:9px; font-weight:700; margin-top:2px;">' + t.name + '</div></div>';
+      }).join('');
+    }
+
+    function viewAllTrophies() {
+      var grid = document.getElementById('trophy-full-grid');
+      var save = SaveSystem.load();
+      grid.innerHTML = TROPHIES.map(function(t) {
+        var earned = t.check(save);
+        return '<div style="text-align:center; padding:16px; border-radius:14px; background:' + (earned ? 'rgba(251,191,36,0.1)' : 'rgba(255,255,255,0.02)') + '; border:1px solid ' + (earned ? 'rgba(251,191,36,0.25)' : 'rgba(255,255,255,0.05)') + ';">' +
+          '<div style="font-size:36px; margin-bottom:6px;">' + t.icon + '</div>' +
+          '<div style="color:' + (earned ? '#fbbf24' : '#475569') + '; font-size:13px; font-weight:800;">' + t.name + '</div>' +
+          '<div style="color:#64748b; font-size:10px; font-weight:600; margin-top:4px;">' + t.desc + '</div>' +
+          (earned ? '<div style="color:#10b981; font-size:10px; font-weight:800; margin-top:6px;">✅ EARNED</div>' : '<div style="color:#475569; font-size:10px; font-weight:700; margin-top:6px;">🔒 Locked</div>') +
+          '</div>';
+      }).join('');
+      document.getElementById('trophy-fullscreen').style.display = 'block';
+    }
+
+    function printTrophyCertificate() {
+      var save = SaveSystem.load();
+      var earned = TROPHIES.filter(function(t) { return t.check(save); });
+      var name = (window.CHRONOVERSE_TENANT || 'Player').charAt(0).toUpperCase() + (window.CHRONOVERSE_TENANT || 'Player').slice(1);
+      var desc = 'Has earned ' + earned.length + ' of ' + TROPHIES.length + ' achievements including: ' + earned.map(function(t) { return t.icon + ' ' + t.name; }).join(', ');
+      generateCertificate(name, desc);
+    }
+
     // ── Race Mode Functions ──
     var _pendingChallenge = null;
 
@@ -3694,6 +4057,7 @@
       initDifficulty();
       updateDailyChallenge();
       renderWorldMap();
+      renderTrophyRoom();
       setTimeout(checkOnboarding, 500);
       setTimeout(function() {
         loadLeaderboard();
