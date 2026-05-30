@@ -2,7 +2,24 @@
    SAVE SYSTEM — localStorage persistence
    ======================================== */
 
-const HERO_NAME = 'Aiden';
+// Dynamic hero name — reads from localStorage or tenant, falls back to 'Aiden'
+function getHeroName() {
+  try {
+    const stored = window.localStore.getItem('ChronoversePlayerName');
+    if (stored) return stored;
+  } catch(e) {}
+  if (window.CHRONOVERSE_TENANT) {
+    const t = window.CHRONOVERSE_TENANT;
+    return t.charAt(0).toUpperCase() + t.slice(1);
+  }
+  return 'Aiden';
+}
+// Keep HERO_NAME as a getter so it's always current
+Object.defineProperty(window, 'HERO_NAME', { get: getHeroName, configurable: true });
+// Also expose as module-level variable for existing references
+let HERO_NAME = 'Aiden'; // Initial fallback, updated by updateHeroName()
+function updateHeroName() { HERO_NAME = getHeroName(); }
+
 let currentProfile = 'Default';
 try { currentProfile = window.localStore.getItem('ChronoverseActiveProfile') || 'Default'; } catch(e) { console.warn('[SaveSystem] Failed to read active profile:', e); }
 
@@ -26,7 +43,10 @@ const SaveSystem = {
     }
   },
   getKey() { 
-    return currentProfile === 'Default' ? 'ChronoverseSave' : 'ChronoverseSave_' + currentProfile; 
+    // Tenant-aware save key: each subdomain user gets their own save slot
+    const tenant = (window.CHRONOVERSE_TENANT || '').toLowerCase();
+    const base = tenant ? 'ChronoverseSave_' + tenant : 'ChronoverseSave';
+    return currentProfile === 'Default' ? base : base + '_' + currentProfile; 
   },
   getDefault() {
     return {

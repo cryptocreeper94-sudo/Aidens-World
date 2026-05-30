@@ -10,6 +10,8 @@ class HubScene extends Phaser.Scene {
 
   create() {
     const { width, height } = this.cameras.main;
+    // Ensure HERO_NAME is current for this session
+    if (typeof updateHeroName === 'function') updateHeroName();
     const save = SaveSystem.load();
 
     this.cameras.main.fadeIn(500);

@@ -2321,6 +2321,8 @@
       
       // Expose globally for SaveSystem
       window.CHRONOVERSE_TENANT = tenantName;
+      // Update HERO_NAME for the Phaser game engine
+      if (typeof updateHeroName === 'function') updateHeroName();
       if (window.syncFirebaseSave) await window.syncFirebaseSave(tenantName);
 
       const hour = new Date().getHours();

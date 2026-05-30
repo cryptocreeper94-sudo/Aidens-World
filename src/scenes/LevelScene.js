@@ -10,7 +10,7 @@ class LevelScene extends Phaser.Scene {
   init(data) {
     this.levelNum = data.levelNum || 1;
     this.config = LevelData.generateConfig(this.levelNum);
-    this.activeHero = localStorage.getItem('ChronoverseActiveHero') || 'spider_hero';
+    try { this.activeHero = window.localStore.getItem('ChronoverseActiveHero') || 'spider_hero'; } catch(e) { this.activeHero = 'spider_hero'; }
   }
 
   create() {
@@ -33,9 +33,8 @@ class LevelScene extends Phaser.Scene {
     this.echoesCollected = 0; // Echoes collected THIS level
     this.riftPowerUsed = false; // Has the rift power been used this level?
     
-    let initialSaveStr = localStorage.getItem('ChronoverseSave');
-    let initialSave = initialSaveStr ? JSON.parse(initialSaveStr) : {};
-    this.baseShards = initialSave.totalShards || 0;
+    let initialSave = SaveSystem.load();
+    this.baseShards = initialSave.totalShards || initialSave.shards || 0;
     this.baseEchoes = initialSave.totalEchoes || 0;
     this.overdriveMeter = initialSave.overdriveMeter || 0;
     this.isOverdrive = false;

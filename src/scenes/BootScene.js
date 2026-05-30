@@ -142,9 +142,11 @@ class BootScene extends Phaser.Scene {
          
          if (levelInfo && levelInfo.indexInWorld === 0 && levelInfo.world.storyIntro) {
            const storyId = levelInfo.world.storyIntro;
-           if (!save.storySeen[storyId] && typeof STORY_PANELS !== 'undefined' && STORY_PANELS[storyId]) {
-             targetScene = 'StoryScene';
-             sceneData.storyId = storyId;
+           if (!save.storyViewed || !save.storyViewed.includes(storyId)) {
+             if (typeof STORY_PANELS !== 'undefined' && STORY_PANELS[storyId]) {
+              targetScene = 'StoryScene';
+              sceneData.storyId = storyId;
+            }
            }
          }
          

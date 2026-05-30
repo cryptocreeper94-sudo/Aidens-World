@@ -77,8 +77,26 @@ window.launchRiftInvaders = function() {
   // Switch to gameplay music
   if (typeof MusicSystem !== 'undefined') MusicSystem.play('gameplay');
 
+  // Hide ALL UI layers
   const portal = document.getElementById('aiden-portal');
   if (portal) portal.style.display = 'none';
+  const playHub = document.getElementById('play-mode-hub');
+  if (playHub) playHub.style.display = 'none';
+  const gameHub = document.getElementById('game-hub');
+  if (gameHub) { gameHub.style.display = 'none'; gameHub.style.opacity = '0'; }
+
+  // Enter game mode (fullscreen + landscape)
+  document.body.classList.add('playing-game');
+  if (document.documentElement.requestFullscreen) {
+    document.documentElement.requestFullscreen().catch(e => console.log('FS:', e));
+  } else if (document.documentElement.webkitRequestFullscreen) {
+    document.documentElement.webkitRequestFullscreen();
+  }
+  try {
+    if (screen.orientation && screen.orientation.lock) {
+      screen.orientation.lock('landscape').catch(e => console.log('Orientation lock:', e));
+    }
+  } catch(e) {}
 
   const container = document.getElementById('game-container-invaders');
   if (container) {
