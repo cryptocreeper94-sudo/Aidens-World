@@ -98,7 +98,7 @@ class StoryScene extends Phaser.Scene {
     this.speakerText.setText(replaceHero(panel.speaker) + ':');
     this.dialogText.setText('');
 
-    const fullText = panel.text;
+    const fullText = replaceHero(panel.text);
     let charIdx = 0;
     if (this.typeTimer) this.typeTimer.remove();
     this.typeTimer = this.time.addEvent({

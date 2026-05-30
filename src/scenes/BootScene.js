@@ -119,10 +119,25 @@ class BootScene extends Phaser.Scene {
     this.load.image('victory_panel', 'assets/story/victory.png');
 
     // ── STORY AUDIO ──
+    // Determine tenant for personalized audio
+    const tenant = (window.CHRONOVERSE_TENANT || '').toLowerCase();
+    
     if (typeof STORY_PANELS !== 'undefined') {
       for (const [storyId, story] of Object.entries(STORY_PANELS)) {
         for (let i = 0; i < story.panels.length; i++) {
-          this.load.audio(`voice_${storyId}_${i}`, `assets/audio/story_${storyId}_${i}.mp3`);
+          const genericPath = `assets/audio/story_${storyId}_${i}.mp3`;
+          const tenantPath = tenant ? `assets/audio/tenants/${tenant}/story_${storyId}_${i}.mp3` : null;
+          
+          // Check if this panel contains {HERO} — if so, try tenant-specific audio first
+          const panel = story.panels[i];
+          const hasHeroRef = panel.text.includes('{HERO}') || panel.speaker === '{HERO}';
+          
+          if (hasHeroRef && tenantPath) {
+            // Load tenant-specific version as primary, generic as fallback
+            this.load.audio(`voice_${storyId}_${i}`, [tenantPath, genericPath]);
+          } else {
+            this.load.audio(`voice_${storyId}_${i}`, genericPath);
+          }
         }
       }
     }
