@@ -978,7 +978,7 @@
         <div style="font-size:11px; font-weight:800; color:#22d3ee; text-transform:uppercase; letter-spacing:3px; margin-bottom:12px;">📥 Download The Chronoverse</div>
         <p style="color:#94a3b8; font-size:13px; margin-bottom:16px; line-height:1.6;">Install on your device for the best experience. 100% free, no ads, no tracking.</p>
         <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-bottom:12px;">
-          <a href="https://github.com/cryptocreeper94-sudo/Aidens-World/releases/download/v1.0.0/The.Chronoverse.Setup.1.0.0.exe" style="display:inline-flex; align-items:center; gap:8px; background:linear-gradient(135deg,#10b981,#059669); color:#fff; padding:14px 24px; border-radius:16px; text-decoration:none; font-weight:800; font-size:14px; box-shadow:0 6px 20px rgba(16,185,129,0.4); transition:all 0.2s;" onmouseenter="this.style.transform='translateY(-2px)'" onmouseleave="this.style.transform='none'">
+          <a href="https://github.com/cryptocreeper94-sudo/Chronoverse/releases/download/v1.0.0/The.Chronoverse.Setup.1.0.0.exe" style="display:inline-flex; align-items:center; gap:8px; background:linear-gradient(135deg,#10b981,#059669); color:#fff; padding:14px 24px; border-radius:16px; text-decoration:none; font-weight:800; font-size:14px; box-shadow:0 6px 20px rgba(16,185,129,0.4); transition:all 0.2s;" onmouseenter="this.style.transform='translateY(-2px)'" onmouseleave="this.style.transform='none'">
             🖥️ Windows (.exe)
           </a>
         </div>
@@ -997,6 +997,22 @@
           <a href="https://trustshield.tech" target="_blank" style="display:inline-flex; align-items:center; gap:6px; padding:10px 18px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:10px; text-decoration:none; color:#f0f4f8; font-size:12px; font-weight:600; transition:all 0.2s;" onmouseenter="this.style.borderColor='rgba(6,182,212,0.3)'" onmouseleave="this.style.borderColor='rgba(255,255,255,0.08)'">🛡 TrustShield <span style="font-size:8px;background:rgba(16,185,129,0.15);color:#10b981;padding:2px 6px;border-radius:3px;font-weight:800">FREE</span></a>
           <a href="https://lume-cortex.com" target="_blank" style="display:inline-flex; align-items:center; gap:6px; padding:10px 18px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:10px; text-decoration:none; color:#f0f4f8; font-size:12px; font-weight:600; transition:all 0.2s;" onmouseenter="this.style.borderColor='rgba(6,182,212,0.3)'" onmouseleave="this.style.borderColor='rgba(255,255,255,0.08)'">⬡ Lume Cortex <span style="font-size:8px;background:rgba(16,185,129,0.15);color:#10b981;padding:2px 6px;border-radius:3px;font-weight:800">FREE</span></a>
         </div>
+      </div>
+
+      <!-- Parent SMS Notifications (TCPA Compliant) -->
+      <div id="sms-optin-section" style="background:rgba(16,185,129,0.04); border:1px solid rgba(16,185,129,0.15); border-radius:20px; padding:24px; margin-top:20px; text-align:center;">
+        <div style="font-size:11px; font-weight:800; color:#10b981; text-transform:uppercase; letter-spacing:3px; margin-bottom:8px;">📱 Parent Notifications</div>
+        <p style="color:#94a3b8; font-size:13px; margin-bottom:16px; line-height:1.6;">Get updates about your child's learning milestones and new Chronoverse features.</p>
+        <div id="sms-form" style="max-width:340px; margin:0 auto;">
+          <input id="sms-phone" type="tel" placeholder="Phone number" style="width:100%; padding:12px 16px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:12px; color:#e2e8f0; font-size:14px; font-family:inherit; margin-bottom:10px; outline:none;" onfocus="this.style.borderColor='rgba(16,185,129,0.4)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'">
+          <label style="display:flex; align-items:flex-start; gap:10px; text-align:left; cursor:pointer; margin-bottom:12px;">
+            <input id="sms-consent" type="checkbox" style="margin-top:3px; width:18px; height:18px; accent-color:#10b981; flex-shrink:0;">
+            <span style="font-size:11px; color:#94a3b8; line-height:1.5;">I agree to receive SMS updates about my child's Chronoverse progress (up to 4 msgs/month). Msg & data rates may apply. Reply STOP to cancel anytime.</span>
+          </label>
+          <button onclick="submitSmsOptIn()" style="width:100%; padding:12px; background:linear-gradient(135deg,#10b981,#059669); color:#fff; border:none; border-radius:12px; font-weight:800; font-size:14px; cursor:pointer; transition:all 0.2s;" onmouseenter="this.style.transform='translateY(-1px)'" onmouseleave="this.style.transform='none'">Subscribe</button>
+          <p style="font-size:9px; color:#475569; margin-top:8px; line-height:1.4;">We never share your data. <a href="#" onclick="showPrivacyPolicy();return false" style="color:#10b981; text-decoration:underline;">Privacy Policy</a>. No ads, no tracking. DarkWave Studios LLC.</p>
+        </div>
+        <div id="sms-success" style="display:none; padding:16px; color:#10b981; font-weight:700; font-size:14px;">✅ You're subscribed! We'll keep you updated.</div>
       </div>
     </div>
   </div>
@@ -3546,7 +3562,13 @@
         '<div style="color:#94a3b8;font-size:16px;line-height:1.8;margin-bottom:30px;">' + achievement + '</div>' +
         '<div style="color:#64748b;font-size:12px;">' + (date || new Date().toLocaleDateString()) + '</div>' +
         '<div style="margin-top:30px;color:#475569;font-size:11px;">DarkWave Studios \u00B7 chronoverse.tlid.io</div>' +
-        '</div></body></html>';
+        '</div>
+<!-- Made with Lume-V -->
+<a href="https://lume-lang.org" target="_blank" rel="noopener" id="lume-badge" style="position:fixed;bottom:12px;right:12px;display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:rgba(2,6,23,0.88);border:1px solid rgba(34,211,238,0.3);border-radius:20px;color:#22d3ee;font-size:11px;font-weight:700;text-decoration:none;z-index:9999;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:all 0.3s;font-family:Inter,system-ui,sans-serif;letter-spacing:0.02em;box-shadow:0 2px 12px rgba(0,0,0,0.3);">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+  Made with Lume-V
+</a>
+</body></html>';
 
       var win = window.open('', '_blank');
       if (win) { win.document.write(certHtml); win.document.close(); }
@@ -4553,6 +4575,30 @@
       window.ctNext=function(){li=(li+1)%lessons.length;render();};
       window.ctPrev=function(){li=(li-1+lessons.length)%lessons.length;render();};
       render();
+    }
+
+    // ── SMS Opt-In via dwtl.io ──
+    async function submitSmsOptIn() {
+      var phone = document.getElementById('sms-phone').value.trim();
+      var consent = document.getElementById('sms-consent').checked;
+      if (!phone || phone.length < 10) { alert('Please enter a valid phone number.'); return; }
+      if (!consent) { alert('Please check the consent box to subscribe.'); return; }
+      try {
+        var res = await fetch('https://dwtl.io/api/subscribers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: phone + '@sms.chronoverse.app', phone: phone, smsOptIn: true, source: 'chronoverse' }),
+        });
+        if (res.ok) {
+          document.getElementById('sms-form').style.display = 'none';
+          document.getElementById('sms-success').style.display = 'block';
+        } else {
+          var data = await res.json().catch(function(){ return {}; });
+          alert(data.error || 'Subscription failed. Please try again.');
+        }
+      } catch(e) {
+        alert('Unable to connect. Please try again later.');
+      }
     }
 
     // ── Stripe Funding via dwtl.io ──
