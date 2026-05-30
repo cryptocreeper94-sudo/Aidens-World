@@ -24,6 +24,10 @@ class LevelScene extends Phaser.Scene {
     this.isAlive = true;
     this.isRunning = false;
     this.gameSpeed = this.config.gameSpeed;
+    // Apply difficulty multiplier
+    var diffMultiplier = { easy: 0.75, normal: 1.0, hard: 1.4 };
+    var diff = window.CHRONOVERSE_DIFFICULTY || 'normal';
+    this.gameSpeed = Math.round(this.gameSpeed * (diffMultiplier[diff] || 1.0));
     this.distanceTraveled = 0;
     this.shardsCollected = 0;
     this.jumpCount = 0;

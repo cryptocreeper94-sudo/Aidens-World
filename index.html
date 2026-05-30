@@ -1135,6 +1135,45 @@
 
     </div>
 
+    <!-- ── Daily Challenge ── -->
+    <div class="app-section-title" style="margin-top:10px;">🔥 Daily Challenge</div>
+    <div id="daily-challenge-card" onclick="launchDailyChallenge()" style="margin:0 auto 20px; max-width:500px; padding:0 10px; cursor:pointer;">
+      <div style="background:linear-gradient(135deg, rgba(251,191,36,0.08), rgba(239,68,68,0.05)); border:2px solid rgba(251,191,36,0.3); border-radius:20px; padding:20px; display:flex; align-items:center; gap:16px; transition:all 0.2s;">
+        <div style="font-size:48px; flex-shrink:0;">🏆</div>
+        <div style="flex:1;">
+          <div style="color:#fbbf24; font-size:16px; font-weight:900;">Today's Challenge</div>
+          <div id="daily-challenge-desc" style="color:#94a3b8; font-size:13px; font-weight:600; margin-top:4px;">A new procedural level every day. Compete globally!</div>
+          <div style="display:flex; gap:8px; margin-top:8px;">
+            <span id="daily-challenge-timer" style="background:rgba(251,191,36,0.1); border-radius:6px; padding:3px 10px; color:#fbbf24; font-size:11px; font-weight:800;"></span>
+            <span id="daily-challenge-status" style="background:rgba(16,185,129,0.1); border-radius:6px; padding:3px 10px; color:#10b981; font-size:11px; font-weight:800;">NEW</span>
+          </div>
+        </div>
+        <div style="color:rgba(251,191,36,0.5); font-size:24px; font-weight:900;">→</div>
+      </div>
+    </div>
+
+    <!-- ── World Map Progress ── -->
+    <div class="app-section-title" style="margin-top:10px;">🗺️ World Map</div>
+    <div id="world-map-section" style="margin:0 auto 20px; max-width:500px; padding:0 10px;">
+      <div style="background:rgba(18,18,35,0.9); border:1px solid rgba(34,211,238,0.15); border-radius:20px; padding:16px; backdrop-filter:blur(10px);">
+        <div id="world-map-progress" style="display:flex; flex-direction:column; gap:8px;">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Difficulty Selector ── -->
+    <div style="margin:0 auto 20px; max-width:500px; padding:0 10px;">
+      <div style="background:rgba(18,18,35,0.7); border:1px solid rgba(255,255,255,0.06); border-radius:16px; padding:14px; display:flex; align-items:center; gap:12px;">
+        <span style="color:#64748b; font-size:12px; font-weight:800; white-space:nowrap;">⚙️ DIFFICULTY</span>
+        <div style="display:flex; gap:6px; flex:1;">
+          <button onclick="setDifficulty('easy')" id="diff-easy" style="flex:1; padding:8px; border-radius:8px; border:1px solid rgba(16,185,129,0.3); background:rgba(16,185,129,0.08); color:#10b981; font-size:11px; font-weight:800; cursor:pointer;">Easy</button>
+          <button onclick="setDifficulty('normal')" id="diff-normal" style="flex:1; padding:8px; border-radius:8px; border:2px solid rgba(34,211,238,0.4); background:rgba(34,211,238,0.12); color:#22d3ee; font-size:11px; font-weight:800; cursor:pointer;">Normal</button>
+          <button onclick="setDifficulty('hard')" id="diff-hard" style="flex:1; padding:8px; border-radius:8px; border:1px solid rgba(239,68,68,0.3); background:rgba(239,68,68,0.08); color:#ef4444; font-size:11px; font-weight:800; cursor:pointer;">Hard</button>
+        </div>
+      </div>
+    </div>
+
     <!-- ── Cross-Site Navigation ── -->
     <div id="cross-site-nav" style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:20px auto; max-width:500px; padding:0 10px;">
       <a href="https://chronoverse.tlid.io" style="flex:1; min-width:130px; text-decoration:none; background:rgba(34,211,238,0.08); border:1px solid rgba(34,211,238,0.25); border-radius:14px; padding:12px 16px; text-align:center; transition:all 0.2s;">
@@ -3201,6 +3240,136 @@
       }
     }
 
+    // ── Daily Challenge ──
+    function getDailySeed() {
+      var now = new Date();
+      var dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
+      return (now.getFullYear() * 1000 + dayOfYear) >>> 0;
+    }
+
+    function getDailyLevelNum() {
+      return (getDailySeed() % 30) + 1;
+    }
+
+    function updateDailyChallenge() {
+      var timer = document.getElementById('daily-challenge-timer');
+      var status = document.getElementById('daily-challenge-status');
+      var now = new Date();
+      var tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+      var hoursLeft = Math.floor((tomorrow - now) / 3600000);
+      var minsLeft = Math.floor(((tomorrow - now) % 3600000) / 60000);
+      timer.textContent = hoursLeft + 'h ' + minsLeft + 'm left';
+
+      var save = SaveSystem.load();
+      var todayKey = 'daily_' + getDailySeed();
+      if (save[todayKey]) {
+        status.textContent = 'COMPLETED ✓';
+        status.style.color = '#10b981';
+        status.style.background = 'rgba(16,185,129,0.15)';
+      } else {
+        status.textContent = 'NEW';
+        status.style.color = '#fbbf24';
+        status.style.background = 'rgba(251,191,36,0.1)';
+      }
+    }
+
+    function launchDailyChallenge() {
+      var levelNum = getDailyLevelNum();
+      document.getElementById('aiden-portal').style.display = 'none';
+      if (window.phaserGame) {
+        window.phaserGame.scene.start('LevelScene', { levelNum: levelNum, isDaily: true });
+      }
+    }
+
+    // ── World Map Progress ──
+    function renderWorldMap() {
+      var container = document.getElementById('world-map-progress');
+      if (!container || typeof WORLDS === 'undefined') return;
+      var save = SaveSystem.load();
+      var maxLevel = save.maxLevelUnlocked || 1;
+      var stars = save.stars || {};
+
+      var worldColors = ['#10b981', '#22d3ee', '#a855f7', '#ef4444', '#fbbf24'];
+      var worldIcons = ['\uD83C\uDF06', '\uD83C\uDF0C', '\uD83D\uDE80', '\uD83C\uDF0B', '\u2728'];
+      var html = '';
+      var levelCounter = 1;
+
+      for (var w = 0; w < WORLDS.length; w++) {
+        var world = WORLDS[w];
+        var levelsInWorld = world.levels ? world.levels.length : 10;
+        var completedLevels = 0;
+        var worldStars = 0;
+        var maxWorldStars = levelsInWorld * 3;
+
+        for (var l = 0; l < levelsInWorld; l++) {
+          if (levelCounter <= maxLevel) completedLevels++;
+          var lid = world.levels && world.levels[l] ? world.levels[l].id : null;
+          if (lid && stars[lid]) worldStars += stars[lid];
+          levelCounter++;
+        }
+
+        var progress = levelsInWorld > 0 ? Math.round((completedLevels / levelsInWorld) * 100) : 0;
+        var color = worldColors[w % worldColors.length];
+        var icon = worldIcons[w % worldIcons.length];
+        var isLocked = completedLevels === 0 && w > 0;
+
+        html += '<div style="display:flex; align-items:center; gap:12px; padding:10px 8px; border-bottom:1px solid rgba(255,255,255,0.04);' + (isLocked ? 'opacity:0.4;' : '') + '">' +
+          '<div style="font-size:24px; width:32px; text-align:center;">' + icon + '</div>' +
+          '<div style="flex:1;">' +
+            '<div style="display:flex; justify-content:space-between; margin-bottom:4px;">' +
+              '<span style="color:' + color + '; font-size:13px; font-weight:800;">' + world.name + '</span>' +
+              '<span style="color:#64748b; font-size:11px; font-weight:700;">' + completedLevels + '/' + levelsInWorld + (isLocked ? ' \uD83D\uDD12' : '') + '</span>' +
+            '</div>' +
+            '<div style="height:6px; background:rgba(255,255,255,0.06); border-radius:3px; overflow:hidden;">' +
+              '<div style="height:100%; width:' + progress + '%; background:' + color + '; border-radius:3px; transition:width 0.5s ease;"></div>' +
+            '</div>' +
+            '<div style="color:#64748b; font-size:10px; font-weight:600; margin-top:2px;">' + worldStars + '/' + maxWorldStars + ' \u2B50</div>' +
+          '</div></div>';
+      }
+
+      container.innerHTML = html || '<div style="color:#64748b; text-align:center; padding:16px;">Loading worlds...</div>';
+    }
+
+    // ── Difficulty Selector ──
+    function setDifficulty(level) {
+      window.localStore.setItem('chronoverse_difficulty', level);
+      window.CHRONOVERSE_DIFFICULTY = level;
+      var btns = { easy: document.getElementById('diff-easy'), normal: document.getElementById('diff-normal'), hard: document.getElementById('diff-hard') };
+      Object.keys(btns).forEach(function(k) {
+        if (k === level) {
+          btns[k].style.borderWidth = '2px';
+          btns[k].style.transform = 'scale(1.05)';
+        } else {
+          btns[k].style.borderWidth = '1px';
+          btns[k].style.transform = 'scale(1)';
+        }
+      });
+    }
+
+    function initDifficulty() {
+      var saved = window.localStore.getItem('chronoverse_difficulty') || 'normal';
+      window.CHRONOVERSE_DIFFICULTY = saved;
+      setDifficulty(saved);
+    }
+
+    // ── Achievement Certificates ──
+    function generateCertificate(playerName, achievement, date) {
+      var certHtml = '<!DOCTYPE html><html><head><title>Chronoverse Certificate</title></head><body style="margin:0;padding:40px;background:#0a0a1a;display:flex;justify-content:center;align-items:center;min-height:100vh;">' +
+        '<div style="background:linear-gradient(135deg,#0f172a,#1e293b);border:4px solid #fbbf24;border-radius:20px;padding:60px;max-width:600px;text-align:center;box-shadow:0 0 60px rgba(251,191,36,0.2);">' +
+        '<div style="font-size:48px;margin-bottom:10px;">\uD83C\uDFC6</div>' +
+        '<div style="color:#fbbf24;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:4px;margin-bottom:20px;">Certificate of Achievement</div>' +
+        '<div style="color:#22d3ee;font-size:32px;font-weight:900;margin-bottom:10px;">THE CHRONOVERSE</div>' +
+        '<div style="color:#e2e8f0;font-size:14px;margin-bottom:30px;">This certifies that</div>' +
+        '<div style="color:#fbbf24;font-size:28px;font-weight:900;margin-bottom:20px;">' + playerName + '</div>' +
+        '<div style="color:#94a3b8;font-size:16px;line-height:1.8;margin-bottom:30px;">' + achievement + '</div>' +
+        '<div style="color:#64748b;font-size:12px;">' + (date || new Date().toLocaleDateString()) + '</div>' +
+        '<div style="margin-top:30px;color:#475569;font-size:11px;">DarkWave Studios \u00B7 chronoverse.tlid.io</div>' +
+        '</div></body></html>';
+
+      var win = window.open('', '_blank');
+      if (win) { win.document.write(certHtml); win.document.close(); }
+    }
+
     // ── Race Mode Functions ──
     var _pendingChallenge = null;
 
@@ -3522,6 +3691,9 @@
     setTimeout(function() {
       initCustomization();
       updatePortalTitle();
+      initDifficulty();
+      updateDailyChallenge();
+      renderWorldMap();
       setTimeout(checkOnboarding, 500);
       setTimeout(function() {
         loadLeaderboard();
