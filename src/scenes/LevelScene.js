@@ -76,6 +76,33 @@ class LevelScene extends Phaser.Scene {
     this.player.setBounce(0);
     this.player.setDepth(10);
 
+    // ── Ghost Player (Race Mode Opponent) ──
+    this.ghostPlayer = null;
+    this.raceMode = false;
+    this.raceStartTime = 0;
+    if (window.MultiplayerSystem && window.MultiplayerSystem._matchRef) {
+      this.raceMode = true;
+      this.raceStartTime = Date.now();
+      // Create ghost sprite (translucent opponent)
+      this.ghostPlayer = this.add.sprite(250, this.gameH / 2, 'spider_hero');
+      this.ghostPlayer.setDisplaySize(80, 80);
+      this.ghostPlayer.setAlpha(0.35);
+      this.ghostPlayer.setTint(0x22d3ee);
+      this.ghostPlayer.setDepth(9);
+      // Ghost name label
+      const oppName = window.MultiplayerSystem._opponent || 'Opponent';
+      this.ghostLabel = this.add.text(250, this.gameH / 2 - 50, oppName, {
+        fontFamily: 'Arial', fontSize: '10px', color: '#22d3ee', fontStyle: 'bold',
+      }).setOrigin(0.5).setAlpha(0.6).setDepth(9);
+      // Listen for opponent position updates
+      window.MultiplayerSystem.listenForOpponent(oppName, (data) => {
+        if (this.ghostPlayer && data) {
+          this.ghostPlayer.setPosition(data.x || 250, data.y || this.gameH / 2);
+          if (this.ghostLabel) this.ghostLabel.setPosition(data.x || 250, (data.y || this.gameH / 2) - 50);
+        }
+      });
+    }
+
     // Groups
     this.blocks = this.physics.add.group({ immovable: true, allowGravity: false });
     this.spikes = this.physics.add.group({ immovable: true, allowGravity: false });
@@ -868,6 +895,13 @@ class LevelScene extends Phaser.Scene {
       SaveSystem.addEchoes(0); // Re-run unlock checks with current total
     }
 
+    // ── Race Mode Finish ──
+    if (this.raceMode && window.MultiplayerSystem) {
+      const finishTime = Date.now() - this.raceStartTime;
+      const tenant = (window.CHRONOVERSE_TENANT || '').toLowerCase();
+      window.MultiplayerSystem.reportFinish(tenant, finishTime);
+    }
+
     this.time.delayedCall(500, () => {
         this.showVictoryModal();
     });
@@ -1069,6 +1103,13 @@ class LevelScene extends Phaser.Scene {
       } else {
         // Snap to nearest 360° on landing for clean look
         this.player.angle = 0;
+      }
+
+      // ── Multiplayer Position Sync ──
+      if (this.raceMode && window.MultiplayerSystem) {
+        const tenant = (window.CHRONOVERSE_TENANT || '').toLowerCase();
+        const state = this.player.body.onFloor() ? 'running' : 'jumping';
+        window.MultiplayerSystem.syncPosition(tenant, this.player.x, this.player.y, state, this.player.body.velocity.x, this.player.body.velocity.y);
       }
     } else {
       // Idle float waiting for start
