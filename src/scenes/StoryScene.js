@@ -85,6 +85,9 @@ class StoryScene extends Phaser.Scene {
 
   showPanel(idx) {
     const panel = this.panels[idx];
+    // Runtime name replacement — every kid sees their own name
+    const heroName = typeof getHeroName === 'function' ? getHeroName() : (HERO_NAME || 'Hero');
+    const replaceHero = (str) => str.replace(/\{HERO\}/g, heroName);
 
     // Update image if different
     if (panel.image && this.textures.exists(panel.image)) {
@@ -92,7 +95,7 @@ class StoryScene extends Phaser.Scene {
     }
 
     // Typewriter text effect
-    this.speakerText.setText(panel.speaker + ':');
+    this.speakerText.setText(replaceHero(panel.speaker) + ':');
     this.dialogText.setText('');
 
     const fullText = panel.text;

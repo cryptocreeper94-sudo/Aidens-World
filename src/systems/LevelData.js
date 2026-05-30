@@ -62,7 +62,7 @@ const CHARACTERS = {
     unlockText: 'Your first hero!',
   },
   jedi_kid: {
-    name: `Jedi ${HERO_NAME}`,
+    name: 'Jedi {HERO}',
     sprite: 'jedi_kid',
     color: '#22d3ee',
     ability: 'Lightsaber Slash',
@@ -86,7 +86,7 @@ const CHARACTERS = {
     unlockText: 'Find his helmet in Tatooine!',
   },
   iron_kid: {
-    name: `Iron ${HERO_NAME}`,
+    name: 'Iron {HERO}',
     sprite: 'iron_kid',
     color: '#fbbf24',
     ability: 'Repulsor Blast',
@@ -244,15 +244,15 @@ const STORY_PANELS = {
     panels: [
       { image: 'world1_complete_panel', text: 'Doc Ock is defeated! The first Rift Crystal is safe!', speaker: 'Narrator' },
       { image: 'world1_complete_panel', text: 'A glowing Jedi robe falls through the rift...', speaker: 'Narrator' },
-      { image: 'world1_complete_panel', text: `${HERO_NAME} puts it on. A lightsaber ignites! The Force awakens!`, speaker: 'Narrator' },
-      { image: 'world1_complete_panel', text: `NEW: Jedi ${HERO_NAME}! May the Force be with you!`, speaker: 'System' },
+      { image: 'world1_complete_panel', text: '{HERO} puts it on. A lightsaber ignites! The Force awakens!', speaker: 'Narrator' },
+      { image: 'world1_complete_panel', text: 'NEW: Jedi {HERO}! May the Force be with you!', speaker: 'System' },
     ],
   },
   world2_intro: {
     panels: [
       { image: 'world2_intro_panel', text: 'The portal leads to a massive Imperial Space Station...', speaker: 'Narrator' },
       { image: 'world2_intro_panel', text: 'Oscorp tech is fused with the Empire! Symbiotes in SPACE!', speaker: 'Narrator' },
-      { image: 'world2_intro_panel', text: '"Green Goblin stole a TIE Fighter!"', speaker: HERO_NAME },
+      { image: 'world2_intro_panel', text: '"Green Goblin stole a TIE Fighter!"', speaker: '{HERO}' },
     ],
   },
   world2_complete: {
@@ -272,15 +272,15 @@ const STORY_PANELS = {
   world3_complete: {
     panels: [
       { image: 'world3_intro_panel', text: 'Darth Venom is defeated! The symbiote releases Vader!', speaker: 'Narrator' },
-      { image: 'world3_intro_panel', text: `${HERO_NAME} combines Spider powers AND the Force!`, speaker: 'Narrator' },
-      { image: 'world3_intro_panel', text: `NEW: Spider-Jedi ${HERO_NAME}! The ultimate hero!`, speaker: 'System' },
+      { image: 'world3_intro_panel', text: '{HERO} combines Spider powers AND the Force!', speaker: 'Narrator' },
+      { image: 'world3_intro_panel', text: 'NEW: Spider-Jedi {HERO}! The ultimate hero!', speaker: 'System' },
     ],
   },
   world4_intro: {
     panels: [
       { image: 'world4_intro_panel', text: 'Both worlds are fully colliding! NYC floats in space!', speaker: 'Narrator' },
       { image: 'world4_intro_panel', text: 'The Rift King - Doc Ock fused with the Emperor - controls it all!', speaker: 'Narrator' },
-      { image: 'world4_intro_panel', text: '"This is it. Everything comes down to this fight."', speaker: HERO_NAME },
+      { image: 'world4_intro_panel', text: '"This is it. Everything comes down to this fight."', speaker: '{HERO}' },
     ],
   },
   world4_complete: {
@@ -289,8 +289,8 @@ const STORY_PANELS = {
       { image: 'victory_panel', text: 'The Rift seals shut! Both worlds are saved!', speaker: 'Narrator' },
       { image: 'victory_panel', text: '"May the Force be with you, Spidey!"', speaker: 'Luke Skywalker' },
       { image: 'victory_panel', text: '"You too! Call me anytime!"', speaker: 'Spider-Man' },
-      { image: 'victory_panel', text: `"I saved TWO universes! Best. Day. EVER!"`, speaker: HERO_NAME },
-      { image: 'victory_panel', text: `CONGRATULATIONS ${HERO_NAME.toUpperCase()}! ULTIMATE HERO!`, speaker: 'System' },
+      { image: 'victory_panel', text: '"I saved TWO universes! Best. Day. EVER!"', speaker: '{HERO}' },
+      { image: 'victory_panel', text: 'CONGRATULATIONS {HERO}! ULTIMATE HERO!', speaker: 'System' },
       { image: 'victory_panel', text: 'DEMOGORGON UNLOCKED! The Upside Down bows to you!', speaker: 'System' },
     ],
   },
@@ -312,7 +312,7 @@ const STORY_PANELS = {
   milestone_15: {
     panels: [
       { image: 'world2_intro_panel', text: 'Halfway through the Space Station. The symbiote grows stronger...', speaker: 'Narrator' },
-      { image: 'world2_intro_panel', text: '"I can feel it bonding with the suit. It wants to help us fight."', speaker: HERO_NAME },
+      { image: 'world2_intro_panel', text: '"I can feel it bonding with the suit. It wants to help us fight."', speaker: '{HERO}' },
     ],
   },
   milestone_20: {
@@ -321,13 +321,13 @@ const STORY_PANELS = {
       { image: 'world2_intro_panel', text: 'The symbiote fully bonds. Spider-Man\'s suit turns jet BLACK.', speaker: 'Narrator' },
       { image: 'world3_intro_panel', text: 'A new portal opens — twin suns shine through. Tatooine awaits.', speaker: 'Narrator' },
       { image: 'world3_intro_panel', text: '"The Mandalorian sent a signal. The third crystal is buried in the Jedi Temple."', speaker: 'Anakin' },
-      { image: 'world3_intro_panel', text: '"Then let\'s go get it. All of us. Together."', speaker: HERO_NAME },
+      { image: 'world3_intro_panel', text: '"Then let\'s go get it. All of us. Together."', speaker: '{HERO}' },
     ],
   },
   milestone_25: {
     panels: [
       { image: 'world3_intro_panel', text: 'The twin suns beat down mercilessly. The desert hides ancient secrets.', speaker: 'Narrator' },
-      { image: 'world3_intro_panel', text: '"The Mandalorian left his helmet here. He was trying to warn us about Darth Venom..."', speaker: HERO_NAME },
+      { image: 'world3_intro_panel', text: '"The Mandalorian left his helmet here. He was trying to warn us about Darth Venom..."', speaker: '{HERO}' },
     ],
   },
   milestone_30: {
@@ -335,7 +335,7 @@ const STORY_PANELS = {
       { image: 'world3_intro_panel', text: 'Darth Venom falls! The symbiote releases Vader at last!', speaker: 'Narrator' },
       { image: 'world3_intro_panel', text: '"Three crystals recovered. The Rift King holds the final one."', speaker: 'Anakin' },
       { image: 'world4_intro_panel', text: 'The sky tears open. Both universes merge into one twisted reality!', speaker: 'Narrator' },
-      { image: 'world4_intro_panel', text: '"Every hero we\'ve met... every power we\'ve gained... it all comes down to this."', speaker: HERO_NAME },
+      { image: 'world4_intro_panel', text: '"Every hero we\'ve met... every power we\'ve gained... it all comes down to this."', speaker: '{HERO}' },
     ],
   },
 };
