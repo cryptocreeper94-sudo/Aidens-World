@@ -841,6 +841,28 @@ class LevelScene extends Phaser.Scene {
     this._lumesEarned = lumesEarned;
     SaveSystem.save(save);
     
+    // ── Activity Logging (for Parent Dashboard) ──
+    try {
+      if (typeof ActivityLogger !== 'undefined') {
+        // Find world name for this level
+        let worldName = 'Unknown';
+        let counter2 = 1;
+        for (let w2 = 0; w2 < WORLDS.length; w2++) {
+          for (let l2 = 0; l2 < WORLDS[w2].levels.length; l2++) {
+            if (counter2 === this.levelNum) worldName = WORLDS[w2].name;
+            counter2++;
+          }
+        }
+        ActivityLogger.levelComplete(foundLevelId || ('level-' + this.levelNum), 3, worldName);
+        if (this.levelNum % 10 === 0) {
+          ActivityLogger.worldUnlock(worldNum, worldName);
+        }
+        if (this.echoesCollected > 0) {
+          ActivityLogger.echoFound(save.totalEchoes);
+        }
+      }
+    } catch(e) {}
+    
     // Process echo unlocks
     if (this.echoesCollected > 0) {
       SaveSystem.addEchoes(0); // Re-run unlock checks with current total

@@ -214,6 +214,7 @@ class HubScene extends Phaser.Scene {
 
     // ── DAILY BONUS ──
     if (SaveSystem.checkDailyBonus()) {
+      try { if (typeof ActivityLogger !== 'undefined') ActivityLogger.dailyBonus(25); } catch(e) {}
       this.time.delayedCall(500, () => this.showDailyBonus());
     }
   }

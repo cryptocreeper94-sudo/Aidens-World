@@ -145,6 +145,31 @@ const SaveSystem = {
         // Bug B fix: validate doc ID is a non-empty string before writing
         if (typeof docId === 'string' && docId.length > 0) {
           window.db.collection('chronoverse_saves').doc(docId).set(data).catch(e => console.warn('[SaveSystem] Firebase write error:', e));
+          
+          // ── Kid Profile Sync (for Parent Dashboard) ──
+          // Push aggregated stats to kids/<tenant> so family.tlid.io can read them
+          if (currentProfile === 'Default') {
+            const totalStars = Object.values(data.stars || {}).reduce((a, b) => a + b, 0);
+            const levelsCompleted = Object.keys(data.stars || {}).filter(k => data.stars[k] > 0).length;
+            const kidProfileUpdate = {
+              totalStars: totalStars,
+              maxLevel: levelsCompleted,
+              totalShards: data.shards || 0,
+              selectedChar: data.selectedChar || 'hero_red',
+              lastPlayed: window.firebase ? window.firebase.firestore.FieldValue.serverTimestamp() : new Date(),
+              currentWorld: data.currentWorld || 1,
+              totalPlayTime: data.totalPlayTime || 0,
+              totalEchoes: data.totalEchoes || 0,
+            };
+            // Read avatar from customization prefs if available
+            try {
+              const customPrefs = JSON.parse(window.localStore.getItem('ChronoverseCustomPrefs_' + docId) || '{}');
+              if (customPrefs.avatar) kidProfileUpdate.avatar = customPrefs.avatar;
+            } catch(e) {}
+            
+            window.db.collection('kids').doc(docId).set(kidProfileUpdate, { merge: true })
+              .catch(e => console.warn('[SaveSystem] Kid profile sync error:', e));
+          }
         } else {
           console.warn('[SaveSystem] Invalid Firebase doc ID, skipping cloud sync. CHRONOVERSE_TENANT:', window.CHRONOVERSE_TENANT);
         }
@@ -267,6 +292,59 @@ const SaveSystem = {
     return 'Good Evening';
   },
 };
+
+// ── Activity Logger (for Parent Dashboard feed) ──
+const ActivityLogger = {
+  _lastLog: 0,
+  _minInterval: 5000, // Don't log more than once every 5s
+
+  log(type, description, details) {
+    try {
+      if (!window.db || !window.CHRONOVERSE_TENANT) return;
+      const now = Date.now();
+      if (now - this._lastLog < this._minInterval) return;
+      this._lastLog = now;
+
+      const tenant = window.CHRONOVERSE_TENANT.toLowerCase();
+      if (!tenant || tenant.length === 0) return;
+
+      const entry = {
+        type: type,           // 'level_complete', 'star_earned', 'echo_found', 'world_unlock', 'character_unlock', 'daily_bonus'
+        description: description,
+        details: details || {},
+        timestamp: window.firebase ? window.firebase.firestore.FieldValue.serverTimestamp() : new Date(),
+      };
+
+      window.db.collection('kids').doc(tenant).collection('activity')
+        .add(entry)
+        .catch(e => console.warn('[Activity] Log error:', e));
+    } catch(e) { console.warn('[Activity] Logger error:', e); }
+  },
+
+  levelComplete(levelId, stars, worldName) {
+    const starText = '⭐'.repeat(stars);
+    this.log('level_complete', `Completed ${levelId} with ${stars} star${stars !== 1 ? 's' : ''} ${starText}`, { levelId, stars, worldName });
+  },
+
+  worldUnlock(worldNum, worldName) {
+    this.log('world_unlock', `Unlocked ${worldName}!`, { worldNum, worldName });
+  },
+
+  characterUnlock(charId, charName) {
+    this.log('character_unlock', `Unlocked ${charName}!`, { charId, charName });
+  },
+
+  echoFound(totalEchoes) {
+    this.log('echo_found', `Collected an Echo! (${totalEchoes} total)`, { totalEchoes });
+  },
+
+  dailyBonus(shards) {
+    this.log('daily_bonus', `Claimed daily bonus: +${shards} Rift Shards`, { shards });
+  },
+};
+
+// Make globally accessible
+window.ActivityLogger = ActivityLogger;
 
 // Rift Memories Lore Entries
 const RIFT_LORE = [
