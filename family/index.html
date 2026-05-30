@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Chronoverse Family — Parent Dashboard</title>
+  <meta name="description" content="Manage your children's Chronoverse accounts, track progress, set limits, and play together." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    :root {
+      --bg: #0a0a14;
+      --bg-card: rgba(18, 18, 35, 0.9);
+      --bg-elevated: rgba(25, 25, 50, 0.95);
+      --border: rgba(255,255,255,0.06);
+      --border-hover: rgba(255,255,255,0.12);
+      --text: #e2e8f0;
+      --text-dim: #64748b;
+      --text-bright: #ffffff;
+      --accent: #22d3ee;
+      --accent-glow: rgba(34,211,238,0.15);
+      --accent-solid: rgba(34,211,238,0.2);
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #f43f5e;
+      --purple: #a855f7;
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* ── Animated Background ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: -1;
+      background: 
+        radial-gradient(ellipse at 20% 0%, rgba(34,211,238,0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 100%, rgba(168,85,247,0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(16,185,129,0.04) 0%, transparent 60%);
+    }
+
+    /* ── Auth Screen ── */
+    .auth-screen {
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 24px;
+    }
+    .auth-logo {
+      font-size: 48px; margin-bottom: 8px;
+    }
+    .auth-title {
+      font-size: 32px; font-weight: 900; color: var(--text-bright);
+      margin-bottom: 4px; letter-spacing: -0.5px;
+    }
+    .auth-subtitle {
+      font-size: 14px; color: var(--text-dim); margin-bottom: 40px;
+      font-weight: 500;
+    }
+    .auth-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px 28px;
+      width: 100%; max-width: 400px;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+    .auth-tabs {
+      display: flex; gap: 0; margin-bottom: 28px;
+      background: rgba(255,255,255,0.04);
+      border-radius: var(--radius-sm); padding: 4px;
+    }
+    .auth-tab {
+      flex: 1; padding: 10px; border: none;
+      background: transparent; color: var(--text-dim);
+      font-size: 14px; font-weight: 700; cursor: pointer;
+      border-radius: 8px; transition: all 0.2s;
+    }
+    .auth-tab.active {
+      background: var(--accent-solid);
+      color: var(--accent);
+    }
+    .form-group {
+      margin-bottom: 18px;
+    }
+    .form-group label {
+      display: block; font-size: 12px; font-weight: 700;
+      color: var(--text-dim); text-transform: uppercase;
+      letter-spacing: 0.5px; margin-bottom: 8px;
+    }
+    .form-input {
+      width: 100%; background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      color: var(--text-bright); font-size: 16px; padding: 14px 16px;
+      font-family: 'Inter', sans-serif; font-weight: 500;
+      outline: none; transition: border-color 0.2s;
+    }
+    .form-input:focus { border-color: var(--accent); }
+    .form-input::placeholder { color: var(--text-dim); }
+    .auth-btn {
+      width: 100%; padding: 16px; border: none;
+      background: linear-gradient(135deg, var(--accent), #6366f1);
+      color: #fff; font-size: 16px; font-weight: 800;
+      border-radius: var(--radius-sm); cursor: pointer;
+      transition: all 0.2s; letter-spacing: 0.5px;
+      margin-top: 8px;
+    }
+    .auth-btn:active { transform: scale(0.97); }
+    .auth-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .auth-error {
+      background: rgba(244,63,94,0.1); border: 1px solid rgba(244,63,94,0.2);
+      color: var(--danger); padding: 10px 14px; border-radius: var(--radius-sm);
+      font-size: 13px; font-weight: 600; margin-bottom: 16px; display: none;
+    }
+    .auth-divider {
+      text-align: center; color: var(--text-dim); font-size: 12px;
+      font-weight: 600; margin: 20px 0; position: relative;
+    }
+    .auth-divider::before, .auth-divider::after {
+      content: ''; position: absolute; top: 50%;
+      width: 40%; height: 1px; background: var(--border);
+    }
+    .auth-divider::before { left: 0; }
+    .auth-divider::after { right: 0; }
+    .auth-google {
+      width: 100%; padding: 14px; border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04); color: var(--text);
+      font-size: 14px; font-weight: 700; border-radius: var(--radius-sm);
+      cursor: pointer; transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .auth-google:hover { border-color: var(--border-hover); background: rgba(255,255,255,0.06); }
+
+    /* ── Dashboard Shell ── */
+    .dashboard { display: none; min-height: 100vh; }
+    .dashboard.active { display: block; }
+    .auth-screen.hidden { display: none; }
+
+    /* Top Bar */
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(10px);
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(10,10,20,0.8);
+    }
+    .topbar-brand {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .topbar-brand span:first-child { font-size: 24px; }
+    .topbar-brand span:last-child {
+      font-size: 16px; font-weight: 800; color: var(--text-bright);
+      letter-spacing: -0.3px;
+    }
+    .topbar-user {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .topbar-user-name {
+      font-size: 13px; font-weight: 600; color: var(--text-dim);
+    }
+    .topbar-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--accent-solid); border: 2px solid var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; font-weight: 800; color: var(--accent);
+      cursor: pointer;
+    }
+    .signout-btn {
+      background: rgba(244,63,94,0.1); border: 1px solid rgba(244,63,94,0.2);
+      color: var(--danger); padding: 8px 16px; border-radius: 8px;
+      font-size: 12px; font-weight: 700; cursor: pointer;
+    }
+
+    /* Main Content */
+    .main-content {
+      max-width: 800px; margin: 0 auto;
+      padding: 24px 20px 100px;
+    }
+
+    /* Welcome Section */
+    .welcome-section {
+      margin-bottom: 32px;
+    }
+    .welcome-section h1 {
+      font-size: 28px; font-weight: 900; color: var(--text-bright);
+      letter-spacing: -0.5px; margin-bottom: 4px;
+    }
+    .welcome-section p {
+      font-size: 14px; color: var(--text-dim); font-weight: 500;
+    }
+
+    /* Stats Row */
+    .stats-row {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 12px; margin-bottom: 32px;
+    }
+    .stat-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px 16px; text-align: center;
+    }
+    .stat-card .stat-value {
+      font-size: 28px; font-weight: 900; color: var(--text-bright);
+      margin-bottom: 2px;
+    }
+    .stat-card .stat-label {
+      font-size: 11px; color: var(--text-dim); font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+
+    /* Section Headers */
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .section-header h2 {
+      font-size: 18px; font-weight: 800; color: var(--text-bright);
+    }
+    .section-header button {
+      background: var(--accent-solid); border: 1px solid rgba(34,211,238,0.2);
+      color: var(--accent); padding: 10px 20px; border-radius: 50px;
+      font-size: 13px; font-weight: 800; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .section-header button:active { transform: scale(0.95); }
+
+    /* Kid Cards */
+    .kid-cards { display: flex; flex-direction: column; gap: 14px; }
+    .kid-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px;
+      display: flex; align-items: center; gap: 16px;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .kid-card:active { transform: scale(0.98); }
+    .kid-card:hover { border-color: var(--border-hover); }
+    .kid-card-avatar {
+      width: 56px; height: 56px; border-radius: 50%;
+      object-fit: cover; border: 3px solid var(--accent);
+      background: #0a0a2e; flex-shrink: 0;
+    }
+    .kid-card-info { flex: 1; min-width: 0; }
+    .kid-card-name {
+      font-size: 17px; font-weight: 800; color: var(--text-bright);
+      margin-bottom: 2px;
+    }
+    .kid-card-username {
+      font-size: 12px; color: var(--accent); font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .kid-card-stats {
+      display: flex; gap: 12px;
+    }
+    .kid-card-stat {
+      font-size: 11px; color: var(--text-dim); font-weight: 600;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .kid-card-stat .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+    }
+    .kid-card-actions {
+      display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;
+    }
+    .kid-action-btn {
+      padding: 8px 14px; border-radius: 8px; border: none;
+      font-size: 12px; font-weight: 800; cursor: pointer; transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .kid-action-btn.play {
+      background: linear-gradient(135deg, var(--success), #059669);
+      color: #fff;
+    }
+    .kid-action-btn.view {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border); color: var(--text-dim);
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center; padding: 60px 20px;
+      background: var(--bg-card); border: 2px dashed var(--border);
+      border-radius: var(--radius);
+    }
+    .empty-state .empty-icon { font-size: 64px; margin-bottom: 16px; }
+    .empty-state h3 { font-size: 20px; font-weight: 800; color: var(--text-bright); margin-bottom: 8px; }
+    .empty-state p { font-size: 14px; color: var(--text-dim); margin-bottom: 24px; line-height: 1.6; }
+    .empty-state button {
+      background: linear-gradient(135deg, var(--accent), #6366f1);
+      border: none; color: #fff; padding: 14px 32px; border-radius: 50px;
+      font-size: 15px; font-weight: 800; cursor: pointer;
+    }
+
+    /* Add Kid Modal */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 9000;
+      background: rgba(0,0,0,0.7); backdrop-filter: blur(6px);
+      display: none; align-items: flex-end; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    @media (min-width: 600px) {
+      .modal-overlay.open { align-items: center; }
+    }
+    .modal-content {
+      background: var(--bg-elevated); border: 1px solid var(--border);
+      border-radius: var(--radius) var(--radius) 0 0;
+      padding: 28px 24px 40px; width: 100%; max-width: 440px;
+      animation: modalSlideUp 0.3s ease;
+    }
+    @media (min-width: 600px) {
+      .modal-content { border-radius: var(--radius); }
+    }
+    @keyframes modalSlideUp { from { transform: translateY(30px); opacity: 0; } }
+    .modal-content h3 {
+      font-size: 20px; font-weight: 900; color: var(--text-bright);
+      margin-bottom: 20px;
+    }
+    .modal-close {
+      position: absolute; top: 16px; right: 16px;
+      background: none; border: none; color: var(--text-dim);
+      font-size: 24px; cursor: pointer;
+    }
+    .username-preview {
+      background: rgba(34,211,238,0.06); border: 1px solid rgba(34,211,238,0.15);
+      border-radius: var(--radius-sm); padding: 12px 16px;
+      margin-bottom: 18px; display: flex; align-items: center; gap: 6px;
+    }
+    .username-preview .url-prefix {
+      font-size: 13px; color: var(--text-dim); font-weight: 600;
+    }
+    .username-preview .url-name {
+      font-size: 13px; color: var(--accent); font-weight: 800;
+    }
+    .username-preview .url-suffix {
+      font-size: 13px; color: var(--text-dim); font-weight: 600;
+    }
+    .username-status {
+      font-size: 12px; font-weight: 700; margin-top: 6px; height: 16px;
+    }
+    .username-status.available { color: var(--success); }
+    .username-status.taken { color: var(--danger); }
+
+    /* Activity Feed */
+    .activity-section { margin-top: 32px; }
+    .activity-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .activity-icon {
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; flex-shrink: 0;
+    }
+    .activity-text {
+      font-size: 13px; color: var(--text); font-weight: 500; flex: 1;
+    }
+    .activity-text strong { color: var(--text-bright); font-weight: 700; }
+    .activity-time {
+      font-size: 11px; color: var(--text-dim); font-weight: 600; flex-shrink: 0;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      text-align: center; padding: 40px 20px 30px;
+      border-top: 1px solid var(--border); margin-top: 40px;
+    }
+    .footer p { font-size: 12px; color: var(--text-dim); font-weight: 500; line-height: 2; }
+    .footer .lume { color: var(--accent); font-weight: 700; }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════ -->
+  <!--        AUTH SCREEN                  -->
+  <!-- ═══════════════════════════════════ -->
+  <div id="auth-screen" class="auth-screen">
+    <div class="auth-logo">🌀</div>
+    <div class="auth-title">Chronoverse Family</div>
+    <div class="auth-subtitle">Parent Dashboard • Manage & Play Together</div>
+    
+    <div class="auth-card">
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="switchAuthTab('login')">Log In</button>
+        <button class="auth-tab" onclick="switchAuthTab('signup')">Sign Up</button>
+      </div>
+
+      <div id="auth-error" class="auth-error"></div>
+
+      <div id="login-form">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" class="form-input" id="login-email" placeholder="parent@email.com" />
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" class="form-input" id="login-password" placeholder="••••••••" />
+        </div>
+        <button class="auth-btn" onclick="handleLogin()">Log In</button>
+      </div>
+
+      <div id="signup-form" style="display:none;">
+        <div class="form-group">
+          <label>Your Name</label>
+          <input type="text" class="form-input" id="signup-name" placeholder="Your name" />
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" class="form-input" id="signup-email" placeholder="parent@email.com" />
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" class="form-input" id="signup-password" placeholder="Min 6 characters" />
+        </div>
+        <button class="auth-btn" onclick="handleSignup()">Create Account</button>
+      </div>
+
+      <div class="auth-divider">or</div>
+      <button class="auth-google" onclick="handleGoogleAuth()">
+        <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Continue with Google
+      </button>
+    </div>
+    
+    <div style="margin-top:24px; font-size:12px; color:var(--text-dim); text-align:center;">
+      Made with <span style="color:var(--accent); font-weight:700;">Lume</span> • DarkWave Studios
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════ -->
+  <!--        DASHBOARD                    -->
+  <!-- ═══════════════════════════════════ -->
+  <div id="dashboard" class="dashboard">
+    
+    <!-- Top Bar -->
+    <div class="topbar">
+      <div class="topbar-brand">
+        <span>🌀</span>
+        <span>Chronoverse Family</span>
+      </div>
+      <div class="topbar-user">
+        <span class="topbar-user-name" id="topbar-name"></span>
+        <button class="signout-btn" onclick="handleSignOut()">Sign Out</button>
+      </div>
+    </div>
+
+    <div class="main-content">
+      
+      <!-- Welcome -->
+      <div class="welcome-section">
+        <h1 id="welcome-heading">Welcome back!</h1>
+        <p>Here's what's happening in your kids' Chronoverse</p>
+      </div>
+
+      <!-- Stats Overview -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-value" id="stat-kids">0</div>
+          <div class="stat-label">Kids</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-levels">0</div>
+          <div class="stat-label">Levels Beat</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-stars">0</div>
+          <div class="stat-label">Stars Earned</div>
+        </div>
+      </div>
+
+      <!-- Kid Profiles -->
+      <div class="section-header">
+        <h2>Your Kids</h2>
+        <button onclick="openAddKidModal()">+ Add Kid</button>
+      </div>
+      <div class="kid-cards" id="kid-cards">
+        <!-- Populated by JS -->
+        <div class="empty-state" id="empty-state">
+          <div class="empty-icon">👶</div>
+          <h3>No kids yet!</h3>
+          <p>Add your child's profile to get started. They'll get their own personalized portal at <strong>username.tlid.io</strong></p>
+          <button onclick="openAddKidModal()">+ Add First Kid</button>
+        </div>
+      </div>
+
+      <!-- Activity Feed -->
+      <div class="activity-section">
+        <div class="section-header">
+          <h2>Recent Activity</h2>
+        </div>
+        <div id="activity-feed">
+          <div class="activity-item">
+            <div class="activity-icon" style="background:var(--accent-solid);">🎮</div>
+            <div class="activity-text">Activity will appear here once your kids start playing</div>
+            <div class="activity-time">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="footer">
+        <p>Made with ❤️ in Gladeville, TN, USA 🇺🇸</p>
+        <p>Made with <span class="lume">Lume</span> • DarkWave Studios</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════ -->
+  <!--        ADD KID MODAL               -->
+  <!-- ═══════════════════════════════════ -->
+  <div id="add-kid-modal" class="modal-overlay" onclick="if(event.target===this)closeAddKidModal()">
+    <div class="modal-content" style="position:relative;">
+      <button class="modal-close" onclick="closeAddKidModal()">✕</button>
+      <h3>Add a Kid</h3>
+
+      <div class="form-group">
+        <label>Kid's Name</label>
+        <input type="text" class="form-input" id="kid-name" placeholder="What's their name?" oninput="generateUsername()" />
+      </div>
+
+      <div class="form-group">
+        <label>Username (their portal URL)</label>
+        <input type="text" class="form-input" id="kid-username" placeholder="Choose a unique username" oninput="checkUsername()" maxlength="20" />
+        <div class="username-status" id="username-status"></div>
+      </div>
+
+      <div class="username-preview">
+        <span class="url-prefix">https://</span>
+        <span class="url-name" id="username-preview-name">username</span>
+        <span class="url-suffix">.tlid.io</span>
+      </div>
+
+      <div id="add-kid-error" class="auth-error"></div>
+
+      <button class="auth-btn" id="add-kid-btn" onclick="handleAddKid()" disabled>Create Portal</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════ -->
+  <!--        JAVASCRIPT ENGINE           -->
+  <!-- ═══════════════════════════════════ -->
+  <script>
+    // ── Firebase Init ──
+    const firebaseConfig = {
+      apiKey: "AIzaSyC_OAIYUpdIeEz4FlEXBpYZ5U9KaA6l360",
+      authDomain: "darkwave-auth.firebaseapp.com",
+      projectId: "darkwave-auth",
+      storageBucket: "darkwave-auth.firebasestorage.app",
+      messagingSenderId: "41307406912",
+      appId: "1:41307406912:web:b82a15c90790542e2a55a5",
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    let currentUser = null;
+    let parentData = null;
+
+    // ── Auth State ──
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        currentUser = user;
+        document.getElementById('auth-screen').classList.add('hidden');
+        document.getElementById('dashboard').classList.add('active');
+        await loadParentDashboard();
+      } else {
+        currentUser = null;
+        document.getElementById('auth-screen').classList.remove('hidden');
+        document.getElementById('dashboard').classList.remove('active');
+      }
+    });
+
+    // ── Auth Tab Switch ──
+    function switchAuthTab(tab) {
+      document.querySelectorAll('.auth-tab').forEach((t, i) => {
+        t.classList.toggle('active', (tab === 'login' ? i === 0 : i === 1));
+      });
+      document.getElementById('login-form').style.display = tab === 'login' ? 'block' : 'none';
+      document.getElementById('signup-form').style.display = tab === 'signup' ? 'block' : 'none';
+      document.getElementById('auth-error').style.display = 'none';
+    }
+
+    function showAuthError(msg) {
+      const el = document.getElementById('auth-error');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+
+    // ── Login ──
+    async function handleLogin() {
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+      if (!email || !password) return showAuthError('Please fill in all fields.');
+      try {
+        await auth.signInWithEmailAndPassword(email, password);
+      } catch (e) {
+        showAuthError(e.message.replace('Firebase: ', '').replace(/\(auth\/.*\)/, ''));
+      }
+    }
+
+    // ── Signup ──
+    async function handleSignup() {
+      const name = document.getElementById('signup-name').value.trim();
+      const email = document.getElementById('signup-email').value.trim();
+      const password = document.getElementById('signup-password').value;
+      if (!name || !email || !password) return showAuthError('Please fill in all fields.');
+      if (password.length < 6) return showAuthError('Password must be at least 6 characters.');
+      try {
+        const cred = await auth.createUserWithEmailAndPassword(email, password);
+        await cred.user.updateProfile({ displayName: name });
+        // Create parent doc in Firestore
+        await db.collection('parents').doc(cred.user.uid).set({
+          displayName: name,
+          email: email,
+          kids: [],
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+      } catch (e) {
+        showAuthError(e.message.replace('Firebase: ', '').replace(/\(auth\/.*\)/, ''));
+      }
+    }
+
+    // ── Google Auth ──
+    async function handleGoogleAuth() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      try {
+        const result = await auth.signInWithPopup(provider);
+        // Check if parent doc exists, create if not
+        const doc = await db.collection('parents').doc(result.user.uid).get();
+        if (!doc.exists) {
+          await db.collection('parents').doc(result.user.uid).set({
+            displayName: result.user.displayName || 'Parent',
+            email: result.user.email,
+            kids: [],
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          });
+        }
+      } catch (e) {
+        showAuthError(e.message.replace('Firebase: ', '').replace(/\(auth\/.*\)/, ''));
+      }
+    }
+
+    // ── Sign Out ──
+    function handleSignOut() {
+      auth.signOut();
+    }
+
+    // ── Load Dashboard ──
+    async function loadParentDashboard() {
+      const name = currentUser.displayName || 'Parent';
+      document.getElementById('topbar-name').textContent = name;
+      document.getElementById('welcome-heading').textContent = `Welcome, ${name.split(' ')[0]}!`;
+
+      // Load parent doc
+      try {
+        const doc = await db.collection('parents').doc(currentUser.uid).get();
+        if (doc.exists) {
+          parentData = doc.data();
+        } else {
+          // Create parent doc if it doesn't exist
+          parentData = { displayName: name, email: currentUser.email, kids: [] };
+          await db.collection('parents').doc(currentUser.uid).set({
+            ...parentData,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          });
+        }
+      } catch (e) {
+        parentData = { kids: [] };
+        console.log('Firestore read error:', e);
+      }
+
+      renderKidCards();
+    }
+
+    // ── Render Kid Cards ──
+    async function renderKidCards() {
+      const container = document.getElementById('kid-cards');
+      const emptyState = document.getElementById('empty-state');
+      const kids = parentData?.kids || [];
+
+      document.getElementById('stat-kids').textContent = kids.length;
+
+      if (kids.length === 0) {
+        emptyState.style.display = 'block';
+        return;
+      }
+      emptyState.style.display = 'none';
+
+      let totalLevels = 0, totalStars = 0;
+      let cardsHtml = '';
+
+      for (const kidUsername of kids) {
+        let kidData = {};
+        try {
+          const kidDoc = await db.collection('kids').doc(kidUsername).get();
+          if (kidDoc.exists) kidData = kidDoc.data();
+        } catch (e) {}
+
+        const displayName = kidData.displayName || kidUsername;
+        const avatar = kidData.avatar || 'hero_aiden_portrait.png';
+        const maxLevel = kidData.maxLevel || 0;
+        const stars = kidData.totalStars || 0;
+        const lastPlayed = kidData.lastPlayed ? timeAgo(kidData.lastPlayed.toDate()) : 'Never';
+
+        totalLevels += maxLevel;
+        totalStars += stars;
+
+        cardsHtml += `
+          <div class="kid-card">
+            <img class="kid-card-avatar" src="https://${kidUsername}.tlid.io/assets/ui/${avatar}" 
+                 onerror="this.src='https://${kidUsername}.tlid.io/assets/ui/hero_aiden_portrait.png'" />
+            <div class="kid-card-info">
+              <div class="kid-card-name">${displayName}</div>
+              <div class="kid-card-username">${kidUsername}.tlid.io</div>
+              <div class="kid-card-stats">
+                <span class="kid-card-stat"><span class="dot" style="background:var(--success);"></span> Level ${maxLevel}</span>
+                <span class="kid-card-stat"><span class="dot" style="background:var(--warning);"></span> ${stars} ⭐</span>
+                <span class="kid-card-stat">${lastPlayed}</span>
+              </div>
+            </div>
+            <div class="kid-card-actions">
+              <button class="kid-action-btn play" onclick="window.open('https://${kidUsername}.tlid.io','_blank')">🎮 Visit</button>
+              <button class="kid-action-btn view" onclick="alert('Multiplayer co-play coming soon!')">👨‍👧 Play</button>
+            </div>
+          </div>
+        `;
+      }
+
+      container.innerHTML = cardsHtml + '<div id="empty-state" class="empty-state" style="display:none;"></div>';
+      document.getElementById('stat-levels').textContent = totalLevels;
+      document.getElementById('stat-stars').textContent = totalStars;
+    }
+
+    // ── Add Kid Modal ──
+    function openAddKidModal() {
+      document.getElementById('add-kid-modal').classList.add('open');
+      document.getElementById('kid-name').value = '';
+      document.getElementById('kid-username').value = '';
+      document.getElementById('username-status').textContent = '';
+      document.getElementById('username-preview-name').textContent = 'username';
+      document.getElementById('add-kid-btn').disabled = true;
+      document.getElementById('add-kid-error').style.display = 'none';
+    }
+    function closeAddKidModal() {
+      document.getElementById('add-kid-modal').classList.remove('open');
+    }
+
+    // ── Username Generation ──
+    function generateUsername() {
+      const name = document.getElementById('kid-name').value.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (name.length >= 2) {
+        const suggestions = [name, name + 'star', name + 'hero', name + 'rift'];
+        const suggestion = suggestions[0];
+        document.getElementById('kid-username').value = suggestion;
+        document.getElementById('username-preview-name').textContent = suggestion;
+        checkUsername();
+      }
+    }
+
+    let usernameCheckTimer;
+    async function checkUsername() {
+      const username = document.getElementById('kid-username').value.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+      document.getElementById('kid-username').value = username;
+      document.getElementById('username-preview-name').textContent = username || 'username';
+      
+      const status = document.getElementById('username-status');
+      const btn = document.getElementById('add-kid-btn');
+
+      if (username.length < 3) {
+        status.textContent = 'Username must be at least 3 characters';
+        status.className = 'username-status taken';
+        btn.disabled = true;
+        return;
+      }
+
+      status.textContent = 'Checking...';
+      status.className = 'username-status';
+
+      clearTimeout(usernameCheckTimer);
+      usernameCheckTimer = setTimeout(async () => {
+        try {
+          const doc = await db.collection('kids').doc(username).get();
+          if (doc.exists) {
+            status.textContent = '✗ Username taken';
+            status.className = 'username-status taken';
+            btn.disabled = true;
+          } else {
+            status.textContent = '✓ Available!';
+            status.className = 'username-status available';
+            btn.disabled = false;
+          }
+        } catch (e) {
+          status.textContent = '✓ Available';
+          status.className = 'username-status available';
+          btn.disabled = false;
+        }
+      }, 400);
+    }
+
+    // ── Add Kid ──
+    async function handleAddKid() {
+      const name = document.getElementById('kid-name').value.trim();
+      const username = document.getElementById('kid-username').value.trim().toLowerCase();
+      const errorEl = document.getElementById('add-kid-error');
+
+      if (!name || !username) {
+        errorEl.textContent = 'Please fill in all fields.';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      const btn = document.getElementById('add-kid-btn');
+      btn.disabled = true;
+      btn.textContent = 'Creating...';
+
+      try {
+        // Create kid doc
+        await db.collection('kids').doc(username).set({
+          displayName: name,
+          parentId: currentUser.uid,
+          avatar: 'hero_aiden_portrait.png',
+          theme: { accentColor: '#22d3ee' },
+          maxLevel: 0,
+          totalStars: 0,
+          totalShards: 0,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+
+        // Add to parent's kid list
+        await db.collection('parents').doc(currentUser.uid).update({
+          kids: firebase.firestore.FieldValue.arrayUnion(username),
+        });
+
+        // Update local data
+        if (!parentData.kids) parentData.kids = [];
+        parentData.kids.push(username);
+
+        closeAddKidModal();
+        renderKidCards();
+        btn.textContent = 'Create Portal';
+      } catch (e) {
+        errorEl.textContent = 'Error creating profile: ' + e.message;
+        errorEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Create Portal';
+      }
+    }
+
+    // ── Utility ──
+    function timeAgo(date) {
+      const seconds = Math.floor((new Date() - date) / 1000);
+      if (seconds < 60) return 'Just now';
+      if (seconds < 3600) return Math.floor(seconds / 60) + 'm ago';
+      if (seconds < 86400) return Math.floor(seconds / 3600) + 'h ago';
+      return Math.floor(seconds / 86400) + 'd ago';
+    }
+
+    // Enter key support
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        if (document.getElementById('login-form').style.display !== 'none') {
+          handleLogin();
+        } else {
+          handleSignup();
+        }
+      }
+    });
+  </script>
+</body>
+</html>
