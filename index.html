@@ -1248,6 +1248,51 @@
       </div>
     </div>
 
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- ── 🎓 LEARNING ACADEMY ── -->
+    <!-- ══════════════════════════════════════════════ -->
+    <div class="app-section-title" style="margin-top:10px;">🎓 Learning Academy</div>
+    <div style="margin:0 auto 10px; max-width:500px; padding:0 10px; text-align:center;">
+      <p style="color:#94a3b8; font-size:12px; font-weight:600; line-height:1.6;">7 interactive learning labs — all free, all offline, all yours. Tap any card to start!</p>
+    </div>
+    <div style="margin:0 auto 20px; max-width:500px; padding:0 10px; display:grid; grid-template-columns:repeat(2,1fr); gap:10px;">
+      <div class="app-card playable" onclick="openTimeMath()" style="border-color:#10b981; box-shadow:0 6px 20px rgba(16,185,129,0.3);">
+        <img class="app-thumb" src="assets/ui/card_time_math.png" alt="Time Math" style="border-color:#10b981;">
+        <div class="app-title" style="color:#10b981;">Time Math</div>
+        <div class="app-desc">50 puzzles · 5 eras</div>
+      </div>
+      <div class="app-card playable" onclick="openScienceLab()" style="border-color:#22d3ee; box-shadow:0 6px 20px rgba(34,211,238,0.3);">
+        <img class="app-thumb" src="assets/ui/card_science_lab.png" alt="Science Lab" style="border-color:#22d3ee;">
+        <div class="app-title" style="color:#22d3ee;">Science Lab</div>
+        <div class="app-desc">12 experiments</div>
+      </div>
+      <div class="app-card playable" onclick="openStoryMode()" style="border-color:#fbbf24; box-shadow:0 6px 20px rgba(251,191,36,0.3);">
+        <img class="app-thumb" src="assets/ui/card_story_mode.png" alt="Story Mode" style="border-color:#fbbf24;">
+        <div class="app-title" style="color:#fbbf24;">Story Mode</div>
+        <div class="app-desc">8 adventures</div>
+      </div>
+      <div class="app-card playable" onclick="openHistoryExplorer()" style="border-color:#f43f5e; box-shadow:0 6px 20px rgba(244,63,94,0.3);">
+        <img class="app-thumb" src="assets/ui/card_history_explorer.png" alt="History Explorer" style="border-color:#f43f5e;">
+        <div class="app-title" style="color:#f43f5e;">History Explorer</div>
+        <div class="app-desc">30 events · timeline</div>
+      </div>
+      <div class="app-card playable" onclick="openArtStudio()" style="border-color:#a855f7; box-shadow:0 6px 20px rgba(168,85,247,0.3);">
+        <img class="app-thumb" src="assets/ui/card_art_studio.png" alt="Art Studio" style="border-color:#a855f7;">
+        <div class="app-title" style="color:#a855f7;">Art Studio</div>
+        <div class="app-desc">Pixel art & drawing</div>
+      </div>
+      <div class="app-card playable" onclick="openMusicLab()" style="border-color:#ec4899; box-shadow:0 6px 20px rgba(236,72,153,0.3);">
+        <img class="app-thumb" src="assets/ui/card_music_lab.png" alt="Music Lab" style="border-color:#ec4899;">
+        <div class="app-title" style="color:#ec4899;">Music Lab</div>
+        <div class="app-desc">Beats & melodies</div>
+      </div>
+      <div class="app-card playable" onclick="openChronoTyper()" style="grid-column:span 2; border-color:#0ea5e9; box-shadow:0 6px 20px rgba(14,165,233,0.3);">
+        <img class="app-thumb" src="assets/ui/card_chrono_typer.png" alt="Chrono Typer" style="border-color:#0ea5e9;">
+        <div class="app-title" style="color:#0ea5e9;">Chrono Typer</div>
+        <div class="app-desc">20 lessons · WPM tracking</div>
+      </div>
+    </div>
+
     <!-- ── Leaderboard ── -->
     <div class="app-section-title" style="margin-top:10px;">🏆 Leaderboard</div>
     <div id="leaderboard-section" style="margin:0 auto 20px; max-width:500px; padding:0 10px;">
@@ -4061,6 +4106,453 @@
             '<div style="color:#64748b;font-size:11px;font-weight:600;">' + e.maxLevel + ' lvls</div></div>';
         }).join('');
       } catch(e) { container.innerHTML = '<div style="text-align:center;color:#64748b;padding:20px;font-size:13px;">Leaderboard unavailable</div>'; }
+    }
+
+    // ══════════════════════════════════════════════
+    // ── 🎓 LEARNING ACADEMY MODULES ──
+    // ══════════════════════════════════════════════
+
+    function createModuleOverlay(id, title, color, contentHTML) {
+      var old = document.getElementById(id); if (old) old.remove();
+      var ov = document.createElement('div'); ov.id = id;
+      ov.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(2,6,23,0.97);z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;animation:fadeIn 0.3s ease;';
+      ov.innerHTML = '<div style="max-width:500px;margin:0 auto;padding:20px;padding-top:env(safe-area-inset-top);">' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">' +
+        '<div style="font-size:18px;font-weight:900;color:' + color + ';">' + title + '</div>' +
+        '<button onclick="document.getElementById(\'' + id + '\').remove()" style="background:rgba(255,255,255,0.1);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer;">✕</button>' +
+        '</div>' + contentHTML + '</div>';
+      document.body.appendChild(ov);
+      return ov;
+    }
+
+    // ── 1. TIME MATH ──
+    function openTimeMath() {
+      var eras = [
+        { name:'Ancient Egypt', emoji:'🏛️', color:'#fbbf24', years:'3000 BC' },
+        { name:'Roman Empire', emoji:'⚔️', color:'#f43f5e', years:'100 AD' },
+        { name:'Medieval', emoji:'🏰', color:'#a855f7', years:'1200 AD' },
+        { name:'Industrial', emoji:'🏭', color:'#64748b', years:'1850 AD' },
+        { name:'Future', emoji:'🚀', color:'#22d3ee', years:'2200 AD' }
+      ];
+      var state = { era:0, q:0, score:0, total:0 };
+      function genQ() {
+        var a = Math.floor(Math.random()*12)+1, b = Math.floor(Math.random()*12)+1;
+        var ops = ['+','-','×'];
+        var op = ops[Math.floor(Math.random()*ops.length)];
+        var ans = op==='+'?a+b : op==='-'?a-b : a*b;
+        if(op==='-'&&a<b){var t=a;a=b;b=t;ans=a-b;}
+        return {text:a+' '+op+' '+b+' = ?', answer:ans};
+      }
+      function render() {
+        var e = eras[state.era], q = genQ();
+        var h = '<div style="text-align:center;margin-bottom:16px;">' +
+          '<div style="font-size:40px;">'+e.emoji+'</div>' +
+          '<div style="color:'+e.color+';font-size:14px;font-weight:800;">'+e.name+' ('+e.years+')</div>' +
+          '<div style="color:#64748b;font-size:11px;margin-top:4px;">Era '+(state.era+1)+'/5 · Score: '+state.score+'</div></div>' +
+          '<div style="background:rgba(255,255,255,0.05);border-radius:20px;padding:24px;text-align:center;margin-bottom:16px;">' +
+          '<div style="color:#fff;font-size:28px;font-weight:900;font-family:monospace;">'+q.text+'</div></div>' +
+          '<div id="tm-choices" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;"></div>' +
+          '<div id="tm-feedback" style="text-align:center;margin-top:12px;font-size:14px;font-weight:800;min-height:24px;"></div>';
+        var ov = createModuleOverlay('mod-timemath','🔢 Time Math','#10b981',h);
+        var choices = [], correct = q.answer;
+        choices.push(correct);
+        while(choices.length<4){var c=correct+Math.floor(Math.random()*10)-5;if(c!==correct&&choices.indexOf(c)===-1&&c>=0)choices.push(c);}
+        choices.sort(function(){return Math.random()-0.5;});
+        var grid = ov.querySelector('#tm-choices');
+        choices.forEach(function(c){
+          var btn = document.createElement('button');
+          btn.textContent = c;
+          btn.style.cssText='padding:16px;border-radius:12px;border:2px solid rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);color:#fff;font-size:20px;font-weight:800;cursor:pointer;transition:all 0.2s;';
+          btn.onclick=function(){
+            state.total++;
+            var fb = ov.querySelector('#tm-feedback');
+            if(c===correct){state.score++;fb.style.color='#10b981';fb.textContent='✅ Correct! +1 star';} 
+            else{fb.style.color='#f43f5e';fb.textContent='❌ Answer was '+correct;}
+            state.q++;
+            if(state.q>=10){state.q=0;state.era++;if(state.era>=5){
+              fb.textContent='🏆 Complete! Final score: '+state.score+'/'+state.total;
+              setTimeout(function(){var o=document.getElementById('mod-timemath');if(o)o.remove();},3000);return;}}
+            setTimeout(render,1200);
+          };
+          grid.appendChild(btn);
+        });
+      }
+      render();
+    }
+
+    // ── 2. SCIENCE LAB ──
+    function openScienceLab() {
+      var experiments = [
+        {name:'Volcano Eruption',emoji:'🌋',desc:'Mix baking soda and vinegar to create a foamy eruption!',color:'#f43f5e',fact:'Real volcanoes erupt when hot magma from deep underground pushes through cracks in the Earth\'s crust.'},
+        {name:'Rainbow Density',emoji:'🌈',desc:'Stack colored liquids by density to make a rainbow in a jar!',color:'#fbbf24',fact:'Honey is denser than water, and oil floats on top because it\'s less dense.'},
+        {name:'Static Electricity',emoji:'⚡',desc:'Rub a balloon on your hair to make things stick!',color:'#22d3ee',fact:'Rubbing creates an imbalance of electrons, giving the balloon a negative charge.'},
+        {name:'Plant Growth',emoji:'🌱',desc:'Watch how sunlight, water, and soil help plants grow!',color:'#10b981',fact:'Plants use photosynthesis to convert sunlight into energy — they literally eat light!'},
+        {name:'Magnet Explorer',emoji:'🧲',desc:'Discover which materials are magnetic and why!',color:'#64748b',fact:'Magnets attract iron, nickel, and cobalt because of the alignment of tiny atomic domains.'},
+        {name:'Water Cycle',emoji:'💧',desc:'See evaporation, condensation, and precipitation in action!',color:'#0ea5e9',fact:'The water you drink today might have been drunk by a dinosaur millions of years ago!'},
+        {name:'Sound Waves',emoji:'🔊',desc:'Visualize how sound travels through air as waves!',color:'#a855f7',fact:'Sound travels about 343 meters per second in air — that\'s faster than a race car!'},
+        {name:'Color Mixing',emoji:'🎨',desc:'Mix primary colors to discover secondary colors!',color:'#ec4899',fact:'Red + Blue = Purple, Red + Yellow = Orange, Blue + Yellow = Green!'},
+        {name:'Gravity Drop',emoji:'🍎',desc:'Drop objects to see how gravity pulls everything down equally!',color:'#f97316',fact:'On the Moon, a feather and a hammer hit the ground at the same time because there\'s no air resistance!'},
+        {name:'Ice Melting',emoji:'🧊',desc:'Test which substances make ice melt faster or slower!',color:'#06b6d4',fact:'Salt lowers the freezing point of water, which is why we put salt on icy roads!'},
+        {name:'Balloon Rocket',emoji:'🎈',desc:'Launch a balloon along a string to learn about thrust!',color:'#eab308',fact:'Rockets work by Newton\'s Third Law: for every action, there is an equal and opposite reaction.'},
+        {name:'Shadow Tracing',emoji:'🔦',desc:'Use a flashlight to trace shadows and learn about light!',color:'#8b5cf6',fact:'Shadows form because light travels in straight lines and can\'t bend around opaque objects.'}
+      ];
+      var idx = 0;
+      function render() {
+        var e = experiments[idx];
+        var h = '<div style="text-align:center;margin-bottom:16px;">' +
+          '<div style="font-size:60px;margin-bottom:8px;">'+e.emoji+'</div>' +
+          '<div style="color:'+e.color+';font-size:16px;font-weight:900;">'+e.name+'</div>' +
+          '<div style="color:#64748b;font-size:11px;margin-top:4px;">Experiment '+(idx+1)+'/12</div></div>' +
+          '<div style="background:rgba(255,255,255,0.05);border-radius:16px;padding:20px;margin-bottom:12px;">' +
+          '<div style="color:#e2e8f0;font-size:13px;line-height:1.7;">'+e.desc+'</div></div>' +
+          '<div id="sci-anim" style="background:rgba('+e.color.replace('#','')+',0.06);border:1px solid '+e.color+'33;border-radius:16px;height:160px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;overflow:hidden;position:relative;">' +
+          '<div style="font-size:80px;animation:pulse 2s infinite;">'+e.emoji+'</div></div>' +
+          '<button id="sci-reveal" style="width:100%;padding:14px;border-radius:12px;border:2px solid '+e.color+';background:'+e.color+'15;color:'+e.color+';font-size:13px;font-weight:800;cursor:pointer;margin-bottom:8px;">🔍 Reveal Science Fact</button>' +
+          '<div id="sci-fact" style="display:none;background:rgba(34,211,238,0.08);border:1px solid rgba(34,211,238,0.2);border-radius:12px;padding:14px;margin-bottom:12px;">' +
+          '<div style="color:#22d3ee;font-size:12px;font-weight:800;margin-bottom:4px;">💡 Did You Know?</div>' +
+          '<div style="color:#e2e8f0;font-size:12px;line-height:1.6;">'+e.fact+'</div></div>' +
+          '<div style="display:flex;gap:8px;">' +
+          '<button onclick="sciPrev()" style="flex:1;padding:12px;border-radius:10px;border:none;background:rgba(255,255,255,0.08);color:#94a3b8;font-size:12px;font-weight:800;cursor:pointer;">← Previous</button>' +
+          '<button onclick="sciNext()" style="flex:1;padding:12px;border-radius:10px;border:none;background:'+e.color+';color:#fff;font-size:12px;font-weight:800;cursor:pointer;">Next →</button></div>';
+        createModuleOverlay('mod-scilab','🔬 Science Lab','#22d3ee',h);
+        document.getElementById('sci-reveal').onclick=function(){document.getElementById('sci-fact').style.display='block';this.style.display='none';};
+      }
+      window.sciNext = function(){idx=(idx+1)%experiments.length;render();};
+      window.sciPrev = function(){idx=(idx-1+experiments.length)%experiments.length;render();};
+      render();
+    }
+
+    // ── 3. STORY MODE ──
+    function openStoryMode() {
+      var stories = [
+        {title:'The Lost Pyramid Clock',era:'Ancient Egypt',emoji:'🏛️',color:'#fbbf24',
+         pages:[
+           {text:'You find yourself at the base of the Great Pyramid. A mysterious clock is missing from the Pharaoh\'s chamber. Do you...', choices:['Enter through the secret tunnel','Climb to the top']},
+           {text:'Inside the dark tunnel, hieroglyphs glow on the walls. You see two paths — one leads to the treasure room, one to the guardian\'s chamber.', choices:['Go to the treasure room','Face the guardian']},
+           {text:'The treasure room is filled with golden artifacts! Among them, the ancient clock ticks softly. You carefully pick it up and the pyramid rumbles...', choices:['Run for the exit!','Look for another way out']},
+           {text:'🏆 You escape with the clock just as the entrance seals behind you! The Pharaoh\'s timeline is restored. You\'re a hero!', choices:null}
+         ]},
+        {title:'Roman Arena Rescue',era:'Roman Empire',emoji:'⚔️',color:'#f43f5e',
+         pages:[
+           {text:'You arrive at the Colosseum! A friendly lion cub is trapped in the arena. The crowd cheers. Do you...', choices:['Sneak through the gates','Distract the guards']},
+           {text:'You make it into the arena! The lion cub runs to you happily. But the gate is closing fast!', choices:['Slide under the gate','Find the lever to hold it open']},
+           {text:'You find the lever and hold the gate! The lion cub races through. The crowd cheers for your bravery!', choices:['Take a bow','Sneak away quietly']},
+           {text:'🏆 The Emperor is so impressed he declares you an honorary citizen of Rome! The lion cub becomes your best friend.', choices:null}
+         ]},
+        {title:'Castle of the Missing Crown',era:'Medieval',emoji:'🏰',color:'#a855f7',
+         pages:[
+           {text:'The King\'s crown has vanished! You\'re a young knight tasked with finding it. The castle has many rooms...', choices:['Search the tower','Check the dungeon']},
+           {text:'In the tower, you find a mysterious map with a riddle: "Where water meets stone, the crown sits alone."', choices:['Go to the moat','Check the fountain']},
+           {text:'At the fountain, moonlight reveals a hidden compartment! Inside, the crown sparkles beautifully!', choices:['Return it to the King','Examine it first']},
+           {text:'🏆 The King is overjoyed! He knights you Sir/Lady Chrono, Protector of Time!', choices:null}
+         ]},
+        {title:'Steam Engine Express',era:'Industrial Age',emoji:'🚂',color:'#64748b',
+         pages:[
+           {text:'It\'s 1850 and the first steam train is about to depart! But the engineer is sick. Can you drive it?', choices:['Hop in the engine','Find a co-pilot first']},
+           {text:'You study the controls — pressure gauge, throttle, brake. The whistle blows! Time to move!', choices:['Full steam ahead!','Start slowly and carefully']},
+           {text:'The train picks up speed through beautiful countryside. A bridge ahead looks old and shaky...', choices:['Slow down for the bridge','Trust the bridge and keep going']},
+           {text:'🏆 You arrive at the station to a cheering crowd! You\'re the youngest engineer in history!', choices:null}
+         ]},
+        {title:'Space Station SOS',era:'Future',emoji:'🚀',color:'#22d3ee',
+         pages:[
+           {text:'Year 2200. You\'re aboard Space Station Chrono when an alarm sounds — oxygen levels dropping!', choices:['Check the life support system','Call mission control']},
+           {text:'The oxygen recycler has a cracked pipe! You need to fix it. Your toolkit has tape and a wrench.', choices:['Use the emergency tape','Tighten with the wrench']},
+           {text:'The tape holds! Oxygen levels start rising. But now the station is drifting off course...', choices:['Fire the thrusters','Use the solar sails']},
+           {text:'🏆 Station Chrono is saved! Earth sends a message: "You\'re the bravest astronaut we\'ve ever seen!"', choices:null}
+         ]},
+        {title:'Dinosaur Time Slip',era:'Prehistoric',emoji:'🦕',color:'#10b981',
+         pages:[
+           {text:'Your time watch malfunctions and sends you 65 million years back! A baby Triceratops nuzzles your hand.', choices:['Follow the Triceratops','Try to fix the watch']},
+           {text:'The Triceratops leads you to a beautiful valley with a waterfall. Your watch beeps — it found a time crystal nearby!', choices:['Search near the waterfall','Look in the cave behind it']},
+           {text:'In the cave, a glowing time crystal pulses with energy! You grab it and plug it into your watch.', choices:['Set coordinates for home','Say goodbye to the Triceratops first']},
+           {text:'🏆 You hug the baby Triceratops goodbye and zap back home! What an incredible adventure through time!', choices:null}
+         ]},
+        {title:'Viking Voyage',era:'Viking Age',emoji:'⛵',color:'#f97316',
+         pages:[
+           {text:'You\'re on a Viking longship sailing into unknown waters! The captain asks you to navigate by the stars.', choices:['Use the North Star','Follow the seabirds']},
+           {text:'The North Star guides you to a mysterious island with tall cliffs. The crew wants to explore!', choices:['Anchor and explore','Sail around the island first']},
+           {text:'On the island, you discover ancient ruins with Viking runes that tell of a hidden treasure!', choices:['Decode the runes','Dig where X marks the spot']},
+           {text:'🏆 You found the treasure — a chest of golden coins and a magical compass that always points to adventure!', choices:null}
+         ]},
+        {title:'Moon Base Alpha',era:'Near Future',emoji:'🌙',color:'#e2e8f0',
+         pages:[
+           {text:'Year 2075. You\'re the youngest scientist on Moon Base Alpha! Today you\'re testing a new rover outside.', choices:['Take the rover for a spin','Run system diagnostics first']},
+           {text:'The rover zooms across the lunar surface! You spot something shiny in a crater...', choices:['Drive into the crater','Use the rover\'s robotic arm']},
+           {text:'It\'s a meteor fragment with crystals inside! Your scanner says it\'s a mineral never seen before!', choices:['Name it Chronium','Radio the discovery to Earth']},
+           {text:'🏆 The new mineral "Chronium" is named after you! Scientists say it could power a time machine someday!', choices:null}
+         ]}
+      ];
+      var si=0, pi=0;
+      function render(){
+        var s=stories[si], p=s.pages[pi];
+        var h='<div style="text-align:center;margin-bottom:12px;">' +
+          '<div style="font-size:48px;">'+s.emoji+'</div>' +
+          '<div style="color:'+s.color+';font-size:14px;font-weight:900;">'+s.title+'</div>' +
+          '<div style="color:#64748b;font-size:11px;">'+s.era+' · Page '+(pi+1)+'/'+s.pages.length+'</div></div>' +
+          '<div style="background:rgba(255,255,255,0.05);border-radius:16px;padding:20px;margin-bottom:16px;">' +
+          '<div style="color:#e2e8f0;font-size:14px;line-height:1.8;">'+p.text+'</div></div>';
+        if(p.choices){
+          p.choices.forEach(function(c,i){
+            h+='<button onclick="storyChoice('+i+')" style="width:100%;padding:14px;border-radius:12px;border:2px solid '+s.color+'44;background:'+s.color+'10;color:#e2e8f0;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:8px;text-align:left;">'+['🅰️','🅱️'][i]+' '+c+'</button>';
+          });
+        } else {
+          h+='<button onclick="storyNextStory()" style="width:100%;padding:14px;border-radius:12px;border:none;background:#10b981;color:#fff;font-size:13px;font-weight:800;cursor:pointer;">📖 Next Story</button>';
+        }
+        h+='<div style="display:flex;gap:6px;margin-top:12px;justify-content:center;">';
+        stories.forEach(function(st,i){h+='<div style="width:8px;height:8px;border-radius:50%;background:'+(i===si?st.color:'rgba(255,255,255,0.15)')+';"></div>';});
+        h+='</div>';
+        createModuleOverlay('mod-storymode','📖 Story Mode','#fbbf24',h);
+      }
+      window.storyChoice=function(){pi++;if(pi>=stories[si].pages.length)pi=stories[si].pages.length-1;render();};
+      window.storyNextStory=function(){si=(si+1)%stories.length;pi=0;render();};
+      render();
+    }
+
+    // ── 4. HISTORY EXPLORER ──
+    function openHistoryExplorer() {
+      var events = [
+        {year:-3000,title:'Egyptian Pyramids Built',emoji:'🏛️',desc:'Ancient Egyptians built the Great Pyramid of Giza, one of the Seven Wonders of the Ancient World.',color:'#fbbf24'},
+        {year:-776,title:'First Olympic Games',emoji:'🏟️',desc:'The ancient Greeks held the first Olympic Games in Olympia, with just one event: a foot race!',color:'#10b981'},
+        {year:-500,title:'Democracy Invented',emoji:'🗳️',desc:'Athens, Greece created the world\'s first democracy — government by the people!',color:'#22d3ee'},
+        {year:-221,title:'Great Wall of China',emoji:'🧱',desc:'Emperor Qin Shi Huang connected existing walls to create the Great Wall of China.',color:'#f43f5e'},
+        {year:79,title:'Vesuvius Erupts',emoji:'🌋',desc:'Mount Vesuvius erupted and buried the Roman city of Pompeii under ash.',color:'#f97316'},
+        {year:1066,title:'Battle of Hastings',emoji:'⚔️',desc:'William the Conqueror defeated King Harold and became King of England.',color:'#a855f7'},
+        {year:1215,title:'Magna Carta Signed',emoji:'📜',desc:'English nobles forced King John to sign the Magna Carta, limiting the King\'s power.',color:'#64748b'},
+        {year:1440,title:'Printing Press',emoji:'📖',desc:'Johannes Gutenberg invented the printing press, making books available to everyone!',color:'#eab308'},
+        {year:1492,title:'Columbus Reaches Americas',emoji:'⛵',desc:'Christopher Columbus sailed across the Atlantic Ocean and reached the Americas.',color:'#06b6d4'},
+        {year:1687,title:'Newton\'s Laws',emoji:'🍎',desc:'Isaac Newton published his laws of motion and gravity after watching an apple fall!',color:'#10b981'},
+        {year:1776,title:'Declaration of Independence',emoji:'🗽',desc:'The United States declared independence from Britain on July 4th, 1776.',color:'#3b82f6'},
+        {year:1789,title:'French Revolution',emoji:'🇫🇷',desc:'The French people stormed the Bastille and fought for liberty, equality, and fraternity.',color:'#f43f5e'},
+        {year:1804,title:'Steam Locomotive',emoji:'🚂',desc:'Richard Trevithick built the first steam locomotive that ran on rails.',color:'#64748b'},
+        {year:1869,title:'Transcontinental Railroad',emoji:'🛤️',desc:'The first railroad connecting the east and west coasts of America was completed!',color:'#a855f7'},
+        {year:1876,title:'Telephone Invented',emoji:'📞',desc:'Alexander Graham Bell made the first telephone call: "Mr. Watson, come here!"',color:'#22d3ee'},
+        {year:1903,title:'First Airplane Flight',emoji:'✈️',desc:'The Wright Brothers flew the first powered airplane at Kitty Hawk for 12 seconds!',color:'#0ea5e9'},
+        {year:1920,title:'Women Win Right to Vote',emoji:'🗳️',desc:'The 19th Amendment gave women the right to vote in the United States.',color:'#ec4899'},
+        {year:1928,title:'Penicillin Discovered',emoji:'💊',desc:'Alexander Fleming discovered penicillin, saving millions of lives from infections.',color:'#10b981'},
+        {year:1945,title:'United Nations Founded',emoji:'🌍',desc:'After World War II, countries formed the UN to promote peace and cooperation.',color:'#3b82f6'},
+        {year:1953,title:'DNA Structure Found',emoji:'🧬',desc:'Watson and Crick discovered the double helix structure of DNA — the code of life!',color:'#a855f7'},
+        {year:1961,title:'First Human in Space',emoji:'🧑‍🚀',desc:'Yuri Gagarin became the first person to orbit the Earth in a spacecraft.',color:'#22d3ee'},
+        {year:1969,title:'Moon Landing',emoji:'🌙',desc:'Neil Armstrong became the first person to walk on the Moon: "One small step for man..."',color:'#e2e8f0'},
+        {year:1989,title:'Berlin Wall Falls',emoji:'🧱',desc:'The Berlin Wall came down, reuniting East and West Germany after 28 years.',color:'#fbbf24'},
+        {year:1990,title:'World Wide Web',emoji:'🌐',desc:'Tim Berners-Lee created the World Wide Web, connecting the whole world online!',color:'#0ea5e9'},
+        {year:1997,title:'First Mars Rover',emoji:'🤖',desc:'NASA\'s Sojourner rover landed on Mars — the first robot to explore another planet!',color:'#f43f5e'},
+        {year:2004,title:'Social Media Begins',emoji:'👥',desc:'Facebook launched, changing how the world connects and shares.',color:'#3b82f6'},
+        {year:2012,title:'Curiosity on Mars',emoji:'🔴',desc:'NASA\'s Curiosity rover landed on Mars to search for signs of ancient life.',color:'#f97316'},
+        {year:2020,title:'COVID-19 Vaccines',emoji:'💉',desc:'Scientists created COVID-19 vaccines in record time using mRNA technology.',color:'#10b981'},
+        {year:2023,title:'AI Revolution',emoji:'🤖',desc:'Artificial Intelligence became available to everyone, changing work, art, and learning.',color:'#a855f7'},
+        {year:2025,title:'Chronoverse Launches!',emoji:'🎮',desc:'DarkWave Studios launched Chronoverse — the world\'s best free kids\' tech platform!',color:'#22d3ee'}
+      ];
+      var sel=0;
+      function render(){
+        var h='<div style="margin-bottom:12px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;">' +
+          '<div style="display:flex;gap:6px;min-width:max-content;">';
+        events.forEach(function(e,i){
+          h+='<button onclick="histSel('+i+')" style="padding:6px 10px;border-radius:8px;border:1px solid '+(i===sel?e.color:'rgba(255,255,255,0.1)')+';background:'+(i===sel?e.color+'20':'transparent')+';color:'+(i===sel?e.color:'#64748b')+';font-size:10px;font-weight:700;white-space:nowrap;cursor:pointer;">'+(e.year<0?Math.abs(e.year)+' BC':e.year)+'</button>';
+        });
+        h+='</div></div>';
+        var e=events[sel];
+        h+='<div style="background:rgba(255,255,255,0.05);border-radius:20px;padding:24px;text-align:center;border:1px solid '+e.color+'33;">' +
+          '<div style="font-size:56px;margin-bottom:8px;">'+e.emoji+'</div>' +
+          '<div style="color:'+e.color+';font-size:18px;font-weight:900;">'+e.title+'</div>' +
+          '<div style="color:#64748b;font-size:12px;font-weight:700;margin:6px 0 12px;">'+(e.year<0?Math.abs(e.year)+' BC':e.year+' AD')+'</div>' +
+          '<div style="color:#e2e8f0;font-size:13px;line-height:1.7;">'+e.desc+'</div></div>' +
+          '<div style="display:flex;gap:8px;margin-top:12px;">' +
+          '<button onclick="histSel('+(sel>0?sel-1:0)+')" style="flex:1;padding:12px;border-radius:10px;border:none;background:rgba(255,255,255,0.08);color:#94a3b8;font-size:12px;font-weight:800;cursor:pointer;">← Earlier</button>' +
+          '<button onclick="histSel('+(sel<events.length-1?sel+1:events.length-1)+')" style="flex:1;padding:12px;border-radius:10px;border:none;background:'+e.color+';color:#fff;font-size:12px;font-weight:800;cursor:pointer;">Later →</button></div>' +
+          '<div style="text-align:center;margin-top:8px;color:#64748b;font-size:11px;font-weight:600;">'+(sel+1)+' of '+events.length+' events</div>';
+        createModuleOverlay('mod-history','🌍 History Explorer','#f43f5e',h);
+      }
+      window.histSel=function(i){sel=i;render();};
+      render();
+    }
+
+    // ── 5. ART STUDIO ──
+    function openArtStudio() {
+      var gridSize=16, pixelSize=0, currentColor='#22d3ee', isDrawing=false;
+      var grid=[];for(var i=0;i<gridSize*gridSize;i++)grid.push('#1e1e2e');
+      var palette=['#f43f5e','#f97316','#fbbf24','#10b981','#22d3ee','#3b82f6','#a855f7','#ec4899','#e2e8f0','#64748b','#1e1e2e','#ffffff'];
+      function render(){
+        var h='<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:12px;">';
+        palette.forEach(function(c){
+          h+='<button onclick="artColor(\''+c+'\')" style="width:28px;height:28px;border-radius:8px;border:2px solid '+(c===currentColor?'#fff':'transparent')+';background:'+c+';cursor:pointer;"></button>';
+        });
+        h+='</div>';
+        h+='<div style="display:flex;gap:8px;justify-content:center;margin-bottom:12px;">' +
+          '<button onclick="artClear()" style="padding:8px 14px;border-radius:8px;border:none;background:rgba(244,63,94,0.15);color:#f43f5e;font-size:11px;font-weight:800;cursor:pointer;">🗑️ Clear</button>' +
+          '<button onclick="artRandom()" style="padding:8px 14px;border-radius:8px;border:none;background:rgba(168,85,247,0.15);color:#a855f7;font-size:11px;font-weight:800;cursor:pointer;">🎲 Random</button>' +
+          '<div style="padding:8px 14px;border-radius:8px;background:rgba(34,211,238,0.15);color:#22d3ee;font-size:11px;font-weight:800;">🎨 '+currentColor+'</div></div>';
+        h+='<canvas id="art-canvas" style="display:block;margin:0 auto;border-radius:12px;border:2px solid rgba(255,255,255,0.1);touch-action:none;image-rendering:pixelated;background:#1e1e2e;cursor:crosshair;max-width:100%;"></canvas>';
+        h+='<div style="text-align:center;margin-top:10px;color:#64748b;font-size:11px;font-weight:600;">Tap or drag to draw · '+gridSize+'×'+gridSize+' pixels</div>';
+        createModuleOverlay('mod-artstudio','🎨 Art Studio','#a855f7',h);
+        var canvas=document.getElementById('art-canvas');
+        var containerW=canvas.parentElement.clientWidth;
+        pixelSize=Math.floor(Math.min(containerW,400)/gridSize);
+        canvas.width=gridSize*pixelSize;canvas.height=gridSize*pixelSize;
+        var ctx=canvas.getContext('2d');
+        function drawGrid(){
+          for(var y=0;y<gridSize;y++)for(var x=0;x<gridSize;x++){
+            ctx.fillStyle=grid[y*gridSize+x];ctx.fillRect(x*pixelSize,y*pixelSize,pixelSize,pixelSize);
+            ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.strokeRect(x*pixelSize,y*pixelSize,pixelSize,pixelSize);
+          }
+        }
+        drawGrid();
+        function paint(e){
+          var rect=canvas.getBoundingClientRect();
+          var touches=e.touches?e.touches:[e];
+          for(var t=0;t<touches.length;t++){
+            var cx=touches[t].clientX-rect.left, cy=touches[t].clientY-rect.top;
+            var gx=Math.floor(cx/pixelSize), gy=Math.floor(cy/pixelSize);
+            if(gx>=0&&gx<gridSize&&gy>=0&&gy<gridSize){grid[gy*gridSize+gx]=currentColor;drawGrid();}
+          }
+        }
+        canvas.onmousedown=function(e){isDrawing=true;paint(e);};
+        canvas.onmousemove=function(e){if(isDrawing)paint(e);};
+        canvas.onmouseup=function(){isDrawing=false;};
+        canvas.ontouchstart=function(e){e.preventDefault();paint(e);};
+        canvas.ontouchmove=function(e){e.preventDefault();paint(e);};
+      }
+      window.artColor=function(c){currentColor=c;render();};
+      window.artClear=function(){for(var i=0;i<grid.length;i++)grid[i]='#1e1e2e';render();};
+      window.artRandom=function(){for(var i=0;i<grid.length;i++)grid[i]=palette[Math.floor(Math.random()*palette.length)];render();};
+      render();
+    }
+
+    // ── 6. MUSIC LAB ──
+    function openMusicLab() {
+      var bpm=120, rows=5, cols=8, playing=false, step=0, intervalId=null;
+      var sounds=['kick','snare','hihat','clap','bell'];
+      var colors=['#f43f5e','#fbbf24','#22d3ee','#a855f7','#10b981'];
+      var grid=[];for(var r=0;r<rows;r++){grid[r]=[];for(var c=0;c<cols;c++)grid[r][c]=false;}
+      var audioCtx=null;
+      function playNote(type,time){
+        if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+        var osc=audioCtx.createOscillator(),gain=audioCtx.createGain();
+        osc.connect(gain);gain.connect(audioCtx.destination);
+        var freq=[80,200,800,400,600][type];
+        osc.type=['sine','triangle','square','sawtooth','sine'][type];
+        osc.frequency.setValueAtTime(freq,audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.3,audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.2);
+        osc.start(audioCtx.currentTime);osc.stop(audioCtx.currentTime+0.2);
+      }
+      function render(){
+        var h='<div style="display:flex;gap:8px;justify-content:center;align-items:center;margin-bottom:12px;">' +
+          '<button id="ml-play" onclick="mlToggle()" style="width:42px;height:42px;border-radius:50%;border:none;background:'+(playing?'#f43f5e':'#10b981')+';color:#fff;font-size:18px;cursor:pointer;">'+(playing?'⏸':'▶')+'</button>' +
+          '<div style="color:#e2e8f0;font-size:12px;font-weight:700;">'+bpm+' BPM</div>' +
+          '<button onclick="mlBPM(-10)" style="padding:6px 10px;border-radius:6px;border:none;background:rgba(255,255,255,0.08);color:#94a3b8;font-size:12px;cursor:pointer;">-</button>' +
+          '<button onclick="mlBPM(10)" style="padding:6px 10px;border-radius:6px;border:none;background:rgba(255,255,255,0.08);color:#94a3b8;font-size:12px;cursor:pointer;">+</button>' +
+          '<button onclick="mlClear()" style="padding:6px 10px;border-radius:6px;border:none;background:rgba(244,63,94,0.15);color:#f43f5e;font-size:11px;font-weight:800;cursor:pointer;">Clear</button></div>';
+        h+='<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">';
+        h+='<div style="display:grid;grid-template-columns:60px repeat('+cols+',1fr);gap:3px;min-width:360px;">';
+        for(var r=0;r<rows;r++){
+          h+='<div style="display:flex;align-items:center;color:'+colors[r]+';font-size:10px;font-weight:800;padding:0 4px;">'+sounds[r]+'</div>';
+          for(var c=0;c<cols;c++){
+            var on=grid[r][c], isStep=(c===step&&playing);
+            h+='<button onclick="mlTog('+r+','+c+')" style="aspect-ratio:1;border-radius:6px;border:1px solid '+(on?colors[r]:'rgba(255,255,255,0.08)')+';background:'+(on?colors[r]+'40':'rgba(255,255,255,0.03)')+';cursor:pointer;position:relative;'+(isStep?'box-shadow:0 0 8px '+colors[r]+';':'')+'"></button>';
+          }
+        }
+        h+='</div></div>';
+        h+='<div style="display:flex;justify-content:center;gap:3px;margin-top:8px;">';
+        for(var c=0;c<cols;c++)h+='<div style="width:12px;height:4px;border-radius:2px;background:'+(c===step&&playing?'#22d3ee':'rgba(255,255,255,0.1)')+';"></div>';
+        h+='</div>';
+        h+='<div style="text-align:center;margin-top:10px;color:#64748b;font-size:11px;font-weight:600;">Tap cells to toggle · Press ▶ to play your beat!</div>';
+        createModuleOverlay('mod-musiclab','🎵 Music Lab','#ec4899',h);
+      }
+      window.mlTog=function(r,c){grid[r][c]=!grid[r][c];render();};
+      window.mlToggle=function(){
+        playing=!playing;
+        if(playing){step=0;intervalId=setInterval(function(){
+          for(var r=0;r<rows;r++)if(grid[r][step])playNote(r);
+          step=(step+1)%cols;render();
+        },60000/bpm);}else{clearInterval(intervalId);}
+        render();
+      };
+      window.mlBPM=function(d){bpm=Math.max(60,Math.min(200,bpm+d));if(playing){clearInterval(intervalId);intervalId=setInterval(function(){for(var r=0;r<rows;r++)if(grid[r][step])playNote(r);step=(step+1)%cols;render();},60000/bpm);}render();};
+      window.mlClear=function(){for(var r=0;r<rows;r++)for(var c=0;c<cols;c++)grid[r][c]=false;render();};
+      render();
+    }
+
+    // ── 7. CHRONO TYPER ──
+    function openChronoTyper() {
+      var lessons = [
+        {title:'Home Row',keys:'asdf jkl;',text:'a s d f j k l a s d f j k l a s d f'},
+        {title:'Top Row',keys:'qwerty',text:'the quick brown fox jumps over the lazy'},
+        {title:'Numbers',keys:'1234567890',text:'1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8'},
+        {title:'Short Words',keys:'all keys',text:'the cat sat on a mat and had a nap'},
+        {title:'Animals',keys:'all keys',text:'dog cat bird fish frog duck bear lion'},
+        {title:'Colors',keys:'all keys',text:'red blue green yellow pink orange purple'},
+        {title:'Science',keys:'all keys',text:'atom star moon planet sun earth mars'},
+        {title:'History',keys:'all keys',text:'king queen castle knight sword shield'},
+        {title:'Space',keys:'all keys',text:'rocket astronaut orbit galaxy nebula star'},
+        {title:'Music',keys:'all keys',text:'drum piano guitar flute trumpet violin'},
+        {title:'Food',keys:'all keys',text:'pizza pasta salad bread cheese fruit milk'},
+        {title:'Sports',keys:'all keys',text:'soccer tennis baseball hockey swimming'},
+        {title:'Ocean',keys:'all keys',text:'whale dolphin shark turtle octopus crab'},
+        {title:'Weather',keys:'all keys',text:'sunny rainy cloudy windy snowy stormy'},
+        {title:'Coding',keys:'all keys',text:'code loop array function variable class'},
+        {title:'Adventure',keys:'all keys',text:'explore discover treasure map compass'},
+        {title:'Magic',keys:'all keys',text:'wizard spell wand potion crystal dragon'},
+        {title:'Speed Run 1',keys:'all keys',text:'the five boxing wizards jump quickly now'},
+        {title:'Speed Run 2',keys:'all keys',text:'pack my box with five dozen liquor jugs'},
+        {title:'Master Test',keys:'all keys',text:'chronoverse is the best kids platform ever'}
+      ];
+      var li=0, pos=0, errors=0, startTime=0, done=false;
+      function render(){
+        var l=lessons[li], txt=l.text;
+        pos=0;errors=0;startTime=Date.now();done=false;
+        var h='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">' +
+          '<div><div style="color:#0ea5e9;font-size:14px;font-weight:900;">'+l.title+'</div>' +
+          '<div style="color:#64748b;font-size:10px;font-weight:600;">Lesson '+(li+1)+'/'+lessons.length+'</div></div>' +
+          '<div style="text-align:right;">' +
+          '<div id="ct-wpm" style="color:#10b981;font-size:16px;font-weight:900;">0 WPM</div>' +
+          '<div id="ct-acc" style="color:#64748b;font-size:10px;font-weight:600;">100% accuracy</div></div></div>';
+        h+='<div style="background:rgba(255,255,255,0.05);border-radius:16px;padding:16px;margin-bottom:12px;font-family:monospace;font-size:16px;line-height:2;letter-spacing:1px;min-height:80px;word-wrap:break-word;" id="ct-display"></div>';
+        h+='<div style="text-align:center;margin-bottom:12px;">' +
+          '<div id="ct-feedback" style="font-size:14px;font-weight:800;min-height:24px;color:#64748b;">Start typing!</div></div>';
+        h+='<div style="display:flex;gap:8px;">' +
+          '<button onclick="ctPrev()" style="flex:1;padding:12px;border-radius:10px;border:none;background:rgba(255,255,255,0.08);color:#94a3b8;font-size:12px;font-weight:800;cursor:pointer;">← Prev</button>' +
+          '<button onclick="ctNext()" style="flex:1;padding:12px;border-radius:10px;border:none;background:#0ea5e9;color:#fff;font-size:12px;font-weight:800;cursor:pointer;">Next →</button></div>';
+        createModuleOverlay('mod-chronotyper','⌨️ Chrono Typer','#0ea5e9',h);
+        var display=document.getElementById('ct-display');
+        function updateDisplay(){
+          var html='';
+          for(var i=0;i<txt.length;i++){
+            if(i<pos)html+='<span style="color:#10b981;">'+txt[i]+'</span>';
+            else if(i===pos)html+='<span style="background:#0ea5e9;color:#fff;padding:0 2px;border-radius:3px;">'+txt[i]+'</span>';
+            else html+='<span style="color:#475569;">'+txt[i]+'</span>';
+          }
+          display.innerHTML=html;
+        }
+        updateDisplay();
+        function keyHandler(e){
+          if(done)return;
+          if(e.key.length!==1)return;
+          var ov=document.getElementById('mod-chronotyper');
+          if(!ov){document.removeEventListener('keydown',keyHandler);return;}
+          if(e.key===txt[pos]){pos++;}else{errors++;
+            display.style.background='rgba(244,63,94,0.15)';
+            setTimeout(function(){display.style.background='rgba(255,255,255,0.05)';},150);
+          }
+          updateDisplay();
+          var elapsed=(Date.now()-startTime)/60000;
+          var wpm=elapsed>0?Math.round((pos/5)/elapsed):0;
+          var acc=pos+errors>0?Math.round((pos/(pos+errors))*100):100;
+          var wpmEl=document.getElementById('ct-wpm');
+          var accEl=document.getElementById('ct-acc');
+          var fbEl=document.getElementById('ct-feedback');
+          if(wpmEl)wpmEl.textContent=wpm+' WPM';
+          if(accEl)accEl.textContent=acc+'% accuracy';
+          if(pos>=txt.length){
+            done=true;
+            if(fbEl){fbEl.style.color='#10b981';fbEl.textContent='🏆 Complete! '+wpm+' WPM · '+acc+'% accuracy';}
+            document.removeEventListener('keydown',keyHandler);
+          }
+        }
+        document.addEventListener('keydown',keyHandler);
+      }
+      window.ctNext=function(){li=(li+1)%lessons.length;render();};
+      window.ctPrev=function(){li=(li-1+lessons.length)%lessons.length;render();};
+      render();
     }
 
     // ── Stripe Funding via dwtl.io ──
