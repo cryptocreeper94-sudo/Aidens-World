@@ -336,10 +336,15 @@
     }
 
     /* ── Layer 2: Portal Dashboard (Cockpit) ── */
+    :root {
+      --accent: #22d3ee;
+      --accent-glow: rgba(34, 211, 238, 0.4);
+      --accent-dim: rgba(34, 211, 238, 0.15);
+    }
     #aiden-portal {
       display: none; /* Shown after Welcome */
       width: 100%; height: 100%;
-      background: url('assets/ui/cockpit_bg.png') no-repeat center center fixed;
+      background: var(--portal-bg, url('assets/ui/cockpit_bg.png')) no-repeat center center fixed;
       background-size: cover;
       color: white;
       overflow-y: auto;
@@ -358,16 +363,243 @@
     
     .portal-header {
       text-align: center;
-      margin-bottom: 30px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    /* ── Profile Avatar ── */
+    .portal-avatar-wrap {
+      position: relative;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .portal-avatar {
+      width: 90px; height: 90px;
+      border-radius: 50%;
+      border: 4px solid var(--accent);
+      object-fit: cover;
+      box-shadow: 0 0 25px var(--accent-glow), 0 8px 20px rgba(0,0,0,0.6);
+      transition: all 0.3s ease;
+      background: #0a0a2e;
+    }
+    .portal-avatar-wrap:active .portal-avatar { transform: scale(0.92); }
+    .portal-avatar-badge {
+      position: absolute; bottom: -4px; right: -4px;
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--accent); color: #000;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 900;
+      border: 3px solid #0a0a2e;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
     }
     .portal-header h1 {
-      font-size: 36px;
+      font-size: 28px;
       font-weight: 900;
       color: #ffffff;
       text-transform: uppercase;
       letter-spacing: 3px;
-      text-shadow: 0 4px 15px rgba(0,0,0,0.8), 0 0 20px #22d3ee;
+      text-shadow: 0 4px 15px rgba(0,0,0,0.8), 0 0 20px var(--accent);
+      margin: 0;
     }
+    .portal-header .portal-subtitle {
+      font-size: 13px; color: var(--accent); font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase; opacity: 0.8;
+    }
+
+    /* ── Customize Button ── */
+    .customize-btn {
+      position: fixed; bottom: 24px; right: 24px; z-index: 100;
+      background: linear-gradient(135deg, rgba(168,85,247,0.9), rgba(124,58,237,0.9));
+      border: 2px solid rgba(255,255,255,0.2); border-radius: 50px;
+      color: #fff; padding: 12px 22px; font-size: 14px; font-weight: 800;
+      cursor: pointer; backdrop-filter: blur(10px);
+      box-shadow: 0 4px 20px rgba(168,85,247,0.5), 0 0 40px rgba(168,85,247,0.2);
+      transition: all 0.3s; display: flex; align-items: center; gap: 8px;
+      -webkit-tap-highlight-color: transparent;
+      animation: customizePulse 3s ease-in-out infinite;
+    }
+    .customize-btn:active { transform: scale(0.92); }
+    @keyframes customizePulse {
+      0%, 100% { box-shadow: 0 4px 20px rgba(168,85,247,0.5); }
+      50% { box-shadow: 0 4px 30px rgba(168,85,247,0.8), 0 0 50px rgba(168,85,247,0.3); }
+    }
+
+    /* ── Customization Panel (slide-up) ── */
+    .customize-panel {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 9000;
+      background: linear-gradient(180deg, rgba(15,15,40,0.98), rgba(8,8,25,0.99));
+      border-top: 2px solid rgba(168,85,247,0.4);
+      border-radius: 24px 24px 0 0;
+      padding: 20px 20px 40px;
+      max-height: 75vh; overflow-y: auto;
+      transform: translateY(100%);
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
+    }
+    .customize-panel.open { transform: translateY(0); }
+    .customize-panel-overlay {
+      position: fixed; inset: 0; z-index: 8999;
+      background: rgba(0,0,0,0.6); opacity: 0;
+      transition: opacity 0.3s; pointer-events: none;
+    }
+    .customize-panel-overlay.open { opacity: 1; pointer-events: auto; }
+    .customize-panel .panel-handle {
+      width: 40px; height: 4px; background: rgba(255,255,255,0.3);
+      border-radius: 2px; margin: 0 auto 20px;
+    }
+    .customize-panel h3 {
+      color: #a855f7; font-size: 18px; font-weight: 900;
+      text-transform: uppercase; letter-spacing: 2px; margin: 0 0 16px;
+    }
+    .customize-section { margin-bottom: 28px; }
+    .customize-section label {
+      display: block; color: #94a3b8; font-size: 12px;
+      font-weight: 800; text-transform: uppercase; letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+    /* Color swatches */
+    .color-grid {
+      display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
+    }
+    .color-swatch {
+      width: 44px; height: 44px; border-radius: 50%;
+      border: 3px solid transparent; cursor: pointer;
+      transition: all 0.2s; position: relative;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .color-swatch:active { transform: scale(0.85); }
+    .color-swatch.active {
+      border-color: #fff;
+      box-shadow: 0 0 15px currentColor, 0 0 30px currentColor;
+    }
+    .color-swatch.active::after {
+      content: '✓'; position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 18px; font-weight: 900;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+    }
+    /* Wallpaper thumbnails */
+    .wallpaper-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+    }
+    .wallpaper-thumb {
+      aspect-ratio: 16/9; border-radius: 12px; overflow: hidden;
+      border: 3px solid transparent; cursor: pointer;
+      transition: all 0.2s; position: relative;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .wallpaper-thumb img {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+    .wallpaper-thumb:active { transform: scale(0.92); }
+    .wallpaper-thumb.active { border-color: var(--accent); box-shadow: 0 0 15px var(--accent-glow); }
+    .wallpaper-thumb.active::after {
+      content: '✓'; position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.4); color: #fff; font-size: 24px; font-weight: 900;
+    }
+    /* Greeting input */
+    .greeting-input {
+      width: 100%; background: rgba(255,255,255,0.06);
+      border: 2px solid rgba(255,255,255,0.15); border-radius: 16px;
+      color: #fff; font-size: 16px; padding: 14px 18px;
+      font-weight: 600; outline: none; transition: border-color 0.2s;
+      box-sizing: border-box;
+    }
+    .greeting-input:focus { border-color: var(--accent); }
+
+    /* ── Avatar Picker Modal ── */
+    .avatar-modal {
+      position: fixed; inset: 0; z-index: 9500;
+      display: none; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .avatar-modal.open { display: flex; }
+    .avatar-modal-content {
+      background: linear-gradient(180deg, #1a1a3e, #0a0a20);
+      border: 2px solid var(--accent); border-radius: 24px;
+      padding: 28px 20px; width: 90%; max-width: 400px; max-height: 80vh;
+      overflow-y: auto; text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 40px var(--accent-glow);
+      animation: modalPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes modalPop { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .avatar-modal h3 {
+      color: var(--accent); font-size: 20px; font-weight: 900;
+      text-transform: uppercase; letter-spacing: 2px; margin: 0 0 20px;
+    }
+    .avatar-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+      padding: 0 8px;
+    }
+    .avatar-option {
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+      transition: all 0.2s;
+    }
+    .avatar-option:active { transform: scale(0.9); }
+    .avatar-option img {
+      width: 80px; height: 80px; border-radius: 50%;
+      border: 3px solid rgba(255,255,255,0.1); object-fit: cover;
+      background: #0a0a2e; transition: all 0.2s;
+    }
+    .avatar-option.active img {
+      border-color: var(--accent);
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+    .avatar-option span {
+      font-size: 11px; color: #94a3b8; font-weight: 700;
+    }
+    .avatar-option.active span { color: var(--accent); }
+    .avatar-option.locked img { opacity: 0.35; filter: grayscale(1); }
+    .avatar-option.locked span { color: #475569; }
+
+    /* ── Onboarding Wizard ── */
+    .onboarding-overlay {
+      position: fixed; inset: 0; z-index: 10000;
+      background: radial-gradient(ellipse at center, #0d0d2b 0%, #000 70%);
+      display: none; flex-direction: column; align-items: center; justify-content: center;
+      padding: 24px; overflow: hidden;
+    }
+    .onboarding-overlay.active { display: flex; }
+    .onboarding-particles {
+      position: absolute; inset: 0; overflow: hidden; pointer-events: none;
+    }
+    .onboarding-step {
+      display: none; flex-direction: column; align-items: center;
+      text-align: center; gap: 20px; max-width: 380px; width: 100%;
+      animation: stepFadeIn 0.5s ease;
+    }
+    .onboarding-step.active { display: flex; }
+    @keyframes stepFadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .onboarding-step h2 {
+      font-size: 28px; font-weight: 900; color: #fff;
+      text-shadow: 0 0 20px var(--accent); margin: 0;
+    }
+    .onboarding-step p {
+      font-size: 16px; color: #94a3b8; line-height: 1.6; margin: 0;
+    }
+    .onboarding-next {
+      background: linear-gradient(135deg, var(--accent), #6366f1);
+      border: none; border-radius: 50px; color: #fff;
+      padding: 16px 48px; font-size: 18px; font-weight: 900;
+      cursor: pointer; margin-top: 12px; letter-spacing: 1px;
+      box-shadow: 0 4px 20px var(--accent-glow);
+      transition: all 0.2s; -webkit-tap-highlight-color: transparent;
+    }
+    .onboarding-next:active { transform: scale(0.92); }
+    .onboarding-dots {
+      display: flex; gap: 8px; margin-top: 20px;
+    }
+    .onboarding-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: rgba(255,255,255,0.2); transition: all 0.3s;
+    }
+    .onboarding-dot.active { background: var(--accent); width: 28px; border-radius: 5px; }
     
     /* ── Daily Message Card (Playful Glassmorphism) ── */
     .message-card {
@@ -846,7 +1078,12 @@
   <!-- Aiden's Portal Dashboard -->
   <div id="aiden-portal">
     <div class="portal-header">
+      <div class="portal-avatar-wrap" onclick="openAvatarPicker()">
+        <img id="portal-avatar-img" class="portal-avatar" src="assets/ui/hero_aiden_portrait.png" alt="Avatar" />
+        <div class="portal-avatar-badge">✎</div>
+      </div>
       <h1>Aiden's World</h1>
+      <div class="portal-subtitle">Rift Walker • Level <span id="portal-level-badge">1</span></div>
     </div>
 
     <!-- Daily Message from Grandpa -->
@@ -870,41 +1107,129 @@
       
       <!-- App 1: Play Mode (Kid-First) -->
       <div class="app-card playable" onclick="showPlayModeHub()" style="border-color:#10b981; box-shadow:0 8px 30px rgba(16,185,129,0.4);">
-        <img class="app-thumb" src="assets/backgrounds/hub_bg.png" alt="Rift Runner Thumbnail" style="border-color:#10b981;">
+        <img class="app-thumb" src="assets/ui/card_play_mode.png" alt="Play Mode" style="border-color:#10b981;">
         <div class="app-title" style="color:#10b981;">Play Mode</div>
         <div class="app-desc">Rift Runner & Mini-Games</div>
       </div>
 
       <!-- App 2: Learn Mode (Parent + Child Together) -->
       <div class="app-card playable" onclick="showLearningCenter()" style="border-color:#fbbf24; box-shadow:0 8px 30px rgba(251,191,36,0.4);">
-        <div class="app-thumb" style="display:flex; align-items:center; justify-content:center; font-size:40px; background:rgba(251,191,36,0.1); color:#fbbf24; border:2px solid #fbbf24;">👨‍👧</div>
+        <img class="app-thumb" src="assets/ui/card_learn_mode.png" alt="Learn Mode" style="border-color:#fbbf24;">
         <div class="app-title" style="color:#fbbf24;">Learn Mode</div>
         <div class="app-desc">Parent + Child Discovery</div>
       </div>
 
       <!-- App 3: Create Mode (Kid-Driven) -->
       <div class="app-card playable" onclick="showLumeSandbox()" style="border-color:#22d3ee; box-shadow:0 8px 30px rgba(34,211,238,0.4);">
-        <div class="app-thumb" style="display:flex; align-items:center; justify-content:center; font-size:40px; background:rgba(34,211,238,0.1); color:#22d3ee; border: 2px solid #22d3ee;">&lt;/&gt;</div>
+        <img class="app-thumb" src="assets/ui/card_create_mode.png" alt="Create Mode" style="border-color:#22d3ee;">
         <div class="app-title" style="color:#22d3ee;">Create Mode</div>
         <div class="app-desc">Lume Voice Sandbox</div>
       </div>
 
       <!-- App 4: Rift Locker (Store) -->
       <div class="app-card playable" onclick="showRiftLocker()" style="border-color:#a855f7; box-shadow:0 8px 30px rgba(168,85,247,0.4);">
-        <div class="app-thumb" style="display:flex; align-items:center; justify-content:center; font-size:40px; background:rgba(168,85,247,0.1); color:#a855f7; border: 2px solid #a855f7;">🔓</div>
+        <img class="app-thumb" src="assets/ui/card_rift_locker.png" alt="Rift Locker" style="border-color:#a855f7;">
         <div class="app-title" style="color:#a855f7;">Rift Locker</div>
         <div class="app-desc">Unlock Suits & Skins</div>
       </div>
 
     </div>
 
+    <!-- Customize Button (floating) -->
+    <button class="customize-btn" onclick="toggleCustomizePanel()">✨ Customize</button>
+
     <!-- Footer -->
-    <div style="text-align: center; padding: 20px 10px 30px; margin-top: 10px;">
+    <div style="text-align: center; padding: 20px 10px 80px; margin-top: 10px;">
       <div style="font-family: 'Arial', sans-serif; font-size: 13px; color: #ffffff; line-height: 1.8;">
         Made with ❤️ in Gladeville, TN, USA 🇺🇸
       </div>
       <div style="font-family: 'Arial', sans-serif; font-size: 11px; color: #ffffff; margin-top: 4px;">
         Made with <span style="color: #22d3ee; font-weight: bold;">Lume</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Avatar Picker Modal ── -->
+  <div id="avatar-modal" class="avatar-modal" onclick="if(event.target===this)closeAvatarPicker()">
+    <div class="avatar-modal-content">
+      <h3>Choose Your Avatar</h3>
+      <div id="avatar-grid" class="avatar-grid">
+        <!-- Populated by JS -->
+      </div>
+      <button onclick="closeAvatarPicker()" style="margin-top:20px; background:rgba(255,255,255,0.1); border:2px solid rgba(255,255,255,0.2); border-radius:50px; color:#fff; padding:12px 36px; font-size:14px; font-weight:800; cursor:pointer;">Done</button>
+    </div>
+  </div>
+
+  <!-- ── Customization Panel (slide-up) ── -->
+  <div id="customize-overlay" class="customize-panel-overlay" onclick="toggleCustomizePanel()"></div>
+  <div id="customize-panel" class="customize-panel">
+    <div class="panel-handle"></div>
+    <h3>✨ Customize Your World</h3>
+    
+    <div class="customize-section">
+      <label>Theme Color</label>
+      <div class="color-grid" id="color-grid">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+    
+    <div class="customize-section">
+      <label>Portal Wallpaper</label>
+      <div class="wallpaper-grid" id="wallpaper-grid">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+    
+    <div class="customize-section">
+      <label>Your Greeting</label>
+      <input type="text" class="greeting-input" id="greeting-input" placeholder="Enter your portal greeting..." maxlength="100" oninput="saveGreeting(this.value)" />
+    </div>
+  </div>
+
+  <!-- ── Onboarding Wizard ── -->
+  <div id="onboarding-overlay" class="onboarding-overlay">
+    <div class="onboarding-particles" id="onboarding-particles"></div>
+    
+    <!-- Step 1: Welcome -->
+    <div class="onboarding-step active" data-step="0">
+      <div style="font-size:80px; margin-bottom:8px;">🌀</div>
+      <h2>Welcome to the Chronoverse</h2>
+      <p>Your personal portal is almost ready. Let's make it yours!</p>
+      <button class="onboarding-next" onclick="onboardingNext()">Let's Go!</button>
+      <div class="onboarding-dots">
+        <div class="onboarding-dot active"></div>
+        <div class="onboarding-dot"></div>
+        <div class="onboarding-dot"></div>
+      </div>
+    </div>
+    
+    <!-- Step 2: Pick Avatar -->
+    <div class="onboarding-step" data-step="1">
+      <h2>Choose Your Avatar</h2>
+      <p>This is how you'll appear in the Chronoverse</p>
+      <div id="onboarding-avatar-grid" class="avatar-grid" style="max-width:320px;">
+        <!-- Populated by JS -->
+      </div>
+      <button class="onboarding-next" onclick="onboardingNext()">Next →</button>
+      <div class="onboarding-dots">
+        <div class="onboarding-dot"></div>
+        <div class="onboarding-dot active"></div>
+        <div class="onboarding-dot"></div>
+      </div>
+    </div>
+    
+    <!-- Step 3: Pick Theme -->
+    <div class="onboarding-step" data-step="2">
+      <h2>Pick Your Color</h2>
+      <p>Choose the vibe for your portal</p>
+      <div id="onboarding-color-grid" class="color-grid" style="max-width:320px;">
+        <!-- Populated by JS -->
+      </div>
+      <button class="onboarding-next" onclick="finishOnboarding()">🚀 Enter the Chronoverse!</button>
+      <div class="onboarding-dots">
+        <div class="onboarding-dot"></div>
+        <div class="onboarding-dot"></div>
+        <div class="onboarding-dot active"></div>
       </div>
     </div>
   </div>
@@ -2377,6 +2702,323 @@
     
     // Execute Edge Routing immediately
     applyTenantPersonalization();
+
+    // ═══════════════════════════════════════════
+    //  CUSTOMIZATION & AVATAR SYSTEM
+    // ═══════════════════════════════════════════
+
+    const AVATAR_LIST = [
+      { id: 'hero_aiden', name: 'Aiden', img: 'assets/ui/hero_aiden_portrait.png', unlock: 0 },
+      { id: 'hero_maya', name: 'Maya', img: 'assets/ui/hero_maya_portrait.png', unlock: 0 },
+      { id: 'hero_leo', name: 'Leo', img: 'assets/ui/hero_leo_portrait.png', unlock: 0 },
+      { id: 'hero_zara', name: 'Zara', img: 'assets/ui/hero_zara_portrait.png', unlock: 0 },
+      { id: 'superboy', name: 'Superboy', img: 'assets/ui/hero_superboy_portrait.png', unlock: 0 },
+      { id: 'cyborg_girl', name: 'Cyborg Girl', img: 'assets/ui/hero_cyborg_girl_portrait.png', unlock: 0 },
+      { id: 'spider_hero', name: 'Spider-Man', img: 'assets/ui/hero_spider_portrait.png', unlock: 5 },
+      { id: 'jedi_kid', name: 'Jedi', img: 'assets/ui/hero_jedi_portrait.png', unlock: 10 },
+      { id: 'iron_kid', name: 'Iron Hero', img: 'assets/ui/hero_iron_portrait.png', unlock: 20 },
+    ];
+
+    const THEME_COLORS = [
+      { name: 'Cyan', value: '#22d3ee', glow: 'rgba(34,211,238,0.4)' },
+      { name: 'Emerald', value: '#10b981', glow: 'rgba(16,185,129,0.4)' },
+      { name: 'Violet', value: '#a855f7', glow: 'rgba(168,85,247,0.4)' },
+      { name: 'Rose', value: '#f43f5e', glow: 'rgba(244,63,94,0.4)' },
+      { name: 'Amber', value: '#f59e0b', glow: 'rgba(245,158,11,0.4)' },
+      { name: 'Blue', value: '#3b82f6', glow: 'rgba(59,130,246,0.4)' },
+      { name: 'Pink', value: '#ec4899', glow: 'rgba(236,72,153,0.4)' },
+      { name: 'Lime', value: '#84cc16', glow: 'rgba(132,204,22,0.4)' },
+    ];
+
+    const WALLPAPERS = [
+      { id: 'default', name: 'Cockpit', img: 'assets/ui/cockpit_bg.png' },
+      { id: 'city', name: 'NYC Night', img: 'assets/backgrounds/world1_bg.png' },
+      { id: 'space', name: 'Space Station', img: 'assets/backgrounds/world2_bg.png' },
+      { id: 'desert', name: 'Tatooine', img: 'assets/backgrounds/world3_bg.png' },
+      { id: 'rift', name: 'The Rift', img: 'assets/backgrounds/world4_bg.png' },
+      { id: 'hub', name: 'Chrono Hub', img: 'assets/backgrounds/hub_bg.png' },
+    ];
+
+    // ── Load preferences ──
+    function getCustomPrefs() {
+      const tenant = (window.CHRONOVERSE_TENANT || 'default').toLowerCase();
+      try {
+        const raw = window.localStore.getItem('ChronoverseCustom_' + tenant);
+        return raw ? JSON.parse(raw) : {};
+      } catch(e) { return {}; }
+    }
+    function saveCustomPrefs(prefs) {
+      const tenant = (window.CHRONOVERSE_TENANT || 'default').toLowerCase();
+      try { window.localStore.setItem('ChronoverseCustom_' + tenant, JSON.stringify(prefs)); } catch(e) {}
+    }
+
+    // ── Apply theme ──
+    function applyTheme(color, glow) {
+      document.documentElement.style.setProperty('--accent', color);
+      document.documentElement.style.setProperty('--accent-glow', glow);
+      document.documentElement.style.setProperty('--accent-dim', glow.replace('0.4', '0.15'));
+    }
+    function applyWallpaper(wallpaperId) {
+      const wp = WALLPAPERS.find(w => w.id === wallpaperId) || WALLPAPERS[0];
+      const portal = document.getElementById('aiden-portal');
+      if (portal) portal.style.background = `url('${wp.img}') no-repeat center center fixed`;
+      if (portal) portal.style.backgroundSize = 'cover';
+    }
+    function applyAvatar(avatarId) {
+      const av = AVATAR_LIST.find(a => a.id === avatarId) || AVATAR_LIST[0];
+      const img = document.getElementById('portal-avatar-img');
+      if (img) img.src = av.img;
+    }
+
+    // ── Initialize customization on load ──
+    function initCustomization() {
+      const prefs = getCustomPrefs();
+      if (prefs.accentColor) applyTheme(prefs.accentColor, prefs.accentGlow || prefs.accentColor.replace(')', ',0.4)').replace('rgb', 'rgba'));
+      if (prefs.wallpaper) applyWallpaper(prefs.wallpaper);
+      if (prefs.avatar) applyAvatar(prefs.avatar);
+      if (prefs.greeting) {
+        const msg = document.getElementById('daily-message');
+        if (msg) msg.textContent = prefs.greeting;
+      }
+
+      // Update level badge
+      try {
+        const save = SaveSystem ? SaveSystem.load() : {};
+        const levelBadge = document.getElementById('portal-level-badge');
+        if (levelBadge && save.maxLevel) levelBadge.textContent = save.maxLevel;
+      } catch(e) {}
+
+      // Populate grids
+      populateAvatarGrid('avatar-grid');
+      populateAvatarGrid('onboarding-avatar-grid');
+      populateColorGrid('color-grid');
+      populateColorGrid('onboarding-color-grid');
+      populateWallpaperGrid();
+
+      // Set greeting input
+      const greetingInput = document.getElementById('greeting-input');
+      if (greetingInput && prefs.greeting) greetingInput.value = prefs.greeting;
+    }
+
+    // ── Avatar grid ──
+    function populateAvatarGrid(containerId) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      const prefs = getCustomPrefs();
+      const currentAvatar = prefs.avatar || 'hero_aiden';
+      let save = {};
+      try { save = SaveSystem ? SaveSystem.load() : {}; } catch(e) {}
+      const maxLevel = save.maxLevel || 0;
+
+      container.innerHTML = AVATAR_LIST.map(av => {
+        const locked = av.unlock > maxLevel;
+        const active = av.id === currentAvatar;
+        return `<div class="avatar-option ${active ? 'active' : ''} ${locked ? 'locked' : ''}" onclick="${locked ? '' : `selectAvatar('${av.id}','${containerId}')`}">
+          <img src="${av.img}" alt="${av.name}" onerror="this.src='assets/ui/hero_aiden_portrait.png'" />
+          <span>${locked ? '🔒 Lvl ' + av.unlock : av.name}</span>
+        </div>`;
+      }).join('');
+    }
+
+    function selectAvatar(avatarId, gridId) {
+      const prefs = getCustomPrefs();
+      prefs.avatar = avatarId;
+      saveCustomPrefs(prefs);
+      applyAvatar(avatarId);
+      populateAvatarGrid('avatar-grid');
+      populateAvatarGrid('onboarding-avatar-grid');
+    }
+
+    function openAvatarPicker() {
+      document.getElementById('avatar-modal').classList.add('open');
+    }
+    function closeAvatarPicker() {
+      document.getElementById('avatar-modal').classList.remove('open');
+    }
+
+    // ── Color grid ──
+    function populateColorGrid(containerId) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      const prefs = getCustomPrefs();
+      const currentColor = prefs.accentColor || '#22d3ee';
+
+      container.innerHTML = THEME_COLORS.map(c => {
+        const active = c.value === currentColor;
+        return `<div class="color-swatch ${active ? 'active' : ''}" 
+          style="background:${c.value}; color:${c.value};" 
+          onclick="selectThemeColor('${c.value}','${c.glow}')"></div>`;
+      }).join('');
+    }
+
+    function selectThemeColor(color, glow) {
+      const prefs = getCustomPrefs();
+      prefs.accentColor = color;
+      prefs.accentGlow = glow;
+      saveCustomPrefs(prefs);
+      applyTheme(color, glow);
+      populateColorGrid('color-grid');
+      populateColorGrid('onboarding-color-grid');
+    }
+
+    // ── Wallpaper grid ──
+    function populateWallpaperGrid() {
+      const container = document.getElementById('wallpaper-grid');
+      if (!container) return;
+      const prefs = getCustomPrefs();
+      const currentWP = prefs.wallpaper || 'default';
+
+      container.innerHTML = WALLPAPERS.map(wp => {
+        const active = wp.id === currentWP;
+        return `<div class="wallpaper-thumb ${active ? 'active' : ''}" onclick="selectWallpaper('${wp.id}')">
+          <img src="${wp.img}" alt="${wp.name}" />
+        </div>`;
+      }).join('');
+    }
+
+    function selectWallpaper(wallpaperId) {
+      const prefs = getCustomPrefs();
+      prefs.wallpaper = wallpaperId;
+      saveCustomPrefs(prefs);
+      applyWallpaper(wallpaperId);
+      populateWallpaperGrid();
+    }
+
+    // ── Greeting ──
+    function saveGreeting(text) {
+      const prefs = getCustomPrefs();
+      prefs.greeting = text;
+      saveCustomPrefs(prefs);
+      const msg = document.getElementById('daily-message');
+      if (msg && text.trim()) msg.textContent = text;
+    }
+
+    // ── Customize panel toggle ──
+    function toggleCustomizePanel() {
+      const panel = document.getElementById('customize-panel');
+      const overlay = document.getElementById('customize-overlay');
+      const isOpen = panel.classList.contains('open');
+      if (isOpen) {
+        panel.classList.remove('open');
+        overlay.classList.remove('open');
+      } else {
+        panel.classList.add('open');
+        overlay.classList.add('open');
+      }
+    }
+
+    // ── Onboarding Wizard ──
+    let onboardingStep = 0;
+
+    function checkOnboarding() {
+      const tenant = (window.CHRONOVERSE_TENANT || 'default').toLowerCase();
+      const key = 'ChronoverseOnboarded_' + tenant;
+      try {
+        if (window.localStore.getItem(key)) return; // Already onboarded
+      } catch(e) { return; }
+      
+      // Show onboarding
+      const overlay = document.getElementById('onboarding-overlay');
+      if (overlay) {
+        overlay.classList.add('active');
+        spawnOnboardingParticles();
+      }
+    }
+
+    function onboardingNext() {
+      onboardingStep++;
+      const steps = document.querySelectorAll('.onboarding-step');
+      steps.forEach((s, i) => {
+        s.classList.toggle('active', i === onboardingStep);
+      });
+    }
+
+    function finishOnboarding() {
+      const tenant = (window.CHRONOVERSE_TENANT || 'default').toLowerCase();
+      try { window.localStore.setItem('ChronoverseOnboarded_' + tenant, '1'); } catch(e) {}
+      
+      const overlay = document.getElementById('onboarding-overlay');
+      if (overlay) {
+        overlay.style.transition = 'opacity 0.5s';
+        overlay.style.opacity = '0';
+        setTimeout(() => {
+          overlay.classList.remove('active');
+          overlay.style.opacity = '';
+          overlay.style.transition = '';
+          // Confetti burst!
+          spawnConfetti();
+        }, 500);
+      }
+    }
+
+    // ── Particle effects ──
+    function spawnOnboardingParticles() {
+      const container = document.getElementById('onboarding-particles');
+      if (!container) return;
+      for (let i = 0; i < 50; i++) {
+        const p = document.createElement('div');
+        const size = Math.random() * 4 + 2;
+        p.style.cssText = `
+          position:absolute; width:${size}px; height:${size}px; border-radius:50%;
+          background:${['#22d3ee','#a855f7','#10b981','#f59e0b','#ec4899'][Math.floor(Math.random()*5)]};
+          left:${Math.random()*100}%; top:${Math.random()*100}%;
+          opacity:${Math.random()*0.6+0.2};
+          animation: particleFloat ${Math.random()*8+4}s ease-in-out infinite ${Math.random()*4}s;
+        `;
+        container.appendChild(p);
+      }
+      // Add the keyframes if not already added
+      if (!document.getElementById('particle-keyframes')) {
+        const style = document.createElement('style');
+        style.id = 'particle-keyframes';
+        style.textContent = `
+          @keyframes particleFloat {
+            0%, 100% { transform: translateY(0) translateX(0); opacity: 0.3; }
+            25% { transform: translateY(-30px) translateX(15px); opacity: 0.7; }
+            50% { transform: translateY(-10px) translateX(-10px); opacity: 0.5; }
+            75% { transform: translateY(-40px) translateX(20px); opacity: 0.6; }
+          }
+        `;
+        document.head.appendChild(style);
+      }
+    }
+
+    function spawnConfetti() {
+      const colors = ['#22d3ee','#a855f7','#10b981','#f59e0b','#ec4899','#3b82f6','#f43f5e'];
+      for (let i = 0; i < 60; i++) {
+        const confetti = document.createElement('div');
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        const left = Math.random() * 100;
+        const delay = Math.random() * 0.5;
+        const size = Math.random() * 8 + 4;
+        confetti.style.cssText = `
+          position:fixed; top:-10px; left:${left}%; width:${size}px; height:${size * 1.5}px;
+          background:${color}; z-index:99999; border-radius:2px;
+          animation: confettiFall ${Math.random()*2+1.5}s ease-in ${delay}s forwards;
+          transform: rotate(${Math.random()*360}deg);
+        `;
+        document.body.appendChild(confetti);
+        setTimeout(() => confetti.remove(), 3000);
+      }
+      if (!document.getElementById('confetti-keyframes')) {
+        const style = document.createElement('style');
+        style.id = 'confetti-keyframes';
+        style.textContent = `
+          @keyframes confettiFall {
+            0% { top: -10px; opacity: 1; transform: rotate(0deg) translateX(0); }
+            100% { top: 110vh; opacity: 0; transform: rotate(720deg) translateX(${Math.random()>0.5?'':'-'}80px); }
+          }
+        `;
+        document.head.appendChild(style);
+      }
+    }
+
+    // ── Initialize everything ──
+    setTimeout(() => {
+      initCustomization();
+      // Delay onboarding check slightly so tenant routing can complete
+      setTimeout(checkOnboarding, 500);
+    }, 100);
 
   </script>
 </body>
